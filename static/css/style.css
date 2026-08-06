@@ -1,0 +1,306 @@
+/*
+=========================================================
+QRESERVE
+Online Queue & Monitoring System
+Bulacan State University - Bustos Campus
+
+Login Page Styles
+=========================================================
+*/
+
+/* -------------------------
+   Google Font
+------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* -------------------------
+   Global
+------------------------- */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    position:relative;
+}
+.login-page{
+    height:calc(100vh - 80px);
+}
+
+/* Background Image */
+
+.background-image{
+    position:fixed;
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    background:url("../images/bulsu.jpg") center center no-repeat;
+    background-size:cover;
+
+    filter:blur(5px);
+    transform:scale(1.08);
+
+    z-index:-2;
+}
+
+/* White Overlay */
+
+.overlay{
+    position:fixed;
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    background:rgba(255,255,255,.35);
+
+    z-index:-1;
+}
+
+/* -------------------------
+   Navigation
+------------------------- */
+
+.custom-navbar{
+
+    height:75px;
+
+    background:#b40000;
+
+    box-shadow:0 3px 15px rgba(0,0,0,.25);
+
+    display:flex;
+    align-items:center;
+
+    padding:0 25px;
+
+}
+
+.logo{
+
+    width:55px;
+    height:55px;
+
+    object-fit:cover;
+
+    border-radius:50%;
+
+    border:2px solid white;
+
+}
+
+.navbar-brand h6{
+
+    color:white;
+    font-size:17px;
+
+    margin-bottom:2px;
+
+}
+
+.navbar-brand small{
+
+    color:white;
+    letter-spacing:1px;
+
+}
+
+/* -------------------------
+   Login Title
+------------------------- */
+
+.login-title{
+
+    color:#9d1010;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+
+}
+
+/* -------------------------
+   Login Card
+------------------------- */
+
+.login-card{
+
+    width:100%;
+    max-width:450px;
+
+    margin:auto;
+
+    border-radius:20px;
+
+    border:none;
+
+    background:rgba(255,255,255,.95);
+
+    box-shadow:0 20px 40px rgba(0,0,0,.18);
+
+}
+
+/* -------------------------
+   Inputs
+------------------------- */
+
+.form-control{
+
+    border-radius:50px;
+
+    padding:14px 20px;
+
+    border:2px solid #d5d5d5;
+
+    transition:.3s;
+
+}
+
+.form-control:focus{
+
+    border-color:#b40000;
+
+    box-shadow:0 0 0 .2rem rgba(180,0,0,.15);
+
+}
+
+/* -------------------------
+   Password Button
+------------------------- */
+
+.input-group .btn{
+
+    border:2px solid #d5d5d5;
+
+    border-left:none;
+
+    background:white;
+
+}
+
+.input-group .btn:hover{
+
+    background:#f8f8f8;
+
+}
+
+/* -------------------------
+   Login Button
+------------------------- */
+
+.btn-success{
+
+    background:#0a8a3b;
+
+    border:none;
+
+    font-weight:600;
+
+    letter-spacing:1px;
+
+    transition:.3s;
+
+}
+
+.btn-success:hover{
+
+    transform:translateY(-2px);
+
+    background:#0b9b43;
+
+    box-shadow:0 10px 20px rgba(0,0,0,.15);
+
+}
+
+/* -------------------------
+   Links
+------------------------- */
+
+a{
+
+    color:#8f0000;
+
+    transition:.25s;
+
+}
+
+a:hover{
+
+    color:#d10000;
+
+}
+
+/* -------------------------
+   Fade Animation
+------------------------- */
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(30px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+/* -------------------------
+   Responsive
+------------------------- */
+
+@media(max-width:768px){
+
+    .login-card{
+
+        margin:20px;
+
+    }
+
+    .navbar-brand h6{
+
+        font-size:14px;
+
+    }
+
+    .logo{
+
+        width:45px;
+        height:45px;
+
+    }
+
+    .login-title{
+
+        font-size:30px;
+
+    }
+
+}
