@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>QRESERVE | Login</title>
+    <title>QRESERVE | Sign Up</title>
 
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -59,16 +59,16 @@
      Main Section
 ======================== -->
 
-<div class="container-fluid h-100">
+<div class="container">
 
-    <div class="row justify-content-center align-items-center login-page h-100">
+    <div class="row justify-content-center align-items-center login-page">
 
         <div class="col-xl-4 col-lg-5 col-md-6 col-sm-8 col-11">
 
             <!-- Title -->
 
             <h1 class="text-center login-title mb-4">
-                QRESERVE LOGIN
+                QRESERVE SIGN UP
             </h1>
 
             <!-- Login Card -->
@@ -87,7 +87,7 @@
 
                         <!-- Email -->
 
-                        <div class="mb-3">
+                        <div class="mb-4">
 
                             <label class="form-label">
 
@@ -135,19 +135,35 @@
                             </div>
 
                         </div>
+                    <!-- Confirm Password -->
+                        <div class="mb-4">
 
-                        <!-- Forgot Password -->
+                            <label class="form-label">
+                                Confirm Password
+                    </label>
 
-                        <div class="text-end mb-3">
+                       <div class="input-group">
 
-                            <a href="#"
-                               class="forgot-link text-decoration-none">
+                    <input
+                        type="password"
+                        class="form-control rounded-start-pill"
+                        id="confirmPassword"
+                        name="confirm_password"
+                        placeholder="Confirm your password"
+                     required>
 
-                                Forgot Password?
+                        <button
+                             class="btn btn-light rounded-end-pill"
+                             type="button"
+                             id="toggleConfirmPassword">
 
-                            </a>
+                            <i class="bi bi-eye"></i>
 
-                        </div>
+                        </button>
+
+                      </div>
+
+</div>
 
                         <!-- Login Button -->
 
@@ -163,65 +179,18 @@
 
                                 </span>
 
-                                LOGIN
+                                SIGN UP
 
                             </button>
 
                         </div>
 
-<!-- OR Divider -->
-
-<div class="divider">
-    <span>OR</span>
-</div>
-
-<!-- Guest Button -->
-
-<div class="d-grid mb-3">
-
-<a href="/guest"
-   class="btn btn-outline-danger rounded-pill">
-
-    <i class="bi bi-person"></i>
-
-    <span>CONTINUE AS GUEST</span>
-
-</a>
-</div>
-
-<!-- Admin Button -->
-
-<div class="d-grid mb-4">
-
-   <a href="/admin/login"
-   class="btn admin-btn rounded-pill">
-
-    <i class="bi bi-shield-lock"></i>
-
-    <span>ADMINISTRATOR LOGIN</span>
-
-</a>
-
-</div>
-
-<!-- Sign Up -->
-
-<div class="text-center">
-
-    <span class="signup-text">
-
-        Don't have an account?
-
-    </span>
-
-    <a href="/signup"
-       class="signup-link text-decoration-none">
-
-        Sign Up
-
+ <div class="text-center mt-3">
+    <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+        Back to Login
     </a>
-
 </div>
+
                     </form>
 
                 </div>
@@ -244,3 +213,28 @@
 
 </body>
 </html>
+const confirmPassword =
+    document.getElementById("confirmPassword");
+
+const toggleConfirmPassword =
+    document.getElementById("toggleConfirmPassword");
+
+if (toggleConfirmPassword) {
+
+    toggleConfirmPassword.addEventListener("click", function () {
+
+        const type =
+            confirmPassword.type === "password"
+                ? "text"
+                : "password";
+
+        confirmPassword.type = type;
+
+        this.innerHTML =
+            type === "password"
+                ? '<i class="bi bi-eye"></i>'
+                : '<i class="bi bi-eye-slash"></i>';
+
+    });
+
+}

@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const togglePassword = document.getElementById("togglePassword");
 
+    const confirmPassword = document.getElementById("confirmPassword");
+const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+
     const alertBox = document.getElementById("alertBox");
 
     // ===========================================
@@ -70,6 +73,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
     });
+
+// ===========================================
+// Toggle Confirm Password Visibility
+// ===========================================
+
+if (toggleConfirmPassword && confirmPassword) {
+
+    toggleConfirmPassword.addEventListener("click", () => {
+
+        if (confirmPassword.type === "password") {
+
+            confirmPassword.type = "text";
+
+            toggleConfirmPassword.innerHTML =
+                '<i class="bi bi-eye-slash"></i>';
+
+        } else {
+
+            confirmPassword.type = "password";
+
+            toggleConfirmPassword.innerHTML =
+                '<i class="bi bi-eye"></i>';
+
+        }
+
+    });
+
+}
 
     // ===========================================
     // Login Submit

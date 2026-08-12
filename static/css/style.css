@@ -38,7 +38,16 @@ body{
     position:relative;
 }
 .login-page{
-    height:calc(100vh - 80px);
+    height:calc(100vh - 75px);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    margin:0;
+}
+
+.container-fluid.h-100{
+    height:calc(100vh - 75px) !important;
 }
 
 /* Background Image */
@@ -60,17 +69,33 @@ body{
     z-index:-2;
 }
 
+.form-label{
+    margin-bottom:5px;
+    font-size:0.85rem;
+    font-weight:500;
+}
+
+.mb-4{
+    margin-bottom:0.8rem !important;
+}
+
+.mb-3{
+    margin-bottom:0.7rem !important;
+}
+
 /* White Overlay */
 
 .overlay{
     position:fixed;
-    top:0;
-    left:0;
+    inset:0;
 
-    width:100%;
-    height:100%;
+    background:
+        linear-gradient(
+            rgba(255,255,255,.55),
+            rgba(255,255,255,.55)
+        );
 
-    background:rgba(255,255,255,.35);
+    backdrop-filter:blur(2px);
 
     z-index:-1;
 }
@@ -128,13 +153,11 @@ body{
 ------------------------- */
 
 .login-title{
-
     color:#9d1010;
-
     font-weight:700;
-
     letter-spacing:1px;
-
+    font-size:2.3rem;
+    margin-bottom:12px !important;
 }
 
 /* -------------------------
@@ -142,20 +165,12 @@ body{
 ------------------------- */
 
 .login-card{
-
-    width:100%;
-    max-width:450px;
-
+    max-width:400px;
     margin:auto;
-
-    border-radius:20px;
-
     border:none;
-
+    border-radius:24px;
     background:rgba(255,255,255,.95);
-
-    box-shadow:0 20px 40px rgba(0,0,0,.18);
-
+    box-shadow:0 15px 35px rgba(0,0,0,.12);
 }
 
 /* -------------------------
@@ -164,13 +179,23 @@ body{
 
 .form-control{
 
-    border-radius:50px;
+    height:50px;
 
-    padding:14px 20px;
+    border-radius:999px;
 
-    border:2px solid #d5d5d5;
+    padding:0 24px;
 
-    transition:.3s;
+    border:2px solid #e3e3e3;
+
+    background:#fff;
+
+    transition:.25s;
+
+}
+
+.form-control:hover{
+
+    border-color:#c5c5c5;
 
 }
 
@@ -178,7 +203,7 @@ body{
 
     border-color:#b40000;
 
-    box-shadow:0 0 0 .2rem rgba(180,0,0,.15);
+    box-shadow:0 0 0 .2rem rgba(180,0,0,.12);
 
 }
 
@@ -188,35 +213,50 @@ body{
 
 .input-group .btn{
 
-    border:2px solid #d5d5d5;
+    border:2px solid #e3e3e3;
 
     border-left:none;
 
     background:white;
 
+    border-radius:0 999px 999px 0;
+
+    transition:.25s;
+
 }
 
 .input-group .btn:hover{
 
-    background:#f8f8f8;
+    background:#fafafa;
 
 }
 
 /* -------------------------
    Login Button
 ------------------------- */
-
+.btn-outline-danger,
+.admin-btn{
+    font-size:0.95rem;
+}
 .btn-success{
 
-    background:#0a8a3b;
+    height:50px;
 
     border:none;
 
-    font-weight:600;
+    border-radius:999px;
 
-    letter-spacing:1px;
+    background:linear-gradient(135deg,#b40000,#d10000);
 
-    transition:.3s;
+    font-weight:500;
+
+    font-size:1rem;
+
+    letter-spacing:.5px;
+
+    transition:.25s;
+
+    box-shadow:0 12px 25px rgba(180,0,0,.22);
 
 }
 
@@ -224,30 +264,127 @@ body{
 
     transform:translateY(-2px);
 
-    background:#0b9b43;
+    background:linear-gradient(135deg,#d10000,#b40000);
 
-    box-shadow:0 10px 20px rgba(0,0,0,.15);
+    box-shadow:0 18px 35px rgba(180,0,0,.28);
 
 }
 
 /* -------------------------
-   Links
+   Secondary Buttons
 ------------------------- */
 
-a{
+.btn-outline-danger{
 
-    color:#8f0000;
+    height:50px;
+
+    border-radius:999px;
+
+    border:2px solid #b40000;
+
+    color:#b40000;
+
+    background:white;
+
+    font-weight:500;
+    
+    font-size:1rem;
+
+    transition:.25s;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+
+}
+.btn-outline-danger:hover{
+
+    background:#b40000;
+
+    color:white;
+
+}
+
+/* -------------------------
+   Administrator Button
+------------------------- */
+
+.admin-btn{
+
+    height:50px;
+
+    border-radius:999px;
+
+    border:2px solid #cfcfcf;
+
+    background:white;
+
+    color:#555;
+
+    font-weight:500;
+    
+    font-size:1rem;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
 
     transition:.25s;
 
 }
 
-a:hover{
+.admin-btn:hover{
 
-    color:#d10000;
+    background:#f7f7f7;
+
+    border-color:#999;
+
+    color:#222;
 
 }
 
+/* -------------------------
+   OR Divider
+------------------------- */
+
+.divider{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    margin:26px 0;
+
+}
+
+.divider::before,
+.divider::after{
+
+    content:"";
+
+    flex:1;
+
+    height:1px;
+
+    background:#dddddd;
+
+}
+
+.divider span{
+
+    color:#888;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    letter-spacing:1px;
+
+}
 /* -------------------------
    Fade Animation
 ------------------------- */
@@ -279,28 +416,60 @@ a:hover{
 @media(max-width:768px){
 
     .login-card{
-
         margin:20px;
-
     }
 
     .navbar-brand h6{
-
         font-size:14px;
-
     }
 
     .logo{
-
         width:45px;
         height:45px;
-
     }
 
     .login-title{
-
         font-size:30px;
-
     }
 
+}   /* <-- CLOSE THE MEDIA QUERY HERE */
+
+/* -------------------------
+   Forgot password
+------------------------- */
+
+.forgot-link{
+    font-size:0.85rem;
+    color:#0d6efd;
+    font-weight:500;
+    transition:.2s;
 }
+
+.forgot-link:hover{
+    color:#0a58ca;
+}
+
+/* -------------------------
+   Sign Up
+------------------------- */
+
+.signup-link{
+    color:#d10000;
+    font-size:0.95rem;
+    font-weight:600;
+    transition:.2s;
+}
+
+.signup-link:hover{
+    color:#b40000;
+}
+
+/* -------------------------    
+   Doesn't have an account
+------------------------- */
+
+.signup-text{
+    font-size:0.95rem;
+    color:#777;
+}
+

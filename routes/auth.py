@@ -1,17 +1,10 @@
-"""
-===========================================================
-QRESERVE
-Authentication Routes
-===========================================================
-"""
-
 from flask import Blueprint, render_template
 
-# Create Blueprint
 auth = Blueprint("auth", __name__)
 
 
 @auth.route("/")
+@auth.route("/login")
 def login():
     """
     Display the Login Page
@@ -19,9 +12,11 @@ def login():
     return render_template("login.html")
 
 
+@auth.route("/signup")
+def signup():
+    return render_template("sign_up.html")
+
+
 @auth.route("/guest")
 def guest():
-    """
-    Temporary Guest Page
-    """
     return "<h2>Guest Dashboard (Coming Soon)</h2>"
