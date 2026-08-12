@@ -4,472 +4,840 @@ QRESERVE
 Online Queue & Monitoring System
 Bulacan State University - Bustos Campus
 
-Login Page Styles
+Responsive Login / Sign Up Styles
 =========================================================
 */
 
-/* -------------------------
-   Google Font
-------------------------- */
+/* =====================================================
+   GOOGLE FONT
+===================================================== */
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* -------------------------
-   Global
-------------------------- */
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
 html,
-body{
-    margin:0;
-    padding:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    font-family:'Poppins',sans-serif;
+body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
-body{
-    position:relative;
-}
-.login-page{
-    height:calc(100vh - 75px);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    margin:0;
+body {
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
-.container-fluid.h-100{
-    height:calc(100vh - 75px) !important;
+
+/* =====================================================
+   BACKGROUND
+===================================================== */
+
+.background-image {
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: url("../images/bulsu.jpg") center center no-repeat;
+    background-size: cover;
+
+    filter: blur(5px);
+    transform: scale(1.08);
+
+    z-index: -2;
 }
 
-/* Background Image */
+.overlay {
+    position: fixed;
+    inset: 0;
 
-.background-image{
-    position:fixed;
-    top:0;
-    left:0;
+    background: rgba(255, 255, 255, 0.55);
 
-    width:100%;
-    height:100%;
+    backdrop-filter: blur(2px);
 
-    background:url("../images/bulsu.jpg") center center no-repeat;
-    background-size:cover;
-
-    filter:blur(5px);
-    transform:scale(1.08);
-
-    z-index:-2;
+    z-index: -1;
 }
 
-.form-label{
-    margin-bottom:5px;
-    font-size:0.85rem;
-    font-weight:500;
+
+/* =====================================================
+   NAVIGATION BAR
+===================================================== */
+
+.custom-navbar {
+    height: 75px;
+
+    background: #b40000;
+
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.25);
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 25px;
+
+    position: relative;
+    z-index: 10;
 }
 
-.mb-4{
-    margin-bottom:0.8rem !important;
+.logo {
+    width: 55px;
+    height: 55px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+
+    border: 2px solid white;
 }
 
-.mb-3{
-    margin-bottom:0.7rem !important;
+.navbar-brand h6 {
+    color: white;
+
+    font-size: 17px;
+
+    margin-bottom: 2px;
 }
 
-/* White Overlay */
+.navbar-brand small {
+    color: white;
 
-.overlay{
-    position:fixed;
-    inset:0;
+    font-size: 14px;
 
-    background:
-        linear-gradient(
-            rgba(255,255,255,.55),
-            rgba(255,255,255,.55)
-        );
-
-    backdrop-filter:blur(2px);
-
-    z-index:-1;
+    letter-spacing: 1px;
 }
 
-/* -------------------------
-   Navigation
-------------------------- */
 
-.custom-navbar{
+/* =====================================================
+   MAIN LOGIN / SIGN UP AREA
+===================================================== */
 
-    height:75px;
+.login-page {
+    min-height: calc(100vh - 75px);
 
-    background:#b40000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-    box-shadow:0 3px 15px rgba(0,0,0,.25);
+    margin: 0;
 
-    display:flex;
-    align-items:center;
-
-    padding:0 25px;
-
+    padding: 30px 15px;
 }
 
-.logo{
 
-    width:55px;
-    height:55px;
-
-    object-fit:cover;
-
-    border-radius:50%;
-
-    border:2px solid white;
-
+/* Remove Bootstrap height restriction */
+.container-fluid.h-100 {
+    height: auto !important;
 }
 
-.navbar-brand h6{
 
-    color:white;
-    font-size:17px;
+/* =====================================================
+   LOGIN / SIGN UP TITLE
+===================================================== */
 
-    margin-bottom:2px;
+.login-title {
+    color: #9d1010;
 
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    font-size: 2.3rem;
+
+    line-height: 1.2;
+
+    margin-bottom: 18px !important;
+
+    text-align: center;
 }
 
-.navbar-brand small{
 
-    color:white;
-    letter-spacing:1px;
+/* =====================================================
+   LOGIN CARD
+===================================================== */
 
+.login-card {
+    width: 100%;
+    max-width: 400px;
+
+    margin: 0 auto;
+
+    border: none;
+
+    border-radius: 24px;
+
+    background: rgba(255, 255, 255, 0.95);
+
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.12);
+
+    overflow: hidden;
 }
 
-/* -------------------------
-   Login Title
-------------------------- */
 
-.login-title{
-    color:#9d1010;
-    font-weight:700;
-    letter-spacing:1px;
-    font-size:2.3rem;
-    margin-bottom:12px !important;
+/* Card body */
+
+.login-card .card-body {
+    padding: 24px !important;
 }
 
-/* -------------------------
-   Login Card
-------------------------- */
 
-.login-card{
-    max-width:400px;
-    margin:auto;
-    border:none;
-    border-radius:24px;
-    background:rgba(255,255,255,.95);
-    box-shadow:0 15px 35px rgba(0,0,0,.12);
+/* =====================================================
+   FORM LABELS
+===================================================== */
+
+.form-label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size: 0.85rem;
+
+    font-weight: 500;
+
+    color: #222;
 }
 
-/* -------------------------
-   Inputs
-------------------------- */
 
-.form-control{
+/* =====================================================
+   FORM SPACING
+===================================================== */
 
-    height:50px;
+/* Override Bootstrap spacing only where needed */
 
-    border-radius:999px;
-
-    padding:0 24px;
-
-    border:2px solid #e3e3e3;
-
-    background:#fff;
-
-    transition:.25s;
-
+.login-card .mb-4 {
+    margin-bottom: 0.8rem !important;
 }
 
-.form-control:hover{
-
-    border-color:#c5c5c5;
-
+.login-card .mb-3 {
+    margin-bottom: 0.7rem !important;
 }
 
-.form-control:focus{
-
-    border-color:#b40000;
-
-    box-shadow:0 0 0 .2rem rgba(180,0,0,.12);
-
+.login-card .mb-2 {
+    margin-bottom: 0.35rem !important;
 }
 
-/* -------------------------
-   Password Button
-------------------------- */
 
-.input-group .btn{
+/* =====================================================
+   INPUTS
+===================================================== */
 
-    border:2px solid #e3e3e3;
+.form-control {
+    width: 100%;
 
-    border-left:none;
+    height: 50px;
 
-    background:white;
+    border-radius: 999px;
 
-    border-radius:0 999px 999px 0;
+    padding: 0 20px;
 
-    transition:.25s;
+    border: 2px solid #e3e3e3;
 
+    background: #fff;
+
+    font-size: 0.95rem;
+
+    color: #333;
+
+    transition: 0.25s;
 }
 
-.input-group .btn:hover{
+.form-control::placeholder {
+    color: #777;
 
-    background:#fafafa;
-
+    opacity: 1;
 }
 
-/* -------------------------
-   Login Button
-------------------------- */
-.btn-outline-danger,
-.admin-btn{
-    font-size:0.95rem;
-}
-.btn-success{
-
-    height:50px;
-
-    border:none;
-
-    border-radius:999px;
-
-    background:linear-gradient(135deg,#b40000,#d10000);
-
-    font-weight:500;
-
-    font-size:1rem;
-
-    letter-spacing:.5px;
-
-    transition:.25s;
-
-    box-shadow:0 12px 25px rgba(180,0,0,.22);
-
+.form-control:hover {
+    border-color: #c5c5c5;
 }
 
-.btn-success:hover{
+.form-control:focus {
+    border-color: #b40000;
 
-    transform:translateY(-2px);
-
-    background:linear-gradient(135deg,#d10000,#b40000);
-
-    box-shadow:0 18px 35px rgba(180,0,0,.28);
-
+    box-shadow: 0 0 0 0.2rem rgba(180, 0, 0, 0.12);
 }
 
-/* -------------------------
-   Secondary Buttons
-------------------------- */
 
-.btn-outline-danger{
+/* =====================================================
+   PASSWORD INPUT GROUP
+===================================================== */
 
-    height:50px;
-
-    border-radius:999px;
-
-    border:2px solid #b40000;
-
-    color:#b40000;
-
-    background:white;
-
-    font-weight:500;
-    
-    font-size:1rem;
-
-    transition:.25s;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:10px;
-
-}
-.btn-outline-danger:hover{
-
-    background:#b40000;
-
-    color:white;
-
+.input-group {
+    width: 100%;
+    display: flex;
 }
 
-/* -------------------------
-   Administrator Button
-------------------------- */
+.input-group .form-control {
+    min-width: 0;
 
-.admin-btn{
+    flex: 1 1 auto;
 
-    height:50px;
-
-    border-radius:999px;
-
-    border:2px solid #cfcfcf;
-
-    background:white;
-
-    color:#555;
-
-    font-weight:500;
-    
-    font-size:1rem;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:10px;
-
-    transition:.25s;
-
+    border-radius: 999px 0 0 999px;
 }
 
-.admin-btn:hover{
+.input-group .btn {
+    flex: 0 0 52px;
 
-    background:#f7f7f7;
+    width: 52px;
+    height: 50px;
 
-    border-color:#999;
+    padding: 0;
 
-    color:#222;
+    border: 2px solid #e3e3e3;
+    border-left: none;
 
+    background: white;
+
+    border-radius: 0 999px 999px 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #111;
+
+    font-size: 1rem;
+
+    transition: 0.25s;
 }
 
-/* -------------------------
-   OR Divider
-------------------------- */
+.input-group .btn:hover {
+    background: #fafafa;
+}
 
-.divider{
 
-    display:flex;
+/* =====================================================
+   FORGOT PASSWORD
+===================================================== */
 
-    align-items:center;
+.forgot-link {
+    font-size: 0.82rem;
 
-    gap:18px;
+    color: #0d6efd;
 
-    margin:26px 0;
+    font-weight: 500;
 
+    transition: 0.2s;
+}
+
+.forgot-link:hover {
+    color: #0a58ca;
+}
+
+
+/* =====================================================
+   LOGIN BUTTON
+===================================================== */
+
+.btn-success {
+    width: 100%;
+
+    height: 50px;
+
+    border: none;
+
+    border-radius: 999px;
+
+    background: linear-gradient(
+        135deg,
+        #b40000,
+        #d10000
+    );
+
+    font-weight: 600;
+
+    font-size: 0.95rem;
+
+    letter-spacing: 0.5px;
+
+    transition: 0.25s;
+
+    box-shadow:
+        0 12px 25px rgba(180, 0, 0, 0.22);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+
+    background: linear-gradient(
+        135deg,
+        #d10000,
+        #b40000
+    );
+
+    box-shadow:
+        0 18px 35px rgba(180, 0, 0, 0.28);
+}
+
+
+/* =====================================================
+   OR DIVIDER
+===================================================== */
+
+.divider {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    margin: 18px 0;
 }
 
 .divider::before,
-.divider::after{
+.divider::after {
+    content: "";
 
-    content:"";
+    flex: 1;
 
-    flex:1;
+    height: 1px;
 
-    height:1px;
-
-    background:#dddddd;
-
+    background: #dddddd;
 }
 
-.divider span{
+.divider span {
+    color: #888;
 
-    color:#888;
+    font-size: 0.75rem;
 
-    font-size:13px;
+    font-weight: 600;
 
-    font-weight:600;
-
-    letter-spacing:1px;
-
+    letter-spacing: 1px;
 }
-/* -------------------------
-   Fade Animation
-------------------------- */
 
-@keyframes fadeIn{
 
-    from{
+/* =====================================================
+   GUEST BUTTON
+===================================================== */
 
-        opacity:0;
+.btn-outline-danger {
+    width: 100%;
 
-        transform:translateY(30px);
+    height: 50px;
 
+    border-radius: 999px;
+
+    border: 2px solid #b40000;
+
+    color: #b40000;
+
+    background: white;
+
+    font-weight: 600;
+
+    font-size: 0.9rem;
+
+    transition: 0.25s;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.btn-outline-danger:hover {
+    background: #b40000;
+
+    color: white;
+}
+
+
+/* =====================================================
+   ADMIN BUTTON
+===================================================== */
+
+.admin-btn {
+    width: 100%;
+
+    height: 50px;
+
+    border-radius: 999px;
+
+    border: 2px solid #cfcfcf;
+
+    background: white;
+
+    color: #555;
+
+    font-weight: 600;
+
+    font-size: 0.9rem;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 10px;
+
+    transition: 0.25s;
+}
+
+.admin-btn:hover {
+    background: #f7f7f7;
+
+    border-color: #999;
+
+    color: #222;
+}
+
+
+/* =====================================================
+   SIGN UP TEXT
+===================================================== */
+
+.signup-text {
+    font-size: 0.82rem;
+
+    color: #777;
+}
+
+.signup-link {
+    color: #d10000;
+
+    font-size: 0.85rem;
+
+    font-weight: 600;
+
+    transition: 0.2s;
+}
+
+.signup-link:hover {
+    color: #b40000;
+}
+
+
+/* =====================================================
+   BACK TO LOGIN
+===================================================== */
+
+.login-card a[href*="auth.login"] {
+    font-size: 0.85rem;
+
+    color: #b40000;
+
+    font-weight: 500;
+}
+
+.login-card a[href*="auth.login"]:hover {
+    color: #8f0000;
+}
+
+
+/* =====================================================
+   FADE ANIMATION
+===================================================== */
+
+@keyframes fadeIn {
+
+    from {
+        opacity: 0;
+
+        transform: translateY(20px);
     }
 
-    to{
+    to {
+        opacity: 1;
 
-        opacity:1;
+        transform: translateY(0);
+    }
+}
 
-        transform:translateY(0);
+.login-card {
+    animation: fadeIn 0.5s ease;
+}
 
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 991px) {
+
+    .login-title {
+        font-size: 2rem;
     }
 
+    .login-card {
+        max-width: 390px;
+    }
 }
 
-/* -------------------------
-   Responsive
-------------------------- */
 
-@media(max-width:768px){
+/* =====================================================
+   PHONE
+===================================================== */
 
-    .login-card{
-        margin:20px;
+@media (max-width: 576px) {
+
+    /* Navbar */
+
+    .custom-navbar {
+        height: 65px;
+
+        padding: 0 15px;
     }
 
-    .navbar-brand h6{
-        font-size:14px;
+    .logo {
+        width: 45px;
+        height: 45px;
     }
 
-    .logo{
-        width:45px;
-        height:45px;
+    .navbar-brand .ms-3 {
+        margin-left: 10px !important;
     }
 
-    .login-title{
-        font-size:30px;
+    .navbar-brand h6 {
+        font-size: 12px;
+
+        line-height: 1.2;
     }
 
-}   /* <-- CLOSE THE MEDIA QUERY HERE */
+    .navbar-brand small {
+        font-size: 10px;
 
-/* -------------------------
-   Forgot password
-------------------------- */
+        letter-spacing: 0.5px;
+    }
 
-.forgot-link{
-    font-size:0.85rem;
-    color:#0d6efd;
-    font-weight:500;
-    transition:.2s;
+
+    /* Main */
+
+    .login-page {
+        min-height: calc(100vh - 65px);
+
+        padding: 25px 12px 35px;
+
+        align-items: flex-start;
+    }
+
+
+    /* Title */
+
+    .login-title {
+        font-size: 1.65rem;
+
+        letter-spacing: 0.5px;
+
+        margin-bottom: 14px !important;
+    }
+
+
+    /* Card */
+
+    .login-card {
+        width: 100%;
+
+        max-width: 370px;
+
+        border-radius: 22px;
+    }
+
+
+    /* Card padding */
+
+    .login-card .card-body {
+        padding: 20px !important;
+    }
+
+
+    /* Labels */
+
+    .form-label {
+        font-size: 0.78rem;
+
+        margin-bottom: 4px;
+    }
+
+
+    /* Inputs */
+
+    .form-control {
+        height: 46px;
+
+        padding: 0 17px;
+
+        font-size: 0.88rem;
+    }
+
+
+    /* Password button */
+
+    .input-group .btn {
+        width: 48px;
+
+        flex-basis: 48px;
+
+        height: 46px;
+
+        font-size: 0.9rem;
+    }
+
+
+    /* Forgot password */
+
+    .forgot-link {
+        font-size: 0.76rem;
+    }
+
+
+    /* Login button */
+
+    .btn-success {
+        height: 46px;
+
+        font-size: 0.85rem;
+    }
+
+
+    /* Divider */
+
+    .divider {
+        margin: 15px 0;
+
+        gap: 12px;
+    }
+
+    .divider span {
+        font-size: 0.7rem;
+    }
+
+
+    /* Guest */
+
+    .btn-outline-danger {
+        height: 46px;
+
+        font-size: 0.78rem;
+
+        gap: 7px;
+    }
+
+
+    /* Admin */
+
+    .admin-btn {
+        height: 46px;
+
+        font-size: 0.78rem;
+
+        gap: 7px;
+    }
+
+
+    /* Sign up */
+
+    .signup-text {
+        font-size: 0.72rem;
+    }
+
+    .signup-link {
+        font-size: 0.75rem;
+    }
+
+
+    /* Back to Login */
+
+    .login-card a[href*="auth.login"] {
+        font-size: 0.78rem;
+    }
 }
 
-.forgot-link:hover{
-    color:#0a58ca;
+
+/* =====================================================
+   VERY SMALL PHONES
+===================================================== */
+
+@media (max-width: 380px) {
+
+    .custom-navbar {
+        height: 60px;
+
+        padding: 0 10px;
+    }
+
+    .logo {
+        width: 40px;
+        height: 40px;
+    }
+
+    .navbar-brand h6 {
+        font-size: 10px;
+    }
+
+    .navbar-brand small {
+        font-size: 8px;
+    }
+
+
+    .login-page {
+        min-height: calc(100vh - 60px);
+
+        padding: 18px 8px 30px;
+    }
+
+
+    .login-title {
+        font-size: 1.4rem;
+
+        margin-bottom: 10px !important;
+    }
+
+
+    .login-card {
+        max-width: 350px;
+
+        border-radius: 20px;
+    }
+
+
+    .login-card .card-body {
+        padding: 16px !important;
+    }
+
+
+    .form-control {
+        height: 44px;
+
+        font-size: 0.82rem;
+    }
+
+
+    .input-group .btn {
+        height: 44px;
+
+        width: 44px;
+
+        flex-basis: 44px;
+    }
+
+
+    .btn-success,
+    .btn-outline-danger,
+    .admin-btn {
+        height: 44px;
+
+        font-size: 0.74rem;
+    }
 }
-
-/* -------------------------
-   Sign Up
-------------------------- */
-
-.signup-link{
-    color:#d10000;
-    font-size:0.95rem;
-    font-weight:600;
-    transition:.2s;
-}
-
-.signup-link:hover{
-    color:#b40000;
-}
-
-/* -------------------------    
-   Doesn't have an account
-------------------------- */
-
-.signup-text{
-    font-size:0.95rem;
-    color:#777;
-}
-
