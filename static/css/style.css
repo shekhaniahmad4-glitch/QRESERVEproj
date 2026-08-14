@@ -840,4 +840,87 @@ body {
 
         font-size: 0.74rem;
     }
+    /* ===========================================================
+   ADMIN LOGIN
+=========================================================== */
+
+.admin-login-card {
+    max-width: 420px;
+}
+
+
+/* Admin Shield Icon */
+
+.admin-icon {
+    font-size: 3rem;
+    color: #b40000;
+    margin-bottom: 5px;
+}
+
+
+/* Admin Description */
+
+.admin-description {
+    color: #777;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+
+/* Admin Login Button */
+
+.admin-login-button {
+    height: 50px;
+}
+
+
+/* Admin Login Responsive */
+
+@media (max-width: 768px) {
+
+    .admin-login-card {
+        width: calc(100% - 30px);
+        margin: 15px auto;
+    }
+
+    .admin-icon {
+        font-size: 2.5rem;
+    }
+
+}
+
+
+/* Small Phones */
+
+@media (max-width: 480px) {
+
+    .login-title {
+        font-size: 1.7rem;
+        letter-spacing: 0.5px;
+    }
+
+    .admin-login-card {
+        width: calc(100% - 20px);
+        border-radius: 20px;
+    }
+
+    .admin-description {
+        font-size: 0.8rem;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+    }
+
+    .form-control {
+        height: 48px;
+        font-size: 0.9rem;
+    }
+
+    .admin-login-button {
+        height: 48px;
+        font-size: 0.9rem;
+    }
+
+}
 }

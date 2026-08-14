@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>QRESERVE | Guest Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        /* =========================
+           Dashboard Layout
+        ========================= */
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =========================
+           Sidebar
+        ========================= */
+
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: linear-gradient(
+                to bottom,
+                #a91616,
+                #ed2424
+            );
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            height: 170px;
+            background: #8f1717;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+        }
+
+        .sidebar-logo {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .university-name {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .campus-name {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* =========================
+           Sidebar Navigation
+        ========================= */
+
+        .sidebar-menu {
+            padding-top: 10px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+
+            width: 100%;
+            padding: 13px 20px;
+
+            color: white;
+            text-decoration: none;
+
+            font-size: 13px;
+            font-weight: 500;
+
+            transition: 0.2s;
+        }
+
+        .sidebar-link i {
+            width: 25px;
+            font-size: 17px;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .logout {
+            margin-top: 35px;
+        }
+
+        /* =========================
+           Main Content
+        ========================= */
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            background: white;
+        }
+
+        /* =========================
+           Top Header
+        ========================= */
+
+        .topbar {
+            height: 70px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 25px;
+
+            border-bottom: 1px solid #ddd;
+            background: white;
+        }
+
+        .menu-button {
+            border: none;
+            background: none;
+
+            font-size: 22px;
+            margin-right: 12px;
+
+            color: #555;
+        }
+
+        .page-title {
+            color: #b01818;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .topbar-right {
+            margin-left: auto;
+
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .notification {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .profile-picture {
+            width: 35px;
+            height: 35px;
+
+            border-radius: 50%;
+
+            background: #999;
+        }
+
+        .profile-info {
+            line-height: 1.1;
+        }
+
+        .profile-name {
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .profile-type {
+            font-size: 10px;
+            color: #555;
+        }
+
+        /* =========================
+           Content
+        ========================= */
+
+        .content {
+            padding: 40px;
+        }
+
+        .request-status {
+            text-align: center;
+
+            font-size: 22px;
+            font-weight: 700;
+
+            margin-bottom: 30px;
+        }
+
+        /* =========================
+           Request Cards
+        ========================= */
+
+        .request-grid {
+          width: 100%;
+          max-width: 1000px;
+          margin: 0 auto;
+
+          display: grid;
+
+          grid-template-columns: repeat(2, 1fr);
+
+          gap: 12px 20px;
+        }
+
+        .request-card {
+            min-height: 80px;
+
+            border: 2px solid #ddd;
+            border-radius: 30px;
+
+            padding: 14px 24px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .request-card:hover {
+            border-color: #079447;
+            transform: translateY(-2px);
+        }
+
+        .request-card-title {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .request-card-description {
+            font-size: 11px;
+            color: #333;
+        }
+
+        /* =========================
+           Request Button
+        ========================= */
+
+        .request-button-container {
+            display: flex;
+            justify-content: center;
+
+            margin-top: 90px;
+        }
+
+        .request-button {
+            width: 240px;
+
+            border: none;
+            border-radius: 30px;
+
+            padding: 11px;
+
+            background: #008c43;
+            color: white;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            transition: 0.2s;
+        }
+
+        .request-button:hover {
+            background: #007638;
+        }
+
+        /* =========================
+           Mobile
+        ========================= */
+
+        @media (max-width: 768px) {
+
+            .sidebar {
+                width: 190px;
+            }
+
+            .sidebar-link {
+                font-size: 10px;
+                padding: 10px 12px;
+            }
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .page-title {
+                font-size: 14px;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .request-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .request-button-container {
+                margin-top: 40px;
+            }
+        }
+
+        @media (max-width: 576px) {
+
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar-header {
+                height: 110px;
+            }
+
+            .sidebar-logo {
+                width: 45px;
+                height: 45px;
+            }
+
+            .university-name,
+            .campus-name,
+            .sidebar-link span {
+                display: none;
+            }
+
+            .sidebar-link {
+                justify-content: center;
+                padding: 14px 0;
+            }
+
+            .sidebar-link i {
+                width: auto;
+            }
+
+            .topbar-right .profile-info {
+                display: none;
+            }
+
+            .content {
+                padding: 15px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+
+            <img
+                src="{{ url_for('static', filename='images/logo.png') }}"
+                class="sidebar-logo"
+                alt="Bulacan State University Logo">
+
+            <div class="university-name">
+                BULACAN STATE<br>
+                UNIVERSITY
+            </div>
+
+            <div class="campus-name">
+                BUSTOS CAMPUS
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-menu">
+
+            <a href="#" class="sidebar-link active">
+                <i class="bi bi-house"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="#" class="sidebar-link">
+                <i class="bi bi-people-fill"></i>
+                <span>My Queue</span>
+            </a>
+
+            <a href="#" class="sidebar-link">
+                <i class="bi bi-file-text"></i>
+                <span>My Requests</span>
+            </a>
+
+            <a href="#" class="sidebar-link">
+                <i class="bi bi-clock-history"></i>
+                <span>Queue History</span>
+            </a>
+
+            <a href="#" class="sidebar-link">
+                <i class="bi bi-megaphone"></i>
+                <span>Announcements</span>
+            </a>
+
+            <a href="#" class="sidebar-link">
+                <i class="bi bi-headset"></i>
+                <span>Help & Support</span>
+            </a>
+
+            <a href="{{ url_for('auth.login') }}"
+               class="sidebar-link logout">
+
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+
+    <main class="main-content">
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <button class="menu-button">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <div class="page-title">
+                QRESERVE REQUEST
+            </div>
+
+
+            <div class="topbar-right">
+
+                <i class="bi bi-bell notification"></i>
+
+                <div class="profile">
+
+                    <div class="profile-picture"></div>
+
+                    <div class="profile-info">
+
+                        <div class="profile-name">
+                            Guest
+                        </div>
+
+                        <div class="profile-type">
+                            Guest
+                        </div>
+
+                    </div>
+
+                    <i class="bi bi-chevron-down"></i>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+
+        <section class="content">
+
+            <div class="request-status">
+                No ongoing request right now
+            </div>
+
+
+            <!-- REQUEST OPTIONS -->
+
+            <div class="request-grid">
+
+                <div class="request-card">
+
+                    <div class="request-card-title">
+                        Transcript of Records
+                    </div>
+
+                    <div class="request-card-description">
+                        Process within 3-5 days
+                    </div>
+
+                </div>
+
+
+                <div class="request-card">
+
+                    <div class="request-card-title">
+                        True Copy Report of Grades
+                    </div>
+
+                    <div class="request-card-description">
+                        Processing within 3-5 days
+                    </div>
+
+                </div>
+
+
+                <div class="request-card">
+
+                    <div class="request-card-title">
+                        True Copy Certificate of Registration
+                    </div>
+
+                    <div class="request-card-description">
+                        Processing within 3-5 days
+                    </div>
+
+                </div>
+
+
+                <div class="request-card">
+
+                    <div class="request-card-title">
+                        Others
+                    </div>
+
+                    <div class="request-card-description">
+                        Customized Request
+                    </div>
+
+                </div>
+
+
+                <div class="request-card">
+
+                    <div class="request-card-title">
+                        Good Moral
+                    </div>
+
+                    <div class="request-card-description">
+                        Processing within 1 day
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- REQUEST NOW -->
+
+            <div class="request-button-container">
+
+                <button class="request-button">
+                    Request now
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>
