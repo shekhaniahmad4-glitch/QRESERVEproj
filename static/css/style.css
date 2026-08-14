@@ -924,3 +924,95 @@ body {
 
 }
 }
+
+/* =========================
+   UNDER DEVELOPMENT OVERLAY
+   ========================= */
+
+.development-overlay {
+    position: fixed;
+
+    /* Leave sidebar and topbar visible */
+    top: 70px;
+    left: 250px;
+    right: 0;
+    bottom: 0;
+
+    background: white;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 999;
+}
+
+.development-message {
+    width: 260px;
+    min-height: 180px;
+
+    background: white;
+
+    border: 1px solid #ddd;
+    border-radius: 12px;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+
+    padding: 25px;
+}
+
+.development-message i {
+    font-size: 35px;
+    color: #b40000;
+
+    margin-bottom: 15px;
+}
+
+.development-message h1 {
+    font-size: 18px;
+    font-weight: 700;
+
+    color: #b40000;
+
+    margin: 0 0 10px;
+}
+
+.development-message p {
+    font-size: 11px;
+    color: #666;
+
+    margin: 0;
+    line-height: 1.5;
+}
+
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 768px) {
+
+    .development-overlay {
+        left: 190px;
+    }
+}
+
+@media (max-width: 576px) {
+
+    .development-overlay {
+        left: 70px;
+        top: 70px;
+    }
+
+    .development-message {
+        width: 220px;
+        min-height: 160px;
+    }
+}

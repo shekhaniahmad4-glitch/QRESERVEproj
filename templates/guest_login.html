@@ -25,46 +25,71 @@
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
+
     <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
 
         * {
             box-sizing: border-box;
         }
 
+        html,
         body {
+            width: 100%;
+            height: 100%;
             margin: 0;
-            font-family: 'Poppins', sans-serif;
-            background: #f5f5f5;
-            color: #222;
+            padding: 0;
         }
 
-        /* =========================
-           Dashboard Layout
-        ========================= */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: white;
+            color: #222;
+            overflow: hidden;
+        }
+
+
+        /* =====================================================
+           DASHBOARD
+        ===================================================== */
 
         .dashboard {
             display: flex;
+            width: 100%;
+            height: 100vh;
             min-height: 100vh;
         }
 
-        /* =========================
-           Sidebar
-        ========================= */
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
 
         .sidebar {
             width: 250px;
-            min-height: 100vh;
+            height: 100vh;
+            flex-shrink: 0;
+
             background: linear-gradient(
                 to bottom,
                 #a91616,
                 #ed2424
             );
+
             color: white;
-            flex-shrink: 0;
         }
+
+
+        /* =====================================================
+           SIDEBAR HEADER
+        ===================================================== */
 
         .sidebar-header {
             height: 170px;
+
             background: #8f1717;
 
             display: flex;
@@ -78,7 +103,9 @@
         .sidebar-logo {
             width: 65px;
             height: 65px;
+
             object-fit: contain;
+
             margin-bottom: 8px;
         }
 
@@ -93,9 +120,10 @@
             font-weight: 600;
         }
 
-        /* =========================
-           Sidebar Navigation
-        ========================= */
+
+        /* =====================================================
+           SIDEBAR MENU
+        ===================================================== */
 
         .sidebar-menu {
             padding-top: 10px;
@@ -106,6 +134,7 @@
             align-items: center;
 
             width: 100%;
+
             padding: 13px 20px;
 
             color: white;
@@ -135,21 +164,30 @@
             margin-top: 35px;
         }
 
-        /* =========================
-           Main Content
-        ========================= */
+
+        /* =====================================================
+           MAIN AREA
+        ===================================================== */
 
         .main-content {
             flex: 1;
+
+            width: calc(100% - 250px);
             min-width: 0;
+            height: 100vh;
+
             background: white;
+
+            position: relative;
         }
 
-        /* =========================
-           Top Header
-        ========================= */
+
+        /* =====================================================
+           TOPBAR
+        ===================================================== */
 
         .topbar {
+            width: 100%;
             height: 70px;
 
             display: flex;
@@ -157,31 +195,42 @@
 
             padding: 0 25px;
 
-            border-bottom: 1px solid #ddd;
             background: white;
+
+            border-bottom: 1px solid #ddd;
         }
 
         .menu-button {
             border: none;
-            background: none;
+            background: transparent;
 
             font-size: 22px;
+
             margin-right: 12px;
 
             color: #555;
+
+            cursor: pointer;
         }
 
         .page-title {
             color: #b01818;
+
             font-size: 17px;
             font-weight: 600;
         }
+
+
+        /* =====================================================
+           TOPBAR RIGHT
+        ===================================================== */
 
         .topbar-right {
             margin-left: auto;
 
             display: flex;
             align-items: center;
+
             gap: 22px;
         }
 
@@ -193,6 +242,7 @@
         .profile {
             display: flex;
             align-items: center;
+
             gap: 8px;
         }
 
@@ -219,111 +269,86 @@
             color: #555;
         }
 
-        /* =========================
-           Content
-        ========================= */
 
-        .content {
-            padding: 40px;
-        }
+        /* =====================================================
+           DEVELOPMENT AREA
+        ===================================================== */
 
-        .request-status {
-            text-align: center;
+        .development-area {
+            width: 100%;
+            height: calc(100vh - 70px);
 
-            font-size: 22px;
-            font-weight: 700;
-
-            margin-bottom: 30px;
-        }
-
-        /* =========================
-           Request Cards
-        ========================= */
-
-        .request-grid {
-          width: 100%;
-          max-width: 1000px;
-          margin: 0 auto;
-
-          display: grid;
-
-          grid-template-columns: repeat(2, 1fr);
-
-          gap: 12px 20px;
-        }
-
-        .request-card {
-            min-height: 80px;
-
-            border: 2px solid #ddd;
-            border-radius: 30px;
-
-            padding: 14px 24px;
+            background: white;
 
             display: flex;
-            flex-direction: column;
+
             justify-content: center;
-
-            cursor: pointer;
-
-            transition: 0.2s;
+            align-items: center;
         }
 
-        .request-card:hover {
-            border-color: #079447;
-            transform: translateY(-2px);
+
+        /* =====================================================
+           SMALL UNDER DEVELOPMENT BOX
+        ===================================================== */
+
+        .development-box {
+            width: 300px;
+
+            padding: 25px 30px;
+
+            background: white;
+
+            border: 1px solid #dddddd;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 5px 20px rgba(0, 0, 0, 0.08);
+
+            text-align: center;
         }
 
-        .request-card-title {
-            font-size: 13px;
+        .development-icon {
+            font-size: 30px;
+
+            color: #b01818;
+
+            margin-bottom: 10px;
+        }
+
+        .development-box h2 {
+            margin: 0 0 8px 0;
+
+            font-size: 18px;
+
             font-weight: 700;
-        }
 
-        .request-card-description {
-            font-size: 11px;
             color: #333;
         }
 
-        /* =========================
-           Request Button
-        ========================= */
+        .development-box p {
+            margin: 0;
 
-        .request-button-container {
-            display: flex;
-            justify-content: center;
+            font-size: 12px;
 
-            margin-top: 90px;
+            line-height: 1.5;
+
+            color: #777;
         }
 
-        .request-button {
-            width: 240px;
 
-            border: none;
-            border-radius: 30px;
-
-            padding: 11px;
-
-            background: #008c43;
-            color: white;
-
-            font-size: 13px;
-            font-weight: 600;
-
-            transition: 0.2s;
-        }
-
-        .request-button:hover {
-            background: #007638;
-        }
-
-        /* =========================
-           Mobile
-        ========================= */
+        /* =====================================================
+           TABLET
+        ===================================================== */
 
         @media (max-width: 768px) {
 
             .sidebar {
                 width: 190px;
+            }
+
+            .main-content {
+                width: calc(100% - 190px);
             }
 
             .sidebar-link {
@@ -339,23 +364,24 @@
                 font-size: 14px;
             }
 
-            .content {
-                padding: 20px 15px;
-            }
-
-            .request-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .request-button-container {
-                margin-top: 40px;
+            .development-box {
+                width: 280px;
             }
         }
+
+
+        /* =====================================================
+           PHONE
+        ===================================================== */
 
         @media (max-width: 576px) {
 
             .sidebar {
                 width: 70px;
+            }
+
+            .main-content {
+                width: calc(100% - 70px);
             }
 
             .sidebar-header {
@@ -382,12 +408,77 @@
                 width: auto;
             }
 
+            .topbar {
+                padding: 0 12px;
+            }
+
+            .menu-button {
+                font-size: 20px;
+                margin-right: 8px;
+            }
+
+            .page-title {
+                font-size: 12px;
+            }
+
+            .topbar-right {
+                gap: 10px;
+            }
+
             .topbar-right .profile-info {
                 display: none;
             }
 
-            .content {
-                padding: 15px;
+            .profile-picture {
+                width: 32px;
+                height: 32px;
+            }
+
+            .development-box {
+                width: 230px;
+                padding: 20px;
+            }
+
+            .development-box h2 {
+                font-size: 15px;
+            }
+
+            .development-box p {
+                font-size: 10px;
+            }
+
+            .development-icon {
+                font-size: 25px;
+            }
+        }
+
+
+        /* =====================================================
+           VERY SMALL PHONES
+        ===================================================== */
+
+        @media (max-width: 380px) {
+
+            .sidebar {
+                width: 60px;
+            }
+
+            .main-content {
+                width: calc(100% - 60px);
+            }
+
+            .sidebar-logo {
+                width: 40px;
+                height: 40px;
+            }
+
+            .development-box {
+                width: 210px;
+                padding: 18px;
+            }
+
+            .page-title {
+                font-size: 10px;
             }
         }
 
@@ -395,13 +486,15 @@
 
 </head>
 
+
 <body>
 
 <div class="dashboard">
 
-    <!-- =========================
+
+    <!-- =====================================================
          SIDEBAR
-    ========================== -->
+    ====================================================== -->
 
     <aside class="sidebar">
 
@@ -426,40 +519,20 @@
 
         <nav class="sidebar-menu">
 
+            <!-- Dashboard -->
             <a href="#" class="sidebar-link active">
                 <i class="bi bi-house"></i>
                 <span>Dashboard</span>
             </a>
 
-            <a href="#" class="sidebar-link">
-                <i class="bi bi-people-fill"></i>
-                <span>My Queue</span>
-            </a>
 
-            <a href="#" class="sidebar-link">
-                <i class="bi bi-file-text"></i>
-                <span>My Requests</span>
-            </a>
-
-            <a href="#" class="sidebar-link">
-                <i class="bi bi-clock-history"></i>
-                <span>Queue History</span>
-            </a>
-
-            <a href="#" class="sidebar-link">
-                <i class="bi bi-megaphone"></i>
-                <span>Announcements</span>
-            </a>
-
-            <a href="#" class="sidebar-link">
-                <i class="bi bi-headset"></i>
-                <span>Help & Support</span>
-            </a>
-
-            <a href="{{ url_for('auth.login') }}"
-               class="sidebar-link logout">
+            <!-- Logout -->
+            <a
+                href="{{ url_for('auth.login') }}"
+                class="sidebar-link logout">
 
                 <i class="bi bi-box-arrow-left"></i>
+
                 <span>Logout</span>
 
             </a>
@@ -469,30 +542,46 @@
     </aside>
 
 
-    <!-- =========================
+
+    <!-- =====================================================
          MAIN CONTENT
-    ========================== -->
+    ====================================================== -->
 
     <main class="main-content">
 
 
-        <!-- TOP BAR -->
+        <!-- =================================================
+             TOPBAR
+        ================================================== -->
 
         <header class="topbar">
 
+
+            <!-- Menu -->
             <button class="menu-button">
+
                 <i class="bi bi-list"></i>
+
             </button>
 
+
+            <!-- Page Title -->
             <div class="page-title">
+
                 QRESERVE REQUEST
+
             </div>
 
 
+            <!-- Right Side -->
             <div class="topbar-right">
 
+
+                <!-- Notification -->
                 <i class="bi bi-bell notification"></i>
 
+
+                <!-- Guest -->
                 <div class="profile">
 
                     <div class="profile-picture"></div>
@@ -518,101 +607,46 @@
         </header>
 
 
-        <!-- CONTENT -->
 
-        <section class="content">
+        <!-- =================================================
+             UNDER DEVELOPMENT AREA
+        ================================================== -->
 
-            <div class="request-status">
-                No ongoing request right now
-            </div>
+        <section class="development-area">
 
 
-            <!-- REQUEST OPTIONS -->
+            <div class="development-box">
 
-            <div class="request-grid">
 
-                <div class="request-card">
+                <div class="development-icon">
 
-                    <div class="request-card-title">
-                        Transcript of Records
-                    </div>
-
-                    <div class="request-card-description">
-                        Process within 3-5 days
-                    </div>
+                    <i class="bi bi-tools"></i>
 
                 </div>
 
 
-                <div class="request-card">
-
-                    <div class="request-card-title">
-                        True Copy Report of Grades
-                    </div>
-
-                    <div class="request-card-description">
-                        Processing within 3-5 days
-                    </div>
-
-                </div>
+                <h2>
+                    UNDER DEVELOPMENT
+                </h2>
 
 
-                <div class="request-card">
+                <p>
+                    The Guest Dashboard is currently
+                    under development.
+                </p>
 
-                    <div class="request-card-title">
-                        True Copy Certificate of Registration
-                    </div>
-
-                    <div class="request-card-description">
-                        Processing within 3-5 days
-                    </div>
-
-                </div>
-
-
-                <div class="request-card">
-
-                    <div class="request-card-title">
-                        Others
-                    </div>
-
-                    <div class="request-card-description">
-                        Customized Request
-                    </div>
-
-                </div>
-
-
-                <div class="request-card">
-
-                    <div class="request-card-title">
-                        Good Moral
-                    </div>
-
-                    <div class="request-card-description">
-                        Processing within 1 day
-                    </div>
-
-                </div>
 
             </div>
 
-
-            <!-- REQUEST NOW -->
-
-            <div class="request-button-container">
-
-                <button class="request-button">
-                    Request now
-                </button>
-
-            </div>
 
         </section>
 
+
     </main>
 
+
 </div>
+
 
 </body>
 
