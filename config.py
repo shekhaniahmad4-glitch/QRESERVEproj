@@ -70,7 +70,7 @@ class Config:
 
     MAIL_PASSWORD = os.environ.get(
         "MAIL_PASSWORD"
-    ) or "nzvsvlvfvucqfmto"
+    ) 
 
     MAIL_DEFAULT_SENDER = os.environ.get(
         "MAIL_DEFAULT_SENDER"
