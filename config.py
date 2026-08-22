@@ -66,7 +66,7 @@ class Config:
 
     MAIL_USERNAME = os.environ.get(
         "MAIL_USERNAME"
-    ) or "qreserve.yourproject@gmail.com"
+    ) 
 
     MAIL_PASSWORD = os.environ.get(
         "MAIL_PASSWORD"
