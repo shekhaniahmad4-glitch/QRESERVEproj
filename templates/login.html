@@ -382,6 +382,14 @@
 
             height: 46px;
 
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 0;
+
             border-radius: 25px;
 
             font-size: 13px;
@@ -406,19 +414,17 @@
         }
 
         .admin-btn {
-            border: 1px solid #a90000;
+            border: 1px solid #d00000;
 
-            background: #a90000;
+            color: #d00000;
 
-            color: white;
+            background: white;
         }
 
         .admin-btn:hover {
-            background: #8f0000;
+            background: #fff4f4;
 
-            color: white;
-
-            transform: translateY(-1px);
+            color: #b80000;
         }
 
 
@@ -546,33 +552,33 @@
             }
 
         }
-
 /* =========================================================
-   BIGGER HEADER ON DESKTOP ONLY
-   (was previously forced on every screen size with
-   !important, which broke the mobile header sizing above)
+   FORCE UNIVERSITY HEADER SIZE
    ========================================================= */
 
-@media (min-width: 577px) {
+.custom-navbar {
+    height: 82px !important;
+    padding: 0 32px !important;
+}
 
-    .custom-navbar {
-        height: 82px;
-        padding: 0 32px;
-    }
+.custom-navbar .logo {
+    width: 62px !important;
+    height: 62px !important;
+    object-fit: contain !important;
+    flex-shrink: 0 !important;
+}
 
-    .custom-navbar .logo {
-        width: 62px;
-        height: 62px;
-    }
+.custom-navbar .navbar-brand h6 {
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+}
 
-    .custom-navbar .navbar-brand h6 {
-        font-size: 17px;
-    }
-
-    .custom-navbar .navbar-brand small {
-        font-size: 13px;
-    }
-
+.custom-navbar .navbar-brand small {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
 }
     </style>
 
@@ -820,7 +826,7 @@
                             class="btn admin-btn rounded-pill"
                         >
 
-                            <i class="bi bi-shield-lock me-1"></i>
+                            <i class="bi bi-person-circle me-1"></i>
 
                             ADMINISTRATOR LOGIN
 

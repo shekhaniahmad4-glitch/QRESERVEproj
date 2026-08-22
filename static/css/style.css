@@ -140,16 +140,6 @@ strong {
     object-fit: contain;
 
     flex-shrink: 0;
-
-    /*
-       Creates a white outline around the logo
-       without modifying logo.png.
-    */
-    filter:
-        drop-shadow(1px 0 0 white)
-        drop-shadow(-1px 0 0 white)
-        drop-shadow(0 1px 0 white)
-        drop-shadow(0 -1px 0 white);
 }
 
 

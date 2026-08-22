@@ -95,19 +95,19 @@ Bulacan State University - Bustos Campus
 
             server.send_message(message)
 
-        print("=" * 60)
-        print("QRESERVE OTP EMAIL SENT")
-        print("TO:", recipient_email)
-        print("STATUS: SUCCESS")
-        print("=" * 60)
+        print("=" * 60, flush=True)
+        print("QRESERVE OTP EMAIL SENT", flush=True)
+        print("TO:", recipient_email, flush=True)
+        print("STATUS: SUCCESS", flush=True)
+        print("=" * 60, flush=True)
 
     except Exception as e:
 
-        print("=" * 60)
-        print("QRESERVE OTP EMAIL ERROR")
-        print("TO:", recipient_email)
-        print("ERROR:", e)
-        print("=" * 60)
+        print("=" * 60, flush=True)
+        print("QRESERVE OTP EMAIL ERROR", flush=True)
+        print("TO:", recipient_email, flush=True)
+        print("ERROR:", e, flush=True)
+        print("=" * 60, flush=True)
 
 
 # =======================================================
