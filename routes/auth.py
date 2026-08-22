@@ -12,7 +12,6 @@ from flask import (
 import re
 import secrets
 import smtplib
-import socket
 import threading
 
 from datetime import datetime, timedelta
@@ -27,34 +26,6 @@ from database import db, Student
 
 
 auth = Blueprint("auth", __name__)
-
-
-# =======================================================
-# FORCE IPv4 FOR SMTP CONNECTIONS
-#
-# Some hosts (Render included) don't have a working
-# outbound IPv6 route. Python's smtplib will still try
-# the IPv6 address it gets back from DNS first, which
-# fails with "[Errno 101] Network is unreachable" before
-# it ever reaches Gmail. This forces DNS lookups used by
-# smtplib to only return IPv4 addresses, so it connects
-# over IPv4 every time.
-# =======================================================
-
-_getaddrinfo_lock = threading.Lock()
-_original_getaddrinfo = socket.getaddrinfo
-
-
-def _ipv4_only_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-
-    return _original_getaddrinfo(
-        host,
-        port,
-        socket.AF_INET,
-        type,
-        proto,
-        flags
-    )
 
 
 # =======================================================
@@ -105,34 +76,24 @@ Bulacan State University - Bustos Campus
 
     try:
 
-        with _getaddrinfo_lock:
+        with smtplib.SMTP(
+            smtp_server,
+            smtp_port,
+            timeout=10
+        ) as server:
 
-            socket.getaddrinfo = _ipv4_only_getaddrinfo
+            server.ehlo()
 
-            try:
+            server.starttls()
 
-                with smtplib.SMTP(
-                    smtp_server,
-                    smtp_port,
-                    timeout=10
-                ) as server:
+            server.ehlo()
 
-                    server.ehlo()
+            server.login(
+                sender_email,
+                sender_password
+            )
 
-                    server.starttls()
-
-                    server.ehlo()
-
-                    server.login(
-                        sender_email,
-                        sender_password
-                    )
-
-                    server.send_message(message)
-
-            finally:
-
-                socket.getaddrinfo = _original_getaddrinfo
+            server.send_message(message)
 
         print("=" * 60)
         print("QRESERVE OTP EMAIL SENT")

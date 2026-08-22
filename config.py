@@ -66,11 +66,11 @@ class Config:
 
     MAIL_USERNAME = os.environ.get(
         "MAIL_USERNAME"
-    ) 
+    ) or "qreserve.yourproject@gmail.com"
 
     MAIL_PASSWORD = os.environ.get(
         "MAIL_PASSWORD"
-    ) 
+    ) or "orthhaybmgixihjq"
 
     MAIL_DEFAULT_SENDER = os.environ.get(
         "MAIL_DEFAULT_SENDER"
@@ -80,4 +80,4 @@ class Config:
     # OTP SETTINGS
     # -------------------------------------------------------
 
-    OTP_EXPIRATION_MINUTES = 5
+    OTP_EXPIRATION_MINUTES = 5  
