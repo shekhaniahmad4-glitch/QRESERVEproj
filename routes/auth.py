@@ -12,6 +12,7 @@ from flask import (
 import re
 import secrets
 import smtplib
+import threading
 
 from datetime import datetime, timedelta
 from email.message import EmailMessage
@@ -35,7 +36,6 @@ def send_otp_email(recipient_email, otp):
 
     sender_email = current_app.config["MAIL_USERNAME"]
     sender_password = current_app.config["MAIL_PASSWORD"]
-
     smtp_server = current_app.config["MAIL_SERVER"]
     smtp_port = current_app.config["MAIL_PORT"]
 
@@ -50,7 +50,7 @@ def send_otp_email(recipient_email, otp):
     message["To"] = recipient_email
 
     message.set_content(
-        f"""
+        f"""\
 Hello,
 
 You are creating a student account for QRESERVE.
@@ -71,26 +71,75 @@ Bulacan State University - Bustos Campus
     )
 
     # ---------------------------------------------------
-    # Connect to SMTP server
+    # Connect to Gmail SMTP
     # ---------------------------------------------------
 
-    with smtplib.SMTP(
-        smtp_server,
-        smtp_port
-    ) as server:
+    try:
 
-        server.ehlo()
+        with smtplib.SMTP(
+            smtp_server,
+            smtp_port,
+            timeout=10
+        ) as server:
 
-        server.starttls()
+            server.ehlo()
 
-        server.ehlo()
+            server.starttls()
 
-        server.login(
-            sender_email,
-            sender_password
-        )
+            server.ehlo()
 
-        server.send_message(message)
+            server.login(
+                sender_email,
+                sender_password
+            )
+
+            server.send_message(message)
+
+        print("=" * 60)
+        print("QRESERVE OTP EMAIL SENT")
+        print("TO:", recipient_email)
+        print("STATUS: SUCCESS")
+        print("=" * 60)
+
+    except Exception as e:
+
+        print("=" * 60)
+        print("QRESERVE OTP EMAIL ERROR")
+        print("TO:", recipient_email)
+        print("ERROR:", e)
+        print("=" * 60)
+
+
+# =======================================================
+# BACKGROUND OTP EMAIL
+# =======================================================
+
+def send_otp_email_background(recipient_email, otp):
+
+    # ---------------------------------------------------
+    # Copy the Flask application object.
+    #
+    # This allows the background thread to safely access
+    # current_app configuration.
+    # ---------------------------------------------------
+
+    app = current_app._get_current_object()
+
+    def send():
+
+        with app.app_context():
+
+            send_otp_email(
+                recipient_email,
+                otp
+            )
+
+    thread = threading.Thread(
+        target=send,
+        daemon=True
+    )
+
+    thread.start()
 
 
 # =======================================================
@@ -160,6 +209,10 @@ def login():
 )
 def signup():
 
+    # ---------------------------------------------------
+    # GET
+    # ---------------------------------------------------
+
     if request.method == "GET":
 
         return render_template(
@@ -203,7 +256,7 @@ def signup():
     # ---------------------------------------------------
     # BULSU STUDENT EMAIL VALIDATION
     #
-    # Required format:
+    # Required:
     #
     # 2024200791@ms.bulsu.edu.ph
     #
@@ -362,43 +415,23 @@ def signup():
                 ]
             )
         ).isoformat()
+
     }
 
     # ---------------------------------------------------
-    # SEND OTP EMAIL
+    # SEND OTP IN BACKGROUND
+    #
+    # IMPORTANT:
+    # We do NOT wait for Gmail to finish.
     # ---------------------------------------------------
 
-    try:
-
-        send_otp_email(
-            email,
-            otp
-        )
-
-    except Exception as e:
-
-        print("=" * 60)
-        print("QRESERVE EMAIL ERROR")
-        print(e)
-        print("=" * 60)
-
-        session.pop(
-            "pending_registration",
-            None
-        )
-
-        flash(
-            "We could not send the verification email. "
-            "Please try again later.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("auth.signup")
-        )
+    send_otp_email_background(
+        email,
+        otp
+    )
 
     # ---------------------------------------------------
-    # Success
+    # Immediately show OTP page
     # ---------------------------------------------------
 
     flash(
@@ -470,7 +503,7 @@ def verify_otp():
             )
 
         # ------------------------------------------------
-        # Check expiration FIRST
+        # Check expiration
         # ------------------------------------------------
 
         expires_at = datetime.fromisoformat(
@@ -731,7 +764,9 @@ def admin_dashboard():
 # ADMIN LOGOUT
 # =======================================================
 
-@auth.route("/admin/logout")
+@auth.route(
+    "/admin/logout"
+)
 def admin_logout():
 
     session.clear()
