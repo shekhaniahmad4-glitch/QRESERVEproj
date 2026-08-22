@@ -2,245 +2,916 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>QRESERVE | Login</title>
 
     <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
 
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+
+        /* =========================================
+           GENERAL
+        ========================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        body {
+            min-height: 100vh;
+            position: relative;
+            background: #ffffff;
+        }
+
+
+        /* =========================================
+           BACKGROUND
+        ========================================= */
+
+        .background-image {
+            position: fixed;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+
+            background-image: url("{{ url_for('static', filename='images/bulsu.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            filter: blur(3px);
+
+            z-index: -2;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+
+            background: rgba(255, 255, 255, 0.58);
+
+            z-index: -1;
+        }
+
+
+        /* =========================================
+           TOP NAVIGATION
+        ========================================= */
+
+        .custom-navbar {
+            height: 72px;
+
+            background: #a90000;
+
+            border-bottom: 4px solid #e00000;
+
+            padding: 0 28px;
+
+            position: relative;
+            z-index: 10;
+
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+        }
+
+        .navbar-brand {
+            color: white !important;
+            text-decoration: none;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+
+            object-fit: contain;
+
+            flex-shrink: 0;
+        }
+
+        .navbar-brand h6 {
+            font-size: 15px;
+            letter-spacing: 0.2px;
+            line-height: 1.2;
+        }
+
+        .navbar-brand small {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+
+        /* =========================================
+           MAIN LOGIN AREA
+        ========================================= */
+
+        .login-page {
+            min-height: calc(100vh - 72px);
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 35px 20px 45px;
+        }
+
+
+        /* =========================================
+           TITLE
+        ========================================= */
+
+        .login-title {
+            color: #a90000;
+
+            font-size: 32px;
+            font-weight: 800;
+
+            text-align: center;
+
+            margin: 0 0 18px;
+
+            letter-spacing: 0.3px;
+        }
+
+        .login-subtitle {
+            text-align: center;
+
+            color: #555;
+
+            font-size: 14px;
+
+            margin-top: -10px;
+            margin-bottom: 22px;
+        }
+
+
+        /* =========================================
+           LOGIN CARD
+        ========================================= */
+
+        .login-card {
+            width: 100%;
+            max-width: 430px;
+
+            background: rgba(255, 255, 255, 0.96);
+
+            border: none;
+
+            border-radius: 26px;
+
+            box-shadow:
+                0 15px 40px rgba(0, 0, 0, 0.18);
+
+            padding: 28px 28px 25px;
+
+            margin: 0 auto;
+        }
+
+
+        /* =========================================
+           FORM LABELS
+        ========================================= */
+
+        .form-label {
+            font-size: 14px;
+
+            font-weight: 600;
+
+            color: #222;
+
+            margin-bottom: 7px;
+        }
+
+
+        /* =========================================
+           INPUTS
+        ========================================= */
+
+        .form-control {
+            height: 46px;
+
+            border: 1px solid #d8d8d8;
+
+            border-radius: 25px;
+
+            padding: 0 18px;
+
+            font-size: 14px;
+
+            box-shadow: none;
+
+            transition: 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #c90000;
+
+            box-shadow:
+                0 0 0 3px rgba(201, 0, 0, 0.08);
+        }
+
+        .form-control::placeholder {
+            color: #999;
+        }
+
+
+        /* =========================================
+           PASSWORD INPUT
+        ========================================= */
+
+        .password-group {
+            position: relative;
+        }
+
+        .password-group .form-control {
+            padding-right: 52px;
+        }
+
+        .password-toggle {
+            position: absolute;
+
+            right: 4px;
+            top: 4px;
+
+            width: 38px;
+            height: 38px;
+
+            border: none;
+
+            background: transparent;
+
+            color: #777;
+
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            cursor: pointer;
+
+            z-index: 5;
+        }
+
+        .password-toggle:hover {
+            color: #a90000;
+        }
+
+        .password-toggle i {
+            font-size: 17px;
+        }
+
+
+        /* =========================================
+           FORGOT PASSWORD
+        ========================================= */
+
+        .forgot-link {
+            color: #006cff;
+
+            font-size: 13px;
+
+            font-weight: 600;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline !important;
+        }
+
+
+        /* =========================================
+           LOGIN BUTTON
+        ========================================= */
+
+        .login-btn {
+            width: 100%;
+
+            height: 46px;
+
+            border: none;
+
+            border-radius: 25px;
+
+            background: #d00000;
+
+            color: white;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+            box-shadow:
+                0 8px 20px rgba(208, 0, 0, 0.20);
+
+            transition: all 0.2s ease;
+        }
+
+        .login-btn:hover {
+            background: #b80000;
+
+            transform: translateY(-1px);
+
+            color: white;
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+
+        /* =========================================
+           DIVIDER
+        ========================================= */
+
+        .divider {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            margin: 20px 0 16px;
+
+            color: #999;
+
+            font-size: 11px;
+
+            font-weight: 600;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+
+            flex: 1;
+
+            height: 1px;
+
+            background: #ddd;
+        }
+
+
+        /* =========================================
+           SECONDARY BUTTONS
+        ========================================= */
+
+        .guest-btn,
+        .admin-btn {
+            width: 100%;
+
+            height: 46px;
+
+            border-radius: 25px;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            transition: all 0.2s ease;
+        }
+
+        .guest-btn {
+            border: 1px solid #d00000;
+
+            color: #d00000;
+
+            background: white;
+        }
+
+        .guest-btn:hover {
+            background: #fff4f4;
+
+            color: #b80000;
+        }
+
+        .admin-btn {
+            border: 1px solid #a90000;
+
+            background: #a90000;
+
+            color: white;
+        }
+
+        .admin-btn:hover {
+            background: #8f0000;
+
+            color: white;
+
+            transform: translateY(-1px);
+        }
+
+
+        /* =========================================
+           SIGN UP
+        ========================================= */
+
+        .signup-text {
+            color: #777;
+
+            font-size: 13px;
+        }
+
+        .signup-link {
+            color: #006cff;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            margin-left: 4px;
+        }
+
+        .signup-link:hover {
+            text-decoration: underline !important;
+        }
+
+
+        /* =========================================
+           ALERT
+        ========================================= */
+
+        #alertBox {
+            margin-bottom: 12px;
+        }
+
+        #alertBox .alert {
+            border-radius: 12px;
+
+            font-size: 13px;
+        }
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 576px) {
+
+            .custom-navbar {
+                height: 64px;
+
+                padding: 0 16px;
+            }
+
+            .logo {
+                width: 42px;
+                height: 42px;
+            }
+
+            .navbar-brand h6 {
+                font-size: 12px;
+            }
+
+            .navbar-brand small {
+                font-size: 10px;
+            }
+
+            .login-page {
+                min-height: calc(100vh - 64px);
+
+                padding: 25px 14px 35px;
+            }
+
+            .login-title {
+                font-size: 26px;
+
+                margin-bottom: 14px;
+            }
+
+            .login-card {
+                max-width: 100%;
+
+                padding: 24px 20px 22px;
+
+                border-radius: 22px;
+            }
+
+        }
+
+
+        /* =========================================
+           VERY SMALL PHONES
+        ========================================= */
+
+        @media (max-width: 380px) {
+
+            .custom-navbar {
+                padding: 0 12px;
+            }
+
+            .logo {
+                width: 38px;
+                height: 38px;
+            }
+
+            .navbar-brand h6 {
+                font-size: 11px;
+            }
+
+            .navbar-brand small {
+                font-size: 9px;
+            }
+
+            .login-page {
+                padding: 20px 10px 30px;
+            }
+
+            .login-title {
+                font-size: 23px;
+            }
+
+            .login-card {
+                padding: 21px 17px 20px;
+            }
+
+        }
+/* =========================================================
+   FORCE UNIVERSITY HEADER SIZE
+   ========================================================= */
+
+.custom-navbar {
+    height: 82px !important;
+    padding: 0 32px !important;
+}
+
+.custom-navbar .logo {
+    width: 62px !important;
+    height: 62px !important;
+    object-fit: contain !important;
+    flex-shrink: 0 !important;
+}
+
+.custom-navbar .navbar-brand h6 {
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    margin: 0 !important;
+}
+
+.custom-navbar .navbar-brand small {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+}
+    </style>
+
 </head>
 
-<body><div class="col-xl-4 col-lg-5 col-md-6 col-sm-8 col-11"></div>
 
-<!-- =======================
-     Background Overlay
-======================== -->
-<div class="background-image"></div>
-<div class="overlay"></div>
+<body>
 
-<!-- =======================
-     Navigation Bar
-======================== -->
-<nav class="navbar navbar-dark navbar-expand-lg custom-navbar">
+    <!-- =========================================
+         BACKGROUND
+    ========================================= -->
 
-    <div class="container-fluid">
+    <div class="background-image"></div>
+    <div class="overlay"></div>
 
-        <a class="navbar-brand d-flex align-items-center" href="#">
 
-            <img src="{{ url_for('static', filename='images/logo.png') }}"
-                 class="logo"
-                 alt="BulSU Logo">
+    <!-- =========================================
+         NAVIGATION
+    ========================================= -->
 
-            <div class="ms-3">
+    <nav class="navbar custom-navbar">
 
-                <h6 class="mb-0 fw-bold">
-                    BULACAN STATE UNIVERSITY
-                </h6>
+        <div class="container-fluid p-0">
 
-                <small>BUSTOS CAMPUS</small>
+            <a
+                class="navbar-brand d-flex align-items-center"
+                href="{{ url_for('auth.login') }}"
+            >
 
-            </div>
+                <img
+                    src="{{ url_for('static', filename='images/logo.png') }}"
+                    class="logo"
+                    alt="Bulacan State University Logo"
+                >
 
-        </a>
+                <div class="ms-3">
 
-    </div>
+                    <h6 class="mb-0 fw-bold">
+                        BULACAN STATE UNIVERSITY
+                    </h6>
 
-</nav>
+                    <small>
+                        BUSTOS CAMPUS
+                    </small>
 
-<!-- =======================
-     Main Section
-======================== -->
+                </div>
 
-<div class="container-fluid h-100">
+            </a>
 
-    <div class="row justify-content-center align-items-center login-page h-100">
+        </div>
 
-        <div class="col-12">
+    </nav>
 
-            <!-- Title -->
 
-            <h1 class="text-center login-title mb-4">
+    <!-- =========================================
+         MAIN
+    ========================================= -->
+
+    <main class="login-page">
+
+        <div style="width: 100%; max-width: 430px;">
+
+            <!-- TITLE -->
+
+            <h1 class="login-title">
                 QRESERVE LOGIN
             </h1>
 
-            <!-- Login Card -->
+            <div class="login-subtitle">
+                Log in to your account
+            </div>
 
-            <div class="card login-card">
 
-                <div class="card-body px-4 py-3">
+            <!-- =====================================
+                 LOGIN CARD
+            ====================================== -->
 
-                    <!-- Bootstrap Alert -->
+            <div class="login-card">
 
-                    <div id="alertBox"></div>
 
-                    <!-- Login Form -->
+                <!-- FLASH MESSAGES -->
 
-                    <form id="loginForm">
+                {% with messages = get_flashed_messages(with_categories=true) %}
 
-                        <!-- Email -->
+                    {% if messages %}
 
-                        <div class="mb-3">
+                        {% for category, message in messages %}
 
-                            <label class="form-label">
+                            <div
+                                class="alert alert-{{ category }} alert-dismissible fade show"
+                                role="alert"
+                            >
 
-                                Email
-
-                            </label>
-
-                            <input
-                                    type="email"
-                                    class="form-control rounded-pill"
-                                    id="email"
-                                    placeholder="Enter your email"
-                                    required>
-
-                        </div>
-
-                        <!-- Password -->
-
-                        <div class="mb-2">
-
-                            <label class="form-label">
-
-                                Password
-
-                            </label>
-
-                            <div class="input-group">
-
-                                <input
-                                        type="password"
-                                        class="form-control rounded-start-pill"
-                                        id="password"
-                                        placeholder="Enter your password"
-                                        required>
+                                {{ message }}
 
                                 <button
-                                        class="btn btn-light rounded-end-pill"
-                                        type="button"
-                                        id="togglePassword">
-
-                                    <i class="bi bi-eye"></i>
-
-                                </button>
+                                    type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="alert"
+                                ></button>
 
                             </div>
 
-                        </div>
+                        {% endfor %}
 
-                        <!-- Forgot Password -->
+                    {% endif %}
 
-                        <div class="text-end mb-3">
+                {% endwith %}
 
-                            <a href="#"
-                               class="forgot-link text-decoration-none">
 
-                                Forgot Password?
+                <!-- ALERT BOX -->
 
-                            </a>
+                <div id="alertBox"></div>
 
-                        </div>
 
-                        <!-- Login Button -->
+                <!-- LOGIN FORM -->
 
-                        <div class="d-grid mb-3">
+                <form
+                    id="loginForm"
+                    method="POST"
+                    action="{{ url_for('auth.login') }}"
+                >
+
+                    <!-- EMAIL -->
+
+                    <div class="mb-3">
+
+                        <label
+                            for="email"
+                            class="form-label"
+                        >
+                            Email
+                        </label>
+
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="mb-2">
+
+                        <label
+                            for="password"
+                            class="form-label"
+                        >
+                            Password
+                        </label>
+
+                        <div class="password-group">
+
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="password"
+                                name="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                            >
 
                             <button
-                                    class="btn btn-success rounded-pill"
-                                    id="loginBtn">
+                                type="button"
+                                class="password-toggle"
+                                id="togglePassword"
+                                aria-label="Show password"
+                            >
 
-                                <span
-                                        class="spinner-border spinner-border-sm me-2 d-none"
-                                        id="spinner">
-
-                                </span>
-
-                                LOGIN
+                                <i class="bi bi-eye"></i>
 
                             </button>
 
                         </div>
 
-<!-- OR Divider -->
+                    </div>
 
-<div class="divider">
-    <span>OR</span>
-</div>
 
-<!-- Guest Button -->
+                    <!-- FORGOT PASSWORD -->
 
-<div class="d-grid mb-3">
+                    <div class="text-end mb-3">
 
-<a href="/guest"
-   class="btn btn-outline-danger rounded-pill">
+                        <a
+                            href="#"
+                            class="forgot-link text-decoration-none"
+                        >
+                            Forgot Password?
+                        </a>
 
-    <i class="bi bi-person"></i>
+                    </div>
 
-    <span>CONTINUE AS GUEST</span>
 
-</a>
-</div>
+                    <!-- LOGIN BUTTON -->
 
-<!-- Admin Button -->
+                    <button
+                        type="submit"
+                        class="login-btn"
+                        id="loginBtn"
+                    >
 
-<div class="d-grid mb-4">
+                        LOGIN
 
-   <a href="/admin/login"
-   class="btn admin-btn rounded-pill">
+                    </button>
 
-    <i class="bi bi-shield-lock"></i>
 
-    <span>ADMINISTRATOR LOGIN</span>
+                    <!-- DIVIDER -->
 
-</a>
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
 
-</div>
 
-<!-- Sign Up -->
+                    <!-- GUEST -->
 
-<div class="text-center">
+                    <div class="d-grid mb-3">
 
-    <span class="signup-text">
+                        <a
+                            href="{{ url_for('auth.guest') }}"
+                            class="btn guest-btn rounded-pill"
+                        >
 
-        Don't have an account?
+                            <i class="bi bi-person me-1"></i>
 
-    </span>
+                            CONTINUE AS GUEST
 
-    <a href="/signup"
-       class="signup-link text-decoration-none">
+                        </a>
 
-        Sign Up
+                    </div>
 
-    </a>
 
-</div>
-                    </form>
+                    <!-- ADMIN -->
 
-                </div>
+                    <div class="d-grid mb-4">
+
+                        <a
+                            href="{{ url_for('auth.admin_login') }}"
+                            class="btn admin-btn rounded-pill"
+                        >
+
+                            <i class="bi bi-shield-lock me-1"></i>
+
+                            ADMINISTRATOR LOGIN
+
+                        </a>
+
+                    </div>
+
+
+                    <!-- SIGN UP -->
+
+                    <div class="text-center">
+
+                        <span class="signup-text">
+                            Don't have an account?
+                        </span>
+
+                        <a
+                            href="{{ url_for('auth.signup') }}"
+                            class="signup-link text-decoration-none"
+                        >
+                            Sign Up
+                        </a>
+
+                    </div>
+
+                </form>
 
             </div>
 
         </div>
 
-    </div>
+    </main>
 
-</div>
 
-<!-- Bootstrap -->
+    <!-- =========================================
+         BOOTSTRAP
+    ========================================= -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+    </script>
 
-<!-- Custom JS -->
 
-<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+    <!-- =========================================
+         LOGIN JAVASCRIPT
+    ========================================= -->
+
+    <script>
+
+        const password =
+            document.getElementById("password");
+
+        const togglePassword =
+            document.getElementById("togglePassword");
+
+
+        togglePassword.addEventListener(
+            "click",
+            function () {
+
+                if (password.type === "password") {
+
+                    password.type = "text";
+
+                    this.innerHTML =
+                        '<i class="bi bi-eye-slash"></i>';
+
+                    this.setAttribute(
+                        "aria-label",
+                        "Hide password"
+                    );
+
+                } else {
+
+                    password.type = "password";
+
+                    this.innerHTML =
+                        '<i class="bi bi-eye"></i>';
+
+                    this.setAttribute(
+                        "aria-label",
+                        "Show password"
+                    );
+
+                }
+
+            }
+        );
+
+    </script>
 
 </body>
+
 </html>

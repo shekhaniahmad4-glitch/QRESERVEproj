@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QRESERVE | Verify Account</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+
+    <style>
+
+        /* =========================================
+           GENERAL
+        ========================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+
+        /* =========================================
+           BACKGROUND
+        ========================================= */
+
+        .background-image {
+
+            position: fixed;
+
+            top: -35px;
+            left: -35px;
+            right: -35px;
+            bottom: -35px;
+
+            background-image:
+                url("{{ url_for('static', filename='images/bulsu.jpg') }}");
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            filter: blur(5px);
+
+            transform: scale(1.03);
+
+            z-index: -2;
+        }
+
+
+        .overlay {
+
+            position: fixed;
+
+            inset: 0;
+
+            background: rgba(255, 255, 255, 0.48);
+
+            z-index: -1;
+        }
+
+
+        /* =========================================
+           NAVBAR
+        ========================================= */
+
+        .custom-navbar {
+
+            width: 100%;
+
+            height: 72px;
+
+            background: #a90000;
+
+            border-bottom: 4px solid #e00000;
+
+            padding: 0 28px;
+
+            display: flex;
+
+            align-items: center;
+
+            position: relative;
+
+            z-index: 10;
+
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.18);
+        }
+
+
+        .navbar-brand {
+
+            color: white !important;
+
+            text-decoration: none;
+
+            display: flex;
+
+            align-items: center;
+        }
+
+
+        .logo {
+
+            width: 48px;
+            height: 48px;
+
+            object-fit: contain;
+
+            flex-shrink: 0;
+        }
+
+
+        .brand-text {
+
+            margin-left: 14px;
+
+            line-height: 1.2;
+        }
+
+
+        .university-name {
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.2px;
+
+            margin: 0;
+        }
+
+
+        .campus-name {
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            letter-spacing: 0.4px;
+
+            margin-top: 5px;
+        }
+
+
+        /* =========================================
+           VERIFY PAGE
+        ========================================= */
+
+        .verify-page {
+
+            min-height: calc(100vh - 72px);
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 35px 20px 45px;
+
+            position: relative;
+
+            z-index: 2;
+        }
+
+
+        .verify-container {
+
+            width: 100%;
+
+            max-width: 430px;
+
+            text-align: center;
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .verify-title {
+
+            margin: 0;
+
+            color: #a90000;
+
+            font-size: 32px;
+
+            font-weight: 800;
+
+            letter-spacing: 0.4px;
+
+            line-height: 1.15;
+        }
+
+
+        .verify-subtitle {
+
+            margin-top: 7px;
+
+            margin-bottom: 20px;
+
+            color: #555;
+
+            font-size: 14px;
+
+            font-weight: 500;
+        }
+
+
+        /* =========================================
+           VERIFY CARD
+        ========================================= */
+
+        .verify-card {
+
+            width: 100%;
+
+            background: rgba(255, 255, 255, 0.97);
+
+            border-radius: 26px;
+
+            padding: 30px 30px 27px;
+
+            box-shadow:
+                0 15px 40px rgba(0, 0, 0, 0.18);
+
+            border: none;
+        }
+
+
+        /* =========================================
+           ICON
+        ========================================= */
+
+        .verify-icon {
+
+            width: 68px;
+
+            height: 68px;
+
+            margin: 0 auto 18px;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #fff3f3;
+
+            color: #c90000;
+
+            font-size: 30px;
+
+            border: 1px solid #ffd4d4;
+        }
+
+
+        /* =========================================
+           CARD TEXT
+        ========================================= */
+
+        .verify-heading {
+
+            margin: 0 0 8px;
+
+            color: #222;
+
+            font-size: 20px;
+
+            font-weight: 700;
+        }
+
+
+        .verify-description {
+
+            margin: 0 auto 18px;
+
+            color: #777;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+
+            max-width: 340px;
+        }
+
+
+        /* =========================================
+           EMAIL DISPLAY
+        ========================================= */
+
+        .email-box {
+
+            background: #fafafa;
+
+            border: 1px solid #e0e0e0;
+
+            border-radius: 14px;
+
+            padding: 12px 14px;
+
+            margin-bottom: 20px;
+        }
+
+
+        .email-label {
+
+            color: #888;
+
+            font-size: 11px;
+
+            margin-bottom: 3px;
+        }
+
+
+        .email-address {
+
+            color: #222;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            word-break: break-word;
+        }
+
+
+        /* =========================================
+           OTP LABEL
+        ========================================= */
+
+        .otp-label {
+
+            display: block;
+
+            text-align: left;
+
+            margin-bottom: 7px;
+
+            color: #222;
+
+            font-size: 13px;
+
+            font-weight: 600;
+        }
+
+
+        /* =========================================
+           OTP INPUT
+        ========================================= */
+
+        .otp-input {
+
+            width: 100%;
+
+            height: 52px;
+
+            border: 1px solid #d8d8d8;
+
+            border-radius: 25px;
+
+            background: white;
+
+            text-align: center;
+
+            letter-spacing: 8px;
+
+            font-family: 'Poppins', sans-serif;
+
+            font-size: 20px;
+
+            font-weight: 600;
+
+            color: #222;
+
+            outline: none;
+
+            transition: 0.2s ease;
+
+            padding-left: 8px;
+        }
+
+
+        .otp-input::placeholder {
+
+            color: #aaa;
+
+            letter-spacing: 1px;
+
+            font-size: 13px;
+
+            font-weight: 400;
+        }
+
+
+        .otp-input:focus {
+
+            border-color: #c90000;
+
+            box-shadow:
+                0 0 0 3px rgba(201, 0, 0, 0.08);
+        }
+
+
+        /* =========================================
+           VERIFY BUTTON
+        ========================================= */
+
+        .verify-button {
+
+            width: 100%;
+
+            height: 46px;
+
+            margin-top: 18px;
+
+            border: none;
+
+            border-radius: 25px;
+
+            background: #d00000;
+
+            color: white;
+
+            font-family: 'Poppins', sans-serif;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 8px 20px rgba(208, 0, 0, 0.20);
+
+            transition: all 0.2s ease;
+        }
+
+
+        .verify-button:hover {
+
+            background: #b80000;
+
+            transform: translateY(-1px);
+
+            color: white;
+
+            box-shadow:
+                0 10px 23px rgba(208, 0, 0, 0.25);
+        }
+
+
+        .verify-button:active {
+
+            transform: translateY(0);
+        }
+
+
+        /* =========================================
+           BACK TO SIGN UP
+        ========================================= */
+
+        .back-signup {
+
+            margin-top: 20px;
+
+            color: #777;
+
+            font-size: 12px;
+        }
+
+
+        .back-signup a {
+
+            color: #006cff;
+
+            font-weight: 600;
+
+            text-decoration: none;
+
+            margin-left: 4px;
+        }
+
+
+        .back-signup a:hover {
+
+            text-decoration: underline;
+        }
+
+
+        /* =========================================
+           FLASH MESSAGE
+        ========================================= */
+
+        #alertBox {
+
+            width: 100%;
+
+            margin-bottom: 15px;
+        }
+
+
+        #alertBox .alert {
+
+            border-radius: 12px;
+
+            font-size: 12px;
+
+            text-align: left;
+
+            margin-bottom: 0;
+        }
+
+
+        /* =========================================
+           TABLET
+        ========================================= */
+
+        @media (max-width: 768px) {
+
+            .custom-navbar {
+
+                height: 65px;
+
+                padding: 0 20px;
+            }
+
+
+            .logo {
+
+                width: 42px;
+                height: 42px;
+            }
+
+
+            .university-name {
+
+                font-size: 13px;
+            }
+
+
+            .campus-name {
+
+                font-size: 11px;
+            }
+
+
+            .verify-page {
+
+                min-height: calc(100vh - 65px);
+
+                padding: 30px 16px 35px;
+            }
+
+
+            .verify-title {
+
+                font-size: 29px;
+            }
+
+
+            .verify-card {
+
+                max-width: 430px;
+
+                padding: 27px 25px 24px;
+            }
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================= */
+
+        @media (max-width: 576px) {
+
+            .custom-navbar {
+
+                height: 62px;
+
+                padding: 0 15px;
+
+                border-bottom-width: 4px;
+            }
+
+
+            .logo {
+
+                width: 38px;
+                height: 38px;
+            }
+
+
+            .brand-text {
+
+                margin-left: 9px;
+            }
+
+
+            .university-name {
+
+                font-size: 11px;
+            }
+
+
+            .campus-name {
+
+                font-size: 10px;
+            }
+
+
+            .verify-page {
+
+                min-height: calc(100vh - 62px);
+
+                padding: 25px 12px 30px;
+            }
+
+
+            .verify-title {
+
+                font-size: 25px;
+            }
+
+
+            .verify-subtitle {
+
+                font-size: 12px;
+
+                margin-bottom: 17px;
+            }
+
+
+            .verify-card {
+
+                border-radius: 21px;
+
+                padding: 25px 20px 22px;
+            }
+
+
+            .verify-icon {
+
+                width: 60px;
+
+                height: 60px;
+
+                font-size: 26px;
+
+                margin-bottom: 15px;
+            }
+
+
+            .verify-heading {
+
+                font-size: 18px;
+            }
+
+
+            .verify-description {
+
+                font-size: 12px;
+            }
+
+
+            .email-address {
+
+                font-size: 12px;
+            }
+
+
+            .otp-input {
+
+                height: 50px;
+            }
+        }
+
+
+        /* =========================================
+           VERY SMALL PHONES
+        ========================================= */
+
+        @media (max-width: 380px) {
+
+            .custom-navbar {
+
+                height: 60px;
+
+                padding: 0 10px;
+            }
+
+
+            .logo {
+
+                width: 36px;
+                height: 36px;
+            }
+
+
+            .university-name {
+
+                font-size: 10px;
+            }
+
+
+            .campus-name {
+
+                font-size: 9px;
+            }
+
+
+            .verify-page {
+
+                min-height: calc(100vh - 60px);
+
+                padding: 20px 10px 25px;
+            }
+
+
+            .verify-title {
+
+                font-size: 23px;
+            }
+
+
+            .verify-card {
+
+                padding: 22px 17px 20px;
+            }
+
+
+            .otp-input {
+
+                letter-spacing: 6px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         BACKGROUND
+    ========================================= -->
+
+    <div class="background-image"></div>
+
+    <div class="overlay"></div>
+
+
+    <!-- =========================================
+         NAVIGATION
+    ========================================= -->
+
+    <nav class="custom-navbar">
+
+        <a
+            class="navbar-brand"
+            href="{{ url_for('auth.login') }}"
+        >
+
+            <img
+                src="{{ url_for('static', filename='images/logo.png') }}"
+                class="logo"
+                alt="Bulacan State University Logo"
+            >
+
+            <div class="brand-text">
+
+                <div class="university-name">
+                    BULACAN STATE UNIVERSITY
+                </div>
+
+                <div class="campus-name">
+                    BUSTOS CAMPUS
+                </div>
+
+            </div>
+
+        </a>
+
+    </nav>
+
+
+    <!-- =========================================
+         VERIFY PAGE
+    ========================================= -->
+
+    <main class="verify-page">
+
+        <div class="verify-container">
+
+
+            <!-- HEADER -->
+
+            <h1 class="verify-title">
+                VERIFY ACCOUNT
+            </h1>
+
+            <div class="verify-subtitle">
+                Verify your BuSU student email
+            </div>
+
+
+            <!-- =====================================
+                 VERIFY CARD
+            ====================================== -->
+
+            <div class="verify-card">
+
+
+                <!-- ICON -->
+
+                <div class="verify-icon">
+
+                    <i class="bi bi-envelope-check"></i>
+
+                </div>
+
+
+                <!-- HEADING -->
+
+                <h2 class="verify-heading">
+                    Check your email
+                </h2>
+
+
+                <p class="verify-description">
+
+                    We've sent a verification code to your
+                    BuSU student email address.
+
+                </p>
+
+
+                <!-- EMAIL -->
+
+                <div class="email-box">
+
+                    <div class="email-label">
+                        VERIFYING
+                    </div>
+
+                    <div class="email-address">
+                        {{ email }}
+                    </div>
+
+                </div>
+
+
+                <!-- ALERT -->
+
+                <div id="alertBox">
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+
+                        {% if messages %}
+
+                            {% for category, message in messages %}
+
+                                <div
+                                    class="alert alert-{{ category }}"
+                                    role="alert"
+                                >
+
+                                    {{ message }}
+
+                                </div>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                    {% endwith %}
+
+                </div>
+
+
+                <!-- OTP FORM -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for('auth.verify_otp') }}"
+                >
+
+
+                    <label
+                        for="otp"
+                        class="otp-label"
+                    >
+                        Enter verification code
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="otp"
+                        name="otp"
+                        class="otp-input"
+                        placeholder="6-digit OTP"
+                        maxlength="6"
+                        minlength="6"
+                        inputmode="numeric"
+                        pattern="[0-9]{6}"
+                        autocomplete="one-time-code"
+                        required
+                    >
+
+
+                    <button
+                        type="submit"
+                        class="verify-button"
+                    >
+
+                        <i class="bi bi-shield-check me-1"></i>
+
+                        VERIFY OTP
+
+                    </button>
+
+                </form>
+
+
+                <!-- BACK -->
+
+                <div class="back-signup">
+
+                    Didn't receive the code?
+
+                    <a
+                        href="{{ url_for('auth.signup') }}"
+                    >
+                        Back to Sign Up
+                    </a>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================================
+         BOOTSTRAP
+    ========================================= -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+
+    <!-- =========================================
+         OTP INPUT
+    ========================================= -->
+
+    <script>
+
+        const otpInput =
+            document.getElementById("otp");
+
+
+        otpInput.addEventListener(
+            "input",
+            function () {
+
+                this.value =
+                    this.value.replace(/\D/g, "");
+
+            }
+        );
+
+    </script>
+
+
+</body>
+
+</html>
