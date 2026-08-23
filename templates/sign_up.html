@@ -484,32 +484,51 @@
             }
         }
 /* =========================================================
-   FORCE UNIVERSITY HEADER SIZE
+   FORCE UNIVERSITY HEADER SIZE (large screens only)
+   NOTE: scoped to min-width so it no longer overrides the
+   mobile breakpoints above on small phones/tablets.
    ========================================================= */
 
-.custom-navbar {
-    height: 82px !important;
-    padding: 0 32px !important;
+@media (min-width: 577px) {
+
+    .custom-navbar {
+        height: 82px !important;
+        padding: 0 32px !important;
+    }
+
+    .custom-navbar .logo {
+        width: 62px !important;
+        height: 62px !important;
+        object-fit: contain !important;
+        flex-shrink: 0 !important;
+    }
+
+    .custom-navbar .navbar-brand h6 {
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        line-height: 1.15 !important;
+        margin: 0 !important;
+    }
+
+    .custom-navbar .navbar-brand small {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+    }
 }
 
-.custom-navbar .logo {
-    width: 62px !important;
-    height: 62px !important;
-    object-fit: contain !important;
-    flex-shrink: 0 !important;
+.navbar-brand {
+    min-width: 0;
 }
 
-.custom-navbar .navbar-brand h6 {
-    font-size: 17px !important;
-    font-weight: 700 !important;
-    line-height: 1.15 !important;
-    margin: 0 !important;
+.navbar-brand > div {
+    min-width: 0;
 }
 
-.custom-navbar .navbar-brand small {
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.5px !important;
+.navbar-brand h6,
+.navbar-brand small {
+    white-space: normal;
+    overflow-wrap: break-word;
 }
     </style>
 
