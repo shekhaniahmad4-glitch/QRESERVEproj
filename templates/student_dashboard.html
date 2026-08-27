@@ -1,56 +1,239 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>QRESERVE | Student Dashboard</title>
 
+    <!-- Bootstrap -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
         rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+
+    <style>
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            width: 100%; height: 100%;
+            margin: 0; padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: white; color: #222; overflow: hidden;
+        }
+
+        .dashboard { display: flex; width: 100%; height: 100vh; min-height: 100vh; }
+
+        .sidebar {
+            width: 250px; height: 100vh; flex-shrink: 0;
+            background: linear-gradient(to bottom, #a91616, #ed2424);
+            color: white;
+        }
+
+        .sidebar-header {
+            height: 170px; background: #8f1717;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+        }
+
+        .sidebar-logo { width: 65px; height: 65px; object-fit: contain; margin-bottom: 8px; }
+        .university-name { font-size: 12px; font-weight: 700; line-height: 1.2; }
+        .campus-name { font-size: 11px; font-weight: 600; }
+
+        .sidebar-menu { padding-top: 10px; }
+
+        .sidebar-link {
+            display: flex; align-items: center; width: 100%;
+            padding: 13px 20px; color: white; text-decoration: none;
+            font-size: 13px; font-weight: 500; transition: 0.2s;
+        }
+
+        .sidebar-link i { width: 25px; font-size: 17px; }
+        .sidebar-link:hover { background: rgba(255,255,255,0.15); color: white; }
+        .sidebar-link.active { background: rgba(255,255,255,0.18); }
+        .logout { margin-top: 35px; }
+
+        .main-content {
+            flex: 1; width: calc(100% - 250px); min-width: 0;
+            height: 100vh; background: white; position: relative;
+        }
+
+        .topbar {
+            width: 100%; height: 70px; display: flex; align-items: center;
+            padding: 0 25px; background: white; border-bottom: 1px solid #ddd;
+        }
+
+        .menu-button {
+            border: none; background: transparent; font-size: 22px;
+            margin-right: 12px; color: #555; cursor: pointer;
+        }
+
+        .page-title { color: #b01818; font-size: 17px; font-weight: 600; }
+
+        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 22px; }
+        .notification { font-size: 20px; color: #333; }
+        .profile { display: flex; align-items: center; gap: 8px; }
+        .profile-picture { width: 35px; height: 35px; border-radius: 50%; background: #999; }
+        .profile-info { line-height: 1.1; }
+        .profile-name { font-size: 11px; font-weight: 700; }
+        .profile-type { font-size: 10px; color: #555; }
+
+        .development-area {
+            width: 100%; height: calc(100vh - 70px);
+            background: white; display: flex; justify-content: center; align-items: center;
+        }
+
+        .development-box {
+            width: 300px; padding: 25px 30px; background: white;
+            border: 1px solid #ddd; border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center;
+        }
+
+        .development-icon { font-size: 30px; color: #b01818; margin-bottom: 10px; }
+        .development-box h2 { margin: 0 0 8px 0; font-size: 18px; font-weight: 700; color: #333; }
+        .development-box p { margin: 0; font-size: 12px; line-height: 1.5; color: #777; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 190px; }
+            .main-content { width: calc(100% - 190px); }
+            .sidebar-link { font-size: 10px; padding: 10px 12px; }
+            .topbar { padding: 0 15px; }
+            .page-title { font-size: 14px; }
+            .development-box { width: 280px; }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar { width: 70px; }
+            .main-content { width: calc(100% - 70px); }
+            .sidebar-header { height: 110px; }
+            .sidebar-logo { width: 45px; height: 45px; }
+            .university-name, .campus-name, .sidebar-link span { display: none; }
+            .sidebar-link { justify-content: center; padding: 14px 0; }
+            .sidebar-link i { width: auto; }
+            .topbar { padding: 0 12px; }
+            .menu-button { font-size: 20px; margin-right: 8px; }
+            .page-title { font-size: 12px; }
+            .topbar-right { gap: 10px; }
+            .topbar-right .profile-info { display: none; }
+            .profile-picture { width: 32px; height: 32px; }
+            .development-box { width: 230px; padding: 20px; }
+            .development-box h2 { font-size: 15px; }
+            .development-box p { font-size: 10px; }
+            .development-icon { font-size: 25px; }
+        }
+
+        @media (max-width: 380px) {
+            .sidebar { width: 60px; }
+            .main-content { width: calc(100% - 60px); }
+            .sidebar-logo { width: 40px; height: 40px; }
+            .development-box { width: 210px; padding: 18px; }
+            .page-title { font-size: 10px; }
+        }
+
+    </style>
 
 </head>
 
 
 <body>
 
-    <div class="container py-5">
+<div class="dashboard">
 
-        <div class="text-center">
+    <aside class="sidebar">
 
-            <h1>
-                Welcome to QRESERVE
-            </h1>
-
-
-            <p class="mt-3">
-
-                Logged in as:
-
-                <strong>
-                    {{ session["student_email"] }}
-                </strong>
-
-            </p>
-
-
-            <a
-                href="{{ url_for('auth.logout') }}"
-                class="btn btn-danger mt-3">
-
-                Logout
-
-            </a>
-
+        <div class="sidebar-header">
+            <img
+                src="{{ url_for('static', filename='images/logo.png') }}"
+                class="sidebar-logo"
+                alt="Bulacan State University Logo">
+            <div class="university-name">BULACAN STATE<br>UNIVERSITY</div>
+            <div class="campus-name">BUSTOS CAMPUS</div>
         </div>
 
-    </div>
+        <nav class="sidebar-menu">
+
+            <a href="#" class="sidebar-link active">
+                <i class="bi bi-house"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="#" class="sidebar-link">
+                <i class="bi bi-ticket-perforated"></i>
+                <span>My Queue</span>
+            </a>
+
+            <a href="#" class="sidebar-link">
+                <i class="bi bi-clock-history"></i>
+                <span>History</span>
+            </a>
+
+            <a href="{{ url_for('auth.logout') }}" class="sidebar-link logout">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+            </a>
+
+        </nav>
+
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <button class="menu-button">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <div class="page-title">QRESERVE REQUEST</div>
+
+            <div class="topbar-right">
+
+                <i class="bi bi-bell notification"></i>
+
+                <div class="profile">
+                    <div class="profile-picture"></div>
+                    <div class="profile-info">
+                        <div class="profile-name">{{ session.get("student_email", "Student") }}</div>
+                        <div class="profile-type">Student</div>
+                    </div>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+
+            </div>
+
+        </header>
+
+        <section class="development-area">
+            <div class="development-box">
+                <div class="development-icon">
+                    <i class="bi bi-tools"></i>
+                </div>
+                <h2>UNDER DEVELOPMENT</h2>
+                <p>The Student Dashboard is currently under development.</p>
+            </div>
+        </section>
+
+    </main>
+
+</div>
 
 </body>
 

@@ -24,15 +24,30 @@ from werkzeug.security import (
 
 from database import db, Student
 
+from extensions import limiter
+
 
 auth = Blueprint("auth", __name__)
 
 
 # =======================================================
-# SEND OTP EMAIL
+# BULSU STUDENT EMAIL PATTERN
+#
+# Required:
+#
+# 2024200791@ms.bulsu.edu.ph
+#
+# Exactly 10 digits before @ms.bulsu.edu.ph
 # =======================================================
 
-def send_otp_email(recipient_email, otp):
+BULSU_EMAIL_PATTERN = r"^\d{10}@ms\.bulsu\.edu\.ph$"
+
+
+# =======================================================
+# LOW-LEVEL EMAIL SENDER
+# =======================================================
+
+def _send_email(recipient_email, subject, body):
 
     sender_email = current_app.config["MAIL_USERNAME"]
     sender_password = current_app.config["MAIL_PASSWORD"]
@@ -45,30 +60,11 @@ def send_otp_email(recipient_email, otp):
 
     message = EmailMessage()
 
-    message["Subject"] = "QRESERVE - Student Account Verification"
+    message["Subject"] = subject
     message["From"] = sender_email
     message["To"] = recipient_email
 
-    message.set_content(
-        f"""\
-Hello,
-
-You are creating a student account for QRESERVE.
-
-Your verification code is:
-
-{otp}
-
-This OTP will expire in 5 minutes.
-
-If you did not request this account, you can safely ignore this email.
-
---------------------------------------------------
-QRESERVE
-Bulacan State University - Bustos Campus
---------------------------------------------------
-"""
-    )
+    message.set_content(body)
 
     # ---------------------------------------------------
     # Connect to Gmail SMTP
@@ -111,10 +107,70 @@ Bulacan State University - Bustos Campus
 
 
 # =======================================================
-# BACKGROUND OTP EMAIL
+# SEND OTP EMAIL (SIGN UP)
 # =======================================================
 
-def send_otp_email_background(recipient_email, otp):
+def send_otp_email(recipient_email, otp):
+
+    _send_email(
+        recipient_email,
+        "QRESERVE - Student Account Verification",
+        f"""\
+Hello,
+
+You are creating a student account for QRESERVE.
+
+Your verification code is:
+
+{otp}
+
+This OTP will expire in 5 minutes.
+
+If you did not request this account, you can safely ignore this email.
+
+--------------------------------------------------
+QRESERVE
+Bulacan State University - Bustos Campus
+--------------------------------------------------
+"""
+    )
+
+
+# =======================================================
+# SEND OTP EMAIL (PASSWORD RECOVERY)
+# =======================================================
+
+def send_password_reset_otp_email(recipient_email, otp):
+
+    _send_email(
+        recipient_email,
+        "QRESERVE - Account Recovery Verification",
+        f"""\
+Hello,
+
+You requested to recover your student account for QRESERVE.
+
+Your verification code is:
+
+{otp}
+
+This OTP will expire in 5 minutes.
+
+If you did not request an account recovery, you can safely ignore this email.
+
+--------------------------------------------------
+QRESERVE
+Bulacan State University - Bustos Campus
+--------------------------------------------------
+"""
+    )
+
+
+# =======================================================
+# BACKGROUND EMAIL SENDER
+# =======================================================
+
+def _send_in_background(target_function, recipient_email, otp):
 
     # ---------------------------------------------------
     # Copy the Flask application object.
@@ -129,7 +185,7 @@ def send_otp_email_background(recipient_email, otp):
 
         with app.app_context():
 
-            send_otp_email(
+            target_function(
                 recipient_email,
                 otp
             )
@@ -142,12 +198,56 @@ def send_otp_email_background(recipient_email, otp):
     thread.start()
 
 
+def send_otp_email_background(recipient_email, otp):
+
+    _send_in_background(
+        send_otp_email,
+        recipient_email,
+        otp
+    )
+
+
+def send_password_reset_otp_email_background(recipient_email, otp):
+
+    _send_in_background(
+        send_password_reset_otp_email,
+        recipient_email,
+        otp
+    )
+
+
+# =======================================================
+# PASSWORD REQUIREMENTS
+# =======================================================
+
+def password_requirement_error(password):
+
+    if len(password) < 8:
+
+        return "Password must be at least 8 characters long."
+
+    if not re.search(r"[A-Z]", password):
+
+        return "Password must contain at least one capital letter."
+
+    if not re.search(r"[0-9]", password):
+
+        return "Password must contain at least one number."
+
+    if not re.search(r"[^A-Za-z0-9]", password):
+
+        return "Password must contain at least one special character."
+
+    return None
+
+
 # =======================================================
 # STUDENT LOGIN
 # =======================================================
 
 @auth.route("/", methods=["GET", "POST"])
 @auth.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
 def login():
 
     if request.method == "POST":
@@ -207,6 +307,7 @@ def login():
     "/signup",
     methods=["GET", "POST"]
 )
+@limiter.limit("5 per minute")
 def signup():
 
     # ---------------------------------------------------
@@ -255,20 +356,10 @@ def signup():
 
     # ---------------------------------------------------
     # BULSU STUDENT EMAIL VALIDATION
-    #
-    # Required:
-    #
-    # 2024200791@ms.bulsu.edu.ph
-    #
-    # Exactly 10 digits before @ms.bulsu.edu.ph
     # ---------------------------------------------------
 
-    bulsu_email_pattern = (
-        r"^\d{10}@ms\.bulsu\.edu\.ph$"
-    )
-
     if not re.match(
-        bulsu_email_pattern,
+        BULSU_EMAIL_PATTERN,
         email
     ):
 
@@ -298,67 +389,15 @@ def signup():
         )
 
     # ---------------------------------------------------
-    # Password length
+    # Password requirements
     # ---------------------------------------------------
 
-    if len(password) < 8:
+    password_error = password_requirement_error(password)
+
+    if password_error:
 
         flash(
-            "Password must be at least 8 characters long.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("auth.signup")
-        )
-
-    # ---------------------------------------------------
-    # Uppercase
-    # ---------------------------------------------------
-
-    if not re.search(
-        r"[A-Z]",
-        password
-    ):
-
-        flash(
-            "Password must contain at least one capital letter.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("auth.signup")
-        )
-
-    # ---------------------------------------------------
-    # Number
-    # ---------------------------------------------------
-
-    if not re.search(
-        r"[0-9]",
-        password
-    ):
-
-        flash(
-            "Password must contain at least one number.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("auth.signup")
-        )
-
-    # ---------------------------------------------------
-    # Special character
-    # ---------------------------------------------------
-
-    if not re.search(
-        r"[^A-Za-z0-9]",
-        password
-    ):
-
-        flash(
-            "Password must contain at least one special character.",
+            password_error,
             "danger"
         )
 
@@ -452,6 +491,7 @@ def signup():
     "/verify-otp",
     methods=["GET", "POST"]
 )
+@limiter.limit("10 per minute")
 def verify_otp():
 
     pending = session.get(
@@ -613,6 +653,453 @@ def verify_otp():
 
 
 # =======================================================
+# FORGOT PASSWORD - REQUEST CODE
+# =======================================================
+
+@auth.route(
+    "/forgot-password",
+    methods=["GET", "POST"]
+)
+@limiter.limit("5 per minute")
+def forgot_password():
+
+    # ---------------------------------------------------
+    # GET
+    # ---------------------------------------------------
+
+    if request.method == "GET":
+
+        return render_template(
+            "forgot_password.html"
+        )
+
+    # ---------------------------------------------------
+    # POST
+    # ---------------------------------------------------
+
+    email = request.form.get(
+        "email",
+        ""
+    ).strip().lower()
+
+    if not email:
+
+        flash(
+            "Please enter your BulSU student email.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("auth.forgot_password")
+        )
+
+    if not re.match(
+        BULSU_EMAIL_PATTERN,
+        email
+    ):
+
+        flash(
+            "Please use a valid BulSU student email "
+            "(example: 2024200791@ms.bulsu.edu.ph).",
+            "danger"
+        )
+
+        return redirect(
+            url_for("auth.forgot_password")
+        )
+
+    # ---------------------------------------------------
+    # Check that the account exists
+    # ---------------------------------------------------
+
+    student = Student.query.filter_by(
+        email=email
+    ).first()
+
+    if student is None:
+
+        flash(
+            "No account was found with that email address.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("auth.forgot_password")
+        )
+
+    # ---------------------------------------------------
+    # GENERATE OTP
+    # ---------------------------------------------------
+
+    otp = str(
+        secrets.randbelow(900000) + 100000
+    )
+
+    # ---------------------------------------------------
+    # Store pending password reset
+    # ---------------------------------------------------
+
+    session["password_reset"] = {
+
+        "email": email,
+
+        "otp": otp,
+
+        "expires_at": (
+            datetime.utcnow()
+            + timedelta(
+                minutes=current_app.config[
+                    "OTP_EXPIRATION_MINUTES"
+                ]
+            )
+        ).isoformat(),
+
+        "verified": False
+
+    }
+
+    # ---------------------------------------------------
+    # SEND OTP IN BACKGROUND
+    # ---------------------------------------------------
+
+    send_password_reset_otp_email_background(
+        email,
+        otp
+    )
+
+    flash(
+        "A verification code has been sent to your BulSU email.",
+        "success"
+    )
+
+    return redirect(
+        url_for("auth.verify_reset_otp")
+    )
+
+
+# =======================================================
+# FORGOT PASSWORD - VERIFY OTP
+# =======================================================
+
+@auth.route(
+    "/verify-reset-otp",
+    methods=["GET", "POST"]
+)
+@limiter.limit("10 per minute")
+def verify_reset_otp():
+
+    pending = session.get(
+        "password_reset"
+    )
+
+    # ---------------------------------------------------
+    # No pending password reset
+    # ---------------------------------------------------
+
+    if not pending:
+
+        flash(
+            "No pending password recovery request found.",
+            "warning"
+        )
+
+        return redirect(
+            url_for("auth.forgot_password")
+        )
+
+    # ---------------------------------------------------
+    # POST - VERIFY OTP
+    # ---------------------------------------------------
+
+    if request.method == "POST":
+
+        entered_otp = request.form.get(
+            "otp",
+            ""
+        ).strip()
+
+        # ------------------------------------------------
+        # Validate OTP format
+        # ------------------------------------------------
+
+        if not re.fullmatch(
+            r"\d{6}",
+            entered_otp
+        ):
+
+            flash(
+                "Please enter the 6-digit verification code.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("auth.verify_reset_otp")
+            )
+
+        # ------------------------------------------------
+        # Check expiration
+        # ------------------------------------------------
+
+        expires_at = datetime.fromisoformat(
+            pending["expires_at"]
+        )
+
+        if datetime.utcnow() > expires_at:
+
+            session.pop(
+                "password_reset",
+                None
+            )
+
+            flash(
+                "Your OTP has expired. Please request a new one.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("auth.forgot_password")
+            )
+
+        # ------------------------------------------------
+        # Check OTP
+        # ------------------------------------------------
+
+        if not secrets.compare_digest(
+            entered_otp,
+            pending["otp"]
+        ):
+
+            flash(
+                "Invalid OTP. Please try again.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("auth.verify_reset_otp")
+            )
+
+        # ------------------------------------------------
+        # Mark as verified
+        # ------------------------------------------------
+
+        pending["verified"] = True
+
+        session["password_reset"] = pending
+
+        flash(
+            "Email verified. You may now set a new password.",
+            "success"
+        )
+
+        return redirect(
+            url_for("auth.reset_password")
+        )
+
+    # ---------------------------------------------------
+    # GET - SHOW OTP PAGE
+    # ---------------------------------------------------
+
+    return render_template(
+        "verify_reset_otp.html",
+        email=pending["email"]
+    )
+
+
+# =======================================================
+# FORGOT PASSWORD - RESEND OTP
+# =======================================================
+
+@auth.route(
+    "/verify-reset-otp/resend"
+)
+@limiter.limit("3 per minute")
+def resend_reset_otp():
+
+    pending = session.get(
+        "password_reset"
+    )
+
+    if not pending:
+
+        flash(
+            "No pending password recovery request found.",
+            "warning"
+        )
+
+        return redirect(
+            url_for("auth.forgot_password")
+        )
+
+    # ---------------------------------------------------
+    # GENERATE NEW OTP
+    # ---------------------------------------------------
+
+    otp = str(
+        secrets.randbelow(900000) + 100000
+    )
+
+    pending["otp"] = otp
+
+    pending["verified"] = False
+
+    pending["expires_at"] = (
+        datetime.utcnow()
+        + timedelta(
+            minutes=current_app.config[
+                "OTP_EXPIRATION_MINUTES"
+            ]
+        )
+    ).isoformat()
+
+    session["password_reset"] = pending
+
+    send_password_reset_otp_email_background(
+        pending["email"],
+        otp
+    )
+
+    flash(
+        "A new verification code has been sent to your BulSU email.",
+        "success"
+    )
+
+    return redirect(
+        url_for("auth.verify_reset_otp")
+    )
+
+
+# =======================================================
+# FORGOT PASSWORD - RESET PASSWORD
+# =======================================================
+
+@auth.route(
+    "/reset-password",
+    methods=["GET", "POST"]
+)
+def reset_password():
+
+    pending = session.get(
+        "password_reset"
+    )
+
+    if not pending or not pending.get("verified"):
+
+        flash(
+            "Please verify your email before resetting your password.",
+            "warning"
+        )
+
+        return redirect(
+            url_for("auth.forgot_password")
+        )
+
+    # ---------------------------------------------------
+    # GET
+    # ---------------------------------------------------
+
+    if request.method == "GET":
+
+        return render_template(
+            "reset_password.html"
+        )
+
+    # ---------------------------------------------------
+    # POST
+    # ---------------------------------------------------
+
+    new_password = request.form.get(
+        "new_password",
+        ""
+    )
+
+    confirm_password = request.form.get(
+        "confirm_password",
+        ""
+    )
+
+    if not new_password or not confirm_password:
+
+        flash(
+            "Please complete all fields.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("auth.reset_password")
+        )
+
+    if new_password != confirm_password:
+
+        flash(
+            "Passwords do not match.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("auth.reset_password")
+        )
+
+    password_error = password_requirement_error(
+        new_password
+    )
+
+    if password_error:
+
+        flash(
+            password_error,
+            "danger"
+        )
+
+        return redirect(
+            url_for("auth.reset_password")
+        )
+
+    # ---------------------------------------------------
+    # Update account password
+    # ---------------------------------------------------
+
+    student = Student.query.filter_by(
+        email=pending["email"]
+    ).first()
+
+    if student is None:
+
+        session.pop(
+            "password_reset",
+            None
+        )
+
+        flash(
+            "We could not find that account. Please try again.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("auth.forgot_password")
+        )
+
+    student.password_hash = generate_password_hash(
+        new_password
+    )
+
+    db.session.commit()
+
+    session.pop(
+        "password_reset",
+        None
+    )
+
+    flash(
+        "Your password has been reset successfully. Please log in.",
+        "success"
+    )
+
+    return redirect(
+        url_for("auth.login")
+    )
+
+
+# =======================================================
 # STUDENT DASHBOARD
 # =======================================================
 
@@ -678,6 +1165,7 @@ def guest():
     "/admin/login",
     methods=["GET", "POST"]
 )
+@limiter.limit("5 per minute")
 def admin_login():
 
     if request.method == "POST":
@@ -701,8 +1189,8 @@ def admin_login():
         ]
 
         if (
-            email == admin_email
-            and password == admin_password
+            secrets.compare_digest(email, admin_email)
+            and secrets.compare_digest(password, admin_password)
         ):
 
             session.clear()

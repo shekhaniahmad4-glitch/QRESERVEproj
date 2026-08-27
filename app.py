@@ -10,6 +10,7 @@ from flask import Flask
 
 from routes.auth import auth
 from database import db
+from extensions import limiter
 
 
 def create_app():
@@ -21,6 +22,9 @@ def create_app():
 
     # Initialize database
     db.init_app(app)
+
+    # Initialize rate limiter
+    limiter.init_app(app)
 
     # Register authentication routes
     app.register_blueprint(auth)

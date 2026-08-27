@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>QRESERVE | Verify Account</title>
+    <title>QRESERVE | Account Recovery</title>
 
     <!-- Bootstrap 5 -->
     <link
@@ -492,12 +492,44 @@
 
 
         /* =========================================
-           BACK TO SIGN UP
+           RESEND CODE
+        ========================================= */
+
+        .resend-code {
+
+            display: inline-block;
+
+            margin-top: 16px;
+
+            color: #c90000;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            text-decoration: none;
+        }
+
+        .resend-code i {
+
+            margin-right: 4px;
+        }
+
+        .resend-code:hover {
+
+            text-decoration: underline;
+
+            color: #a90000;
+        }
+
+
+        /* =========================================
+           BACK TO LOGIN
         ========================================= */
 
         .back-signup {
 
-            margin-top: 20px;
+            margin-top: 12px;
 
             color: #777;
 
@@ -833,7 +865,7 @@
             <!-- HEADER -->
 
             <h1 class="verify-title">
-                VERIFY ACCOUNT
+                ACCOUNT RECOVERY
             </h1>
 
             <div class="verify-subtitle">
@@ -867,7 +899,7 @@
                 <p class="verify-description">
 
                     We've sent a verification code to your
-                    BuLSU student email address.
+                    BulSU student email address.
 
                 </p>
 
@@ -919,7 +951,7 @@
 
                 <form
                     method="POST"
-                    action="{{ url_for('auth.verify_otp') }}"
+                    action="{{ url_for('auth.verify_reset_otp') }}"
                 >
 
 
@@ -960,6 +992,16 @@
                 </form>
 
 
+                <!-- RESEND -->
+
+                <a
+                    href="{{ url_for('auth.resend_reset_otp') }}"
+                    class="resend-code"
+                >
+                    <i class="bi bi-arrow-clockwise"></i>Resend code
+                </a>
+
+
                 <!-- BACK -->
 
                 <div class="back-signup">
@@ -967,9 +1009,9 @@
                     Didn't receive the code?
 
                     <a
-                        href="{{ url_for('auth.signup') }}"
+                        href="{{ url_for('auth.login') }}"
                     >
-                        Back to Sign Up
+                        Back to Login
                     </a>
 
                 </div>
