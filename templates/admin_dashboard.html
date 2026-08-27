@@ -1,12 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
 
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>QRESERVE | Admin Dashboard</title>
 
@@ -22,130 +20,638 @@
 
     <!-- Google Font -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
-
 
     <style>
 
-        * { box-sizing: border-box; }
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
 
-        html, body {
-            width: 100%; height: 100%;
-            margin: 0; padding: 0;
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: white; color: #222; overflow: hidden;
+            background: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
         }
 
-        .dashboard { display: flex; width: 100%; height: 100vh; min-height: 100vh; }
+
+        /* =====================================================
+           DASHBOARD LAYOUT
+        ===================================================== */
+
+        .dashboard {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            min-height: 100vh;
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
 
         .sidebar {
-            width: 250px; height: 100vh; flex-shrink: 0;
-            background: linear-gradient(to bottom, #a91616, #ed2424);
+            width: 250px;
+            height: 100vh;
+            flex-shrink: 0;
+
+            background: linear-gradient(
+                180deg,
+                #8a0d0d 0%,
+                #a91616 40%,
+                #d01c1c 100%
+            );
+
             color: white;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
         }
+
+
+        /* =====================================================
+           SIDEBAR HEADER
+        ===================================================== */
 
         .sidebar-header {
-            height: 170px; background: #8f1717;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
+            height: 170px;
+
+            background: rgba(0, 0, 0, 0.14);
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         }
 
-        .sidebar-logo { width: 65px; height: 65px; object-fit: contain; margin-bottom: 8px; }
-        .university-name { font-size: 12px; font-weight: 700; line-height: 1.2; }
-        .campus-name { font-size: 11px; font-weight: 600; }
+        .sidebar-logo {
+            width: 65px;
+            height: 65px;
 
-        .sidebar-menu { padding-top: 10px; }
+            object-fit: contain;
+
+            margin-bottom: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header:hover .sidebar-logo {
+            transform: scale(1.06) rotate(2deg);
+        }
+
+        .university-name {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.25;
+            letter-spacing: 0.3px;
+        }
+
+        .campus-name {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 2px;
+        }
+
+
+        /* =====================================================
+           SIDEBAR MENU
+        ===================================================== */
+
+        .sidebar-menu {
+            padding: 16px 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
         .sidebar-link {
-            display: flex; align-items: center; width: 100%;
-            padding: 13px 20px; color: white; text-decoration: none;
-            font-size: 13px; font-weight: 500; transition: 0.2s;
+            display: flex;
+            align-items: center;
+
+            width: 100%;
+
+            padding: 12px 18px;
+            margin-bottom: 6px;
+
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 12px;
+
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .sidebar-link i { width: 25px; font-size: 17px; }
-        .sidebar-link:hover { background: rgba(255,255,255,0.15); color: white; }
-        .sidebar-link.active { background: rgba(255,255,255,0.18); }
-        .logout { margin-top: 35px; }
+        .sidebar-link i {
+            width: 25px;
+            font-size: 17px;
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .sidebar-link:hover i {
+            transform: scale(1.15);
+        }
+
+        .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.24);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        }
+
+        .logout {
+            margin-top: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logout:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+
+        /* =====================================================
+           MAIN AREA
+        ===================================================== */
 
         .main-content {
-            flex: 1; width: calc(100% - 250px); min-width: 0;
-            height: 100vh; background: white; position: relative;
+            flex: 1;
+
+            width: calc(100% - 250px);
+            min-width: 0;
+            height: 100vh;
+
+            background: #f8fafc;
+
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
 
+
+        /* =====================================================
+           TOPBAR
+        ===================================================== */
+
         .topbar {
-            width: 100%; height: 70px; display: flex; align-items: center;
-            padding: 0 25px; background: white; border-bottom: 1px solid #ddd;
+            width: 100%;
+            height: 70px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 28px;
+
+            background: white;
+
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            z-index: 5;
         }
 
         .menu-button {
-            border: none; background: transparent; font-size: 22px;
-            margin-right: 12px; color: #555; cursor: pointer;
+            border: none;
+            background: transparent;
+
+            font-size: 22px;
+
+            margin-right: 14px;
+
+            color: #555;
+
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 4px 8px;
+            transition: background 0.2s, color 0.2s;
         }
 
-        .page-title { color: #b01818; font-size: 17px; font-weight: 600; }
+        .menu-button:hover {
+            background: #f3f4f6;
+            color: #a90000;
+        }
 
-        .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 22px; }
-        .notification { font-size: 20px; color: #333; }
-        .profile { display: flex; align-items: center; gap: 8px; }
-        .profile-picture { width: 35px; height: 35px; border-radius: 50%; background: #999; }
-        .profile-info { line-height: 1.1; }
-        .profile-name { font-size: 11px; font-weight: 700; }
-        .profile-type { font-size: 10px; color: #555; }
+        .page-title {
+            color: #a90000;
+
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        /* Live Clock Pill */
+        .live-clock-pill {
+            margin-left: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: #f1f5f9;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .live-clock-pill i {
+            color: #a90000;
+        }
+
+
+        /* =====================================================
+           TOPBAR RIGHT
+        ===================================================== */
+
+        .topbar-right {
+            margin-left: auto;
+
+            display: flex;
+            align-items: center;
+
+            gap: 16px;
+        }
+
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            20%, 60% { transform: rotate(12deg); }
+            40%, 80% { transform: rotate(-12deg); }
+        }
+
+        .notification {
+            font-size: 19px;
+            color: #4b5563;
+            cursor: pointer;
+            padding: 7px 9px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .notification:hover {
+            color: #a90000;
+            background: #fee2e2;
+            animation: bellRing 0.6s ease;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+            padding: 5px 12px;
+            border-radius: 30px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .profile:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .profile-picture {
+            width: 34px;
+            height: 34px;
+
+            border-radius: 50%;
+
+            background: linear-gradient(135deg, #a90000, #e00000);
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        .profile-info {
+            line-height: 1.15;
+        }
+
+        .profile-name {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .profile-type {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+
+        /* =====================================================
+           CONTENT AREA
+        ===================================================== */
+
+        .dashboard-content {
+            flex: 1;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+
+        /* =====================================================
+           QUEUE PREVIEW STATS CARDS
+        ===================================================== */
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(169, 0, 0, 0.10);
+            border-color: #fecaca;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: #fff0f0;
+            border: 1px solid #fecaca;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #a90000;
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+
+        /* =====================================================
+           DEVELOPMENT BOX
+        ===================================================== */
+
+        @keyframes boxPop {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes toolWobble {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.08) rotate(-6deg); }
+            75% { transform: scale(1.08) rotate(6deg); }
+        }
 
         .development-area {
-            width: 100%; height: calc(100vh - 70px);
-            background: white; display: flex; justify-content: center; align-items: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding: 10px 0;
         }
 
         .development-box {
-            width: 300px; padding: 25px 30px; background: white;
-            border: 1px solid #ddd; border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center;
+            width: 100%;
+            max-width: 440px;
+
+            padding: 34px 32px 30px;
+
+            background: white;
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 24px;
+
+            box-shadow:
+                0 20px 45px -12px rgba(169, 0, 0, 0.12),
+                0 8px 20px -6px rgba(0, 0, 0, 0.05);
+
+            text-align: center;
+            animation: boxPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .development-icon { font-size: 30px; color: #b01818; margin-bottom: 10px; }
-        .development-box h2 { margin: 0 0 8px 0; font-size: 18px; font-weight: 700; color: #333; }
-        .development-box p { margin: 0; font-size: 12px; line-height: 1.5; color: #777; }
+        .development-box:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 25px 50px -12px rgba(169, 0, 0, 0.18),
+                0 12px 24px -6px rgba(0, 0, 0, 0.07);
+        }
+
+        .development-icon-circle {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: #fff0f0;
+            border: 2px solid #fecaca;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .development-icon-circle i {
+            font-size: 30px;
+            color: #a90000;
+            display: inline-block;
+            animation: toolWobble 3s ease-in-out infinite;
+        }
+
+        .development-box h2 {
+            margin: 0 0 8px 0;
+
+            font-size: 18px;
+
+            font-weight: 800;
+
+            color: #1e293b;
+            letter-spacing: 0.3px;
+        }
+
+        .development-box p {
+            margin: 0 0 18px 0;
+
+            font-size: 13px;
+
+            line-height: 1.55;
+
+            color: #64748b;
+        }
+
+        .preview-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
 
         @media (max-width: 768px) {
-            .sidebar { width: 190px; }
-            .main-content { width: calc(100% - 190px); }
-            .sidebar-link { font-size: 10px; padding: 10px 12px; }
-            .topbar { padding: 0 15px; }
-            .page-title { font-size: 14px; }
-            .development-box { width: 280px; }
+
+            .sidebar {
+                width: 190px;
+            }
+
+            .main-content {
+                width: calc(100% - 190px);
+            }
+
+            .sidebar-link {
+                font-size: 11px;
+                padding: 10px 12px;
+            }
+
+            .topbar {
+                padding: 0 16px;
+            }
+
+            .page-title {
+                font-size: 14px;
+            }
+
+            .live-clock-pill {
+                display: none;
+            }
         }
+
 
         @media (max-width: 576px) {
-            .sidebar { width: 70px; }
-            .main-content { width: calc(100% - 70px); }
-            .sidebar-header { height: 110px; }
-            .sidebar-logo { width: 45px; height: 45px; }
-            .university-name, .campus-name, .sidebar-link span { display: none; }
-            .sidebar-link { justify-content: center; padding: 14px 0; }
-            .sidebar-link i { width: auto; }
-            .topbar { padding: 0 12px; }
-            .menu-button { font-size: 20px; margin-right: 8px; }
-            .page-title { font-size: 12px; }
-            .topbar-right { gap: 10px; }
-            .topbar-right .profile-info { display: none; }
-            .profile-picture { width: 32px; height: 32px; }
-            .development-box { width: 230px; padding: 20px; }
-            .development-box h2 { font-size: 15px; }
-            .development-box p { font-size: 10px; }
-            .development-icon { font-size: 25px; }
-        }
 
-        @media (max-width: 380px) {
-            .sidebar { width: 60px; }
-            .main-content { width: calc(100% - 60px); }
-            .sidebar-logo { width: 40px; height: 40px; }
-            .development-box { width: 210px; padding: 18px; }
-            .page-title { font-size: 10px; }
+            .sidebar {
+                width: 70px;
+            }
+
+            .main-content {
+                width: calc(100% - 70px);
+            }
+
+            .sidebar-header {
+                height: 110px;
+            }
+
+            .sidebar-logo {
+                width: 45px;
+                height: 45px;
+            }
+
+            .university-name,
+            .campus-name,
+            .sidebar-link span {
+                display: none;
+            }
+
+            .sidebar-link {
+                justify-content: center;
+                padding: 14px 0;
+            }
+
+            .sidebar-link i {
+                width: auto;
+            }
+
+            .topbar {
+                padding: 0 12px;
+            }
+
+            .menu-button {
+                font-size: 20px;
+                margin-right: 8px;
+            }
+
+            .page-title {
+                font-size: 12px;
+            }
+
+            .topbar-right {
+                gap: 10px;
+            }
+
+            .topbar-right .profile-info {
+                display: none;
+            }
+
+            .dashboard-content {
+                padding: 16px;
+            }
         }
 
     </style>
@@ -157,88 +663,192 @@
 
 <div class="dashboard">
 
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
     <aside class="sidebar">
 
         <div class="sidebar-header">
+
             <img
                 src="{{ url_for('static', filename='images/logo.png') }}"
                 class="sidebar-logo"
                 alt="Bulacan State University Logo">
-            <div class="university-name">BULACAN STATE<br>UNIVERSITY</div>
-            <div class="campus-name">BUSTOS CAMPUS</div>
+
+            <div class="university-name">
+                BULACAN STATE<br>
+                UNIVERSITY
+            </div>
+
+            <div class="campus-name">
+                BUSTOS CAMPUS
+            </div>
+
         </div>
+
 
         <nav class="sidebar-menu">
 
+            <!-- Dashboard -->
             <a href="#" class="sidebar-link active">
-                <i class="bi bi-house"></i>
+                <i class="bi bi-house-door"></i>
                 <span>Dashboard</span>
             </a>
 
-            <a href="#" class="sidebar-link">
-                <i class="bi bi-people"></i>
-                <span>Manage Users</span>
-            </a>
+            <!-- Extra items based on role -->
+            <a href='#' class='sidebar-link'><i class='bi bi-people'></i><span>Manage Users</span></a><a href='#' class='sidebar-link'><i class='bi bi-display'></i><span>Queue Monitor</span></a><a href='#' class='sidebar-link'><i class='bi bi-bar-chart-line'></i><span>Reports</span></a>
 
-            <a href="#" class="sidebar-link">
-                <i class="bi bi-display"></i>
-                <span>Queue Monitor</span>
-            </a>
+            <!-- Logout -->
+            <a
+                href="{{ url_for('auth.admin_logout') }}"
+                class="sidebar-link logout">
 
-            <a href="#" class="sidebar-link">
-                <i class="bi bi-bar-chart-line"></i>
-                <span>Reports</span>
-            </a>
-
-            <a href="{{ url_for('auth.admin_logout') }}" class="sidebar-link logout">
                 <i class="bi bi-box-arrow-left"></i>
+
                 <span>Logout</span>
+
             </a>
 
         </nav>
 
     </aside>
 
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
     <main class="main-content">
 
+
+        <!-- TOPBAR -->
         <header class="topbar">
 
             <button class="menu-button">
                 <i class="bi bi-list"></i>
             </button>
 
-            <div class="page-title">QRESERVE ADMIN</div>
+            <div class="page-title">
+                QRESERVE ADMIN
+            </div>
 
+            <div class="live-clock-pill">
+                <i class="bi bi-clock"></i>
+                <span id="liveClockDisplay">--:--:--</span>
+            </div>
+
+            <!-- Right Side -->
             <div class="topbar-right">
 
-                <i class="bi bi-bell notification"></i>
+                <i class="bi bi-bell notification" title="Notifications"></i>
 
+                <!-- Profile -->
                 <div class="profile">
+
                     <div class="profile-picture"></div>
+
                     <div class="profile-info">
-                        <div class="profile-name">{{ session.get("admin_email", "Administrator") }}</div>
-                        <div class="profile-type">Administrator</div>
+
+                        <div class="profile-name">
+                            {{ session.get("admin_email", "Administrator") }}
+                        </div>
+
+                        <div class="profile-type">
+                            Administrator
+                        </div>
+
                     </div>
-                    <i class="bi bi-chevron-down"></i>
+
+                    <i class="bi bi-chevron-down" style="font-size: 11px; color: #94a3b8;"></i>
+
                 </div>
 
             </div>
 
         </header>
 
-        <section class="development-area">
-            <div class="development-box">
-                <div class="development-icon">
-                    <i class="bi bi-tools"></i>
+
+        <!-- DASHBOARD BODY -->
+        <div class="dashboard-content">
+
+            <!-- STATS PREVIEW CARDS -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Active Queue</div>
+                        <div class="stat-value">18 <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span></div>
+                    </div>
                 </div>
-                <h2>UNDER DEVELOPMENT</h2>
-                <p>The Admin Dashboard is currently under development.</p>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-ticket-detailed-fill"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Now Serving</div>
+                        <div class="stat-value text-danger">#A-104</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-stopwatch-fill"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Est. Wait Time</div>
+                        <div class="stat-value">~4 min</div>
+                    </div>
+                </div>
+
             </div>
-        </section>
+
+
+            <!-- DEVELOPMENT AREA -->
+            <section class="development-area">
+
+                <div class="development-box">
+
+                    <div class="development-icon-circle">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+
+                    <h2>SYSTEM ONLINE</h2>
+
+                    <p>
+                        The Administrator Queue Monitor & Counter Controller are being hooked up.
+                    </p>
+
+                    <div class="preview-badge">
+                        <i class="bi bi-stars text-warning"></i> QRESERVE Version 1.0 &bull; Ready for next module
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
 
     </main>
 
 </div>
+
+<script>
+    function updateClock() {
+        const el = document.getElementById('liveClockDisplay');
+        if (!el) return;
+        const now = new Date();
+        el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
 
 </body>
 

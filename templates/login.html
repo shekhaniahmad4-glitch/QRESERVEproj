@@ -18,6 +18,11 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
         rel="stylesheet">
 
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <style>
 
         /* =========================================
@@ -34,7 +39,7 @@
             padding: 0;
             width: 100%;
             min-height: 100%;
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', Arial, sans-serif;
             overflow-x: hidden;
         }
 
@@ -46,7 +51,7 @@
 
 
         /* =========================================
-           BACKGROUND
+           BACKGROUND & ANIMATION
         ========================================= */
 
         .background-image {
@@ -75,6 +80,110 @@
             z-index: -1;
         }
 
+        
+        /* =========================================
+           AMBIENT GLOWS & GLASS SPECULAR
+        ========================================= */
+
+        .ambient-glow-1 {
+            position: fixed;
+            top: 20%;
+            left: 15%;
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(208, 0, 0, 0.18) 0%, rgba(208, 0, 0, 0) 70%);
+            filter: blur(45px);
+            z-index: -1;
+            pointer-events: none;
+            animation: floatBlob1 9s ease-in-out infinite alternate;
+        }
+
+        .ambient-glow-2 {
+            position: fixed;
+            bottom: 12%;
+            right: 15%;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(224, 0, 0, 0.14) 0%, rgba(224, 0, 0, 0) 70%);
+            filter: blur(55px);
+            z-index: -1;
+            pointer-events: none;
+            animation: floatBlob2 11s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatBlob1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(45px, 35px) scale(1.15); }
+        }
+
+        @keyframes floatBlob2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-40px, -30px) scale(1.12); }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 14px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(169, 0, 0, 0.18);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #8a0d0d;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(169, 0, 0, 0.06);
+            backdrop-filter: blur(8px);
+            animation: titleEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 2.5px rgba(16, 185, 129, 0.25);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.7; }
+        }
+
+        /* Shimmer light sweep for buttons */
+        .login-btn, .signup-btn, .recovery-btn, .verify-button, .admin-login-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::after, .signup-btn::after, .recovery-btn::after, .verify-button::after, .admin-login-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 40%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.35) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(25deg);
+            transition: all 0.6s ease;
+            pointer-events: none;
+        }
+
+        .login-btn:hover::after, .signup-btn:hover::after, .recovery-btn:hover::after, .verify-button:hover::after, .admin-login-btn:hover::after {
+            left: 130%;
+            transition: all 0.6s ease;
+        }
+
+
 
         /* =========================================
            TOP NAVIGATION
@@ -92,12 +201,28 @@
             position: relative;
             z-index: 10;
 
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
         }
 
         .navbar-brand {
             color: white !important;
             text-decoration: none;
+            min-width: 0;
+            transition: transform 0.25s ease;
+        }
+
+        .navbar-brand:hover .logo {
+            transform: scale(1.06);
+        }
+
+        .navbar-brand > div {
+            min-width: 0;
+        }
+
+        .navbar-brand h6,
+        .navbar-brand small {
+            white-space: normal;
+            overflow-wrap: break-word;
         }
 
         .logo {
@@ -107,6 +232,7 @@
             object-fit: contain;
 
             flex-shrink: 0;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .navbar-brand h6 {
@@ -138,6 +264,33 @@
 
 
         /* =========================================
+           KEYFRAME ANIMATIONS
+        ========================================= */
+
+        @keyframes cardEnter {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes titleEnter {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+        /* =========================================
            TITLE
         ========================================= */
 
@@ -149,9 +302,10 @@
 
             text-align: center;
 
-            margin: 0 0 18px;
+            margin: 0 0 4px;
 
             letter-spacing: 0.3px;
+            animation: titleEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .login-subtitle {
@@ -159,10 +313,10 @@
 
             color: #555;
 
-            font-size: 14px;
+            font-size: 13.5px;
 
-            margin-top: -10px;
-            margin-bottom: 22px;
+            margin-bottom: 18px;
+            animation: titleEnter 0.55s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
 
@@ -174,18 +328,24 @@
             width: 100%;
             max-width: 430px;
 
-            background: rgba(255, 255, 255, 0.96);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
 
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-top: 1.5px solid rgba(255, 255, 255, 1);
 
-            border-radius: 26px;
+            border-radius: 28px;
 
             box-shadow:
-                0 15px 40px rgba(0, 0, 0, 0.18);
+                0 25px 50px -12px rgba(169, 0, 0, 0.18),
+                0 12px 28px -6px rgba(0, 0, 0, 0.08),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
 
-            padding: 28px 28px 25px;
+            padding: 30px 28px 26px;
 
             margin: 0 auto;
+            animation: cardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
 
@@ -194,13 +354,13 @@
         ========================================= */
 
         .form-label {
-            font-size: 14px;
+            font-size: 13px;
 
             font-weight: 600;
 
-            color: #222;
+            color: #333;
 
-            margin-bottom: 7px;
+            margin-bottom: 6px;
         }
 
 
@@ -211,28 +371,32 @@
         .form-control {
             height: 46px;
 
-            border: 1px solid #d8d8d8;
+            border: 1.5px solid #e0e0e0;
 
             border-radius: 25px;
 
             padding: 0 18px;
 
             font-size: 14px;
+            font-family: 'Poppins', sans-serif;
 
             box-shadow: none;
+            background: #fafafa;
 
-            transition: 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .form-control:focus {
-            border-color: #c90000;
+            border-color: #d00000;
+            background: #ffffff;
 
+            transform: translateY(-1.5px);
             box-shadow:
-                0 0 0 3px rgba(201, 0, 0, 0.08);
+                0 0 0 4px rgba(208, 0, 0, 0.12);
         }
 
         .form-control::placeholder {
-            color: #999;
+            color: #aaa;
         }
 
 
@@ -261,7 +425,7 @@
 
             background: transparent;
 
-            color: #777;
+            color: #888;
 
             border-radius: 50%;
 
@@ -272,10 +436,12 @@
             cursor: pointer;
 
             z-index: 5;
+            transition: color 0.2s, transform 0.2s;
         }
 
         .password-toggle:hover {
             color: #a90000;
+            transform: scale(1.1);
         }
 
         .password-toggle i {
@@ -293,9 +459,11 @@
             font-size: 13px;
 
             font-weight: 600;
+            transition: color 0.2s;
         }
 
         .forgot-link:hover {
+            color: #004ecc;
             text-decoration: underline !important;
         }
 
@@ -307,36 +475,40 @@
         .login-btn {
             width: 100%;
 
-            height: 46px;
+            height: 48px;
 
             border: none;
 
             border-radius: 25px;
 
-            background: #d00000;
+            background: linear-gradient(135deg, #d00000 0%, #b00000 100%);
 
             color: white;
 
             font-size: 14px;
+            font-family: 'Poppins', sans-serif;
 
             font-weight: 700;
+            letter-spacing: 0.5px;
 
             box-shadow:
-                0 8px 20px rgba(208, 0, 0, 0.20);
+                0 8px 22px rgba(208, 0, 0, 0.28);
 
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .login-btn:hover {
-            background: #b80000;
+            background: linear-gradient(135deg, #b80000 0%, #980000 100%);
 
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow:
+                0 12px 26px rgba(208, 0, 0, 0.36);
 
             color: white;
         }
 
         .login-btn:active {
-            transform: translateY(0);
+            transform: translateY(0) scale(0.99);
         }
 
 
@@ -368,7 +540,7 @@
 
             height: 1px;
 
-            background: #ddd;
+            background: #e4e4e4;
         }
 
 
@@ -395,12 +567,13 @@
             font-size: 13px;
 
             font-weight: 700;
+            letter-spacing: 0.3px;
 
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .guest-btn {
-            border: 1px solid #d00000;
+            border: 1.5px solid #d00000;
 
             color: #d00000;
 
@@ -411,10 +584,12 @@
             background: #fff4f4;
 
             color: #b80000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(208, 0, 0, 0.14);
         }
 
         .admin-btn {
-            border: 1px solid #d00000;
+            border: 1.5px solid #d00000;
 
             color: #d00000;
 
@@ -425,6 +600,13 @@
             background: #fff4f4;
 
             color: #b80000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(208, 0, 0, 0.14);
+        }
+
+        .guest-btn:active,
+        .admin-btn:active {
+            transform: translateY(0);
         }
 
 
@@ -446,9 +628,11 @@
             font-weight: 600;
 
             margin-left: 4px;
+            transition: color 0.2s;
         }
 
         .signup-link:hover {
+            color: #004ecc;
             text-decoration: underline !important;
         }
 
@@ -458,12 +642,13 @@
         ========================================= */
 
         #alertBox {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         #alertBox .alert {
-            border-radius: 12px;
-
+            border-radius: 14px;
+            border: none;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
             font-size: 13px;
         }
 
@@ -502,7 +687,7 @@
             .login-title {
                 font-size: 26px;
 
-                margin-bottom: 14px;
+                margin-bottom: 4px;
             }
 
             .login-card {
@@ -552,53 +737,35 @@
             }
 
         }
-/* =========================================================
-   FORCE UNIVERSITY HEADER SIZE (large screens only)
-   NOTE: scoped to min-width so it no longer overrides the
-   mobile breakpoints above on small phones/tablets.
-   ========================================================= */
 
-@media (min-width: 577px) {
+        @media (min-width: 577px) {
 
-    .custom-navbar {
-        height: 82px !important;
-        padding: 0 32px !important;
-    }
+            .custom-navbar {
+                height: 82px !important;
+                padding: 0 32px !important;
+            }
 
-    .custom-navbar .logo {
-        width: 62px !important;
-        height: 62px !important;
-        object-fit: contain !important;
-        flex-shrink: 0 !important;
-    }
+            .custom-navbar .logo {
+                width: 62px !important;
+                height: 62px !important;
+                object-fit: contain !important;
+                flex-shrink: 0 !important;
+            }
 
-    .custom-navbar .navbar-brand h6 {
-        font-size: 17px !important;
-        font-weight: 700 !important;
-        line-height: 1.15 !important;
-        margin: 0 !important;
-    }
+            .custom-navbar .navbar-brand h6 {
+                font-size: 17px !important;
+                font-weight: 700 !important;
+                line-height: 1.15 !important;
+                margin: 0 !important;
+            }
 
-    .custom-navbar .navbar-brand small {
-        font-size: 13px !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.5px !important;
-    }
-}
+            .custom-navbar .navbar-brand small {
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                letter-spacing: 0.5px !important;
+            }
+        }
 
-.navbar-brand {
-    min-width: 0;
-}
-
-.navbar-brand > div {
-    min-width: 0;
-}
-
-.navbar-brand h6,
-.navbar-brand small {
-    white-space: normal;
-    overflow-wrap: break-word;
-}
     </style>
 
 </head>
@@ -606,18 +773,17 @@
 
 <body>
 
-    <!-- =========================================
-         BACKGROUND
-    ========================================= -->
-
+    <!-- BACKGROUND -->
     <div class="background-image"></div>
     <div class="overlay"></div>
+    
+    <!-- AMBIENT GLOW EFFECTS -->
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
 
 
-    <!-- =========================================
-         NAVIGATION
-    ========================================= -->
 
+    <!-- NAVIGATION -->
     <nav class="navbar custom-navbar">
 
         <div class="container-fluid p-0">
@@ -652,34 +818,32 @@
     </nav>
 
 
-    <!-- =========================================
-         MAIN
-    ========================================= -->
-
+    <!-- MAIN -->
     <main class="login-page">
 
-        <div style="width: 100%; max-width: 430px;">
+        <div style="width: 100%; max-width: 430px; text-align: center;">
+
+            <!-- PILL BADGE -->
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                BulSU Bustos Campus &bull; Online Queue
+            </div>
 
             <!-- TITLE -->
-
             <h1 class="login-title">
                 QRESERVE LOGIN
             </h1>
 
             <div class="login-subtitle">
-                Log in to your account
+                Log in to your student account
             </div>
 
 
-            <!-- =====================================
-                 LOGIN CARD
-            ====================================== -->
-
-            <div class="login-card">
+            <!-- LOGIN CARD -->
+            <div class="login-card text-start">
 
 
                 <!-- FLASH MESSAGES -->
-
                 {% with messages = get_flashed_messages(with_categories=true) %}
 
                     {% if messages %}
@@ -709,12 +873,10 @@
 
 
                 <!-- ALERT BOX -->
-
                 <div id="alertBox"></div>
 
 
                 <!-- LOGIN FORM -->
-
                 <form
                     id="loginForm"
                     method="POST"
@@ -722,7 +884,6 @@
                 >
 
                     <!-- EMAIL -->
-
                     <div class="mb-3">
 
                         <label
@@ -737,7 +898,7 @@
                             class="form-control"
                             id="email"
                             name="email"
-                            placeholder="Enter your email"
+                            placeholder="Enter your student email"
                             autocomplete="email"
                             required
                         >
@@ -746,7 +907,6 @@
 
 
                     <!-- PASSWORD -->
-
                     <div class="mb-2">
 
                         <label
@@ -774,9 +934,7 @@
                                 id="togglePassword"
                                 aria-label="Show password"
                             >
-
                                 <i class="bi bi-eye"></i>
-
                             </button>
 
                         </div>
@@ -785,7 +943,6 @@
 
 
                     <!-- FORGOT PASSWORD -->
-
                     <div class="text-end mb-3">
 
                         <a
@@ -799,68 +956,42 @@
 
 
                     <!-- LOGIN BUTTON -->
-
                     <button
                         type="submit"
                         class="login-btn"
-                        id="loginBtn"
                     >
-
-                        LOGIN
-
+                        <i class="bi bi-box-arrow-in-right me-1"></i> LOG IN
                     </button>
 
 
                     <!-- DIVIDER -->
-
                     <div class="divider">
                         <span>OR</span>
                     </div>
 
 
-                    <!-- GUEST -->
-
-                    <div class="d-grid mb-3">
-
-                        <a
-                            href="{{ url_for('auth.guest') }}"
-                            class="btn guest-btn rounded-pill"
-                        >
-
-                            <i class="bi bi-person me-1"></i>
-
-                            CONTINUE AS GUEST
-
-                        </a>
-
-                    </div>
+                    <!-- GUEST LOGIN -->
+                    <a
+                        href="{{ url_for('auth.guest') }}"
+                        class="guest-btn text-decoration-none mb-2"
+                    >
+                        <i class="bi bi-person me-1"></i> Guest Login
+                    </a>
 
 
-                    <!-- ADMIN -->
-
-                    <div class="d-grid mb-4">
-
-                        <a
-                            href="{{ url_for('auth.admin_login') }}"
-                            class="btn admin-btn rounded-pill"
-                        >
-
-                            <i class="bi bi-person-circle me-1"></i>
-
-                            ADMINISTRATOR LOGIN
-
-                        </a>
-
-                    </div>
+                    <!-- ADMIN LOGIN -->
+                    <a
+                        href="{{ url_for('auth.admin_login') }}"
+                        class="admin-btn text-decoration-none mb-3"
+                    >
+                        <i class="bi bi-shield-lock me-1"></i> Administrator Login
+                    </a>
 
 
-                    <!-- SIGN UP -->
+                    <!-- SIGN UP LINK -->
+                    <div class="text-center signup-text">
 
-                    <div class="text-center">
-
-                        <span class="signup-text">
-                            Don't have an account?
-                        </span>
+                        Don't have an account?
 
                         <a
                             href="{{ url_for('auth.signup') }}"
@@ -880,52 +1011,45 @@
     </main>
 
 
-    <!-- =========================================
-         BOOTSTRAP
-    ========================================= -->
-
+    <!-- BOOTSTRAP -->
     <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
     </script>
 
 
-    <!-- =========================================
-         LOGIN JAVASCRIPT
-    ========================================= -->
-
+    <!-- PASSWORD TOGGLE JAVASCRIPT -->
     <script>
 
-        const password =
+        const passwordInput =
             document.getElementById("password");
 
         const togglePassword =
             document.getElementById("togglePassword");
 
-
         togglePassword.addEventListener(
             "click",
             function () {
 
-                if (password.type === "password") {
+                if (passwordInput.type === "password") {
 
-                    password.type = "text";
+                    passwordInput.type = "text";
 
-                    this.innerHTML =
+                    togglePassword.innerHTML =
                         '<i class="bi bi-eye-slash"></i>';
 
-                    this.setAttribute(
+                    togglePassword.setAttribute(
                         "aria-label",
                         "Hide password"
                     );
 
                 } else {
 
-                    password.type = "password";
+                    passwordInput.type = "password";
 
-                    this.innerHTML =
+                    togglePassword.innerHTML =
                         '<i class="bi bi-eye"></i>';
 
-                    this.setAttribute(
+                    togglePassword.setAttribute(
                         "aria-label",
                         "Show password"
                     );
