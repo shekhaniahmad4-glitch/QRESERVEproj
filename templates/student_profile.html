@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QRESERVE | My Profile</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Transitions & Animation Delay CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/transitions.css') }}">
+
+    <style>
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background: #f5f6fa;
+            color: #1e293b;
+            overflow: hidden;
+        }
+
+        /* ========== LAYOUT ========== */
+        .layout {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: 220px;
+            height: 100vh;
+            flex-shrink: 0;
+            background: linear-gradient(180deg, #6e0a0a 0%, #8c1010 30%, #a91515 70%, #c01818 100%);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.15);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 22px 0 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .sidebar-logo-wrap {
+            width: 72px; height: 72px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 50%;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-logo-wrap:hover { transform: scale(1.05); }
+
+        .sidebar-logo { width: 54px; height: 54px; object-fit: contain; }
+
+        .sidebar-uni-name {
+            font-size: 11px; font-weight: 700; color: white;
+            line-height: 1.3; letter-spacing: 0.3px;
+        }
+
+        .sidebar-campus {
+            font-size: 10px; font-weight: 600;
+            color: rgba(255,255,255,0.8); letter-spacing: 0.5px; margin-top: 2px;
+        }
+
+        .sidebar-nav {
+            flex: 1; padding: 12px 10px;
+            overflow-y: auto; display: flex; flex-direction: column;
+        }
+
+        .sidebar-nav::-webkit-scrollbar { width: 0; }
+
+        .sidebar-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; margin-bottom: 4px;
+            color: rgba(255,255,255,0.88);
+            text-decoration: none;
+            font-size: 13px; font-weight: 500;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+        }
+
+        .sidebar-link i { font-size: 16px; width: 20px; flex-shrink: 0; transition: transform 0.2s; }
+
+        .sidebar-link:hover {
+            background: rgba(255,255,255,0.16); color: white; transform: translateX(3px);
+        }
+
+        .sidebar-link:hover i { transform: scale(1.15); }
+
+        .sidebar-link.active {
+            background: rgba(255,255,255,0.22); color: white;
+            font-weight: 700; box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+        }
+
+        .sidebar-logout { margin: 8px 10px 14px; }
+
+        .sidebar-logout a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; color: rgba(255,255,255,0.88);
+            text-decoration: none; font-size: 13px; font-weight: 500;
+            border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-logout a:hover { background: rgba(255,255,255,0.18); color: white; }
+        .sidebar-logout a i { font-size: 16px; }
+
+        /* ========== MAIN ========== */
+        .main {
+            flex: 1; min-width: 0; height: 100vh;
+            display: flex; flex-direction: column;
+            background: #f5f6fa; overflow: hidden;
+        }
+
+        /* ========== TOPBAR ========== */
+        .topbar {
+            height: 60px; background: white;
+            border-bottom: 1px solid #eaeaea;
+            display: flex; align-items: center;
+            padding: 0 24px; gap: 12px; flex-shrink: 0;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+        }
+
+        .topbar-menu-btn {
+            background: none; border: none; font-size: 22px;
+            color: #555; cursor: pointer; padding: 4px;
+            border-radius: 6px; line-height: 1; transition: color 0.2s;
+        }
+
+        .topbar-menu-btn:hover { color: #a90000; }
+
+        .topbar-brand {
+            color: #a90000; font-size: 18px; font-weight: 800;
+            letter-spacing: 0.3px; margin-right: auto;
+        }
+
+        .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0); }
+            20%, 60% { transform: rotate(12deg); }
+            40%, 80% { transform: rotate(-12deg); }
+        }
+
+        .topbar-bell {
+            font-size: 20px; color: #555; cursor: pointer;
+            padding: 6px; border-radius: 50%; transition: all 0.2s;
+        }
+
+        .topbar-bell:hover {
+            color: #a90000; background: #fee2e2;
+            animation: bellRing 0.5s ease;
+        }
+
+        .topbar-profile {
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; padding: 4px 8px;
+            border-radius: 30px; transition: background 0.2s;
+        }
+
+        .topbar-profile:hover { background: #f5f5f5; }
+
+        .topbar-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #e8750a, #f59e0b);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 16px; font-weight: 700;
+            flex-shrink: 0; border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+            overflow: hidden;
+        }
+
+        .topbar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .topbar-user-info { line-height: 1.15; }
+
+        .topbar-user-name { font-size: 12.5px; font-weight: 700; color: #1e293b; }
+
+        .topbar-user-role { font-size: 10.5px; color: #64748b; font-weight: 500; }
+
+        .topbar-chevron { font-size: 11px; color: #94a3b8; }
+
+        /* ========== CONTENT ========== */
+        .content {
+            flex: 1; overflow-y: auto;
+            padding: 28px 32px 40px;
+        }
+
+        .content::-webkit-scrollbar { width: 6px; }
+        .content::-webkit-scrollbar-track { background: transparent; }
+        .content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+        /* ========== PAGE HEADER ========== */
+        .page-header {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-header-icon {
+            width: 46px; height: 46px;
+            background: linear-gradient(135deg, #8c1010, #c01818);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 22px;
+            box-shadow: 0 4px 14px rgba(140,16,16,0.25);
+        }
+
+        .page-header h1 {
+            font-size: 20px; font-weight: 800; color: #1e293b;
+            margin: 0;
+        }
+
+        .page-header p {
+            font-size: 12.5px; color: #64748b; margin: 0;
+        }
+
+        /* ========== PROFILE CARD ========== */
+        .profile-card {
+            background: white;
+            border: 1px solid #eaedf0;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+            max-width: 740px;
+        }
+
+        /* ========== AVATAR UPLOAD ========== */
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 32px;
+            padding-bottom: 28px;
+            border-bottom: 1.5px solid #f0f0f0;
+        }
+
+        .avatar-preview {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            border: 3.5px solid #e2e8f0;
+            background: linear-gradient(135deg, #e8750a, #f59e0b);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 40px;
+            overflow: hidden; flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            transition: border-color 0.25s;
+            cursor: pointer;
+        }
+
+        .avatar-preview:hover { border-color: #a90000; }
+
+        .avatar-preview img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .avatar-actions { flex: 1; }
+
+        .avatar-actions h3 {
+            font-size: 15px; font-weight: 700;
+            color: #1e293b; margin-bottom: 4px;
+        }
+
+        .avatar-actions p {
+            font-size: 12px; color: #64748b; margin-bottom: 12px;
+        }
+
+        .btn-upload-pic {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #8c1010, #c01818);
+            color: white; font-size: 12.5px; font-weight: 600;
+            border-radius: 25px; cursor: pointer;
+            border: none; text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(140,16,16,0.2);
+        }
+
+        .btn-upload-pic:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(140,16,16,0.3);
+        }
+
+        /* ========== FORM FIELDS ========== */
+        .form-section-title {
+            font-size: 13.5px; font-weight: 700;
+            color: #a90000; letter-spacing: 0.3px;
+            margin-bottom: 16px; margin-top: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .form-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1.5px;
+            background: linear-gradient(to right, #fde8d8, transparent);
+            border-radius: 2px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 20px;
+        }
+
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+        .form-label {
+            font-size: 11.5px; font-weight: 600;
+            color: #475569; letter-spacing: 0.2px;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px; color: #1e293b;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none; background: #fafafa;
+        }
+
+        .form-control-custom:focus {
+            border-color: #a90000;
+            box-shadow: 0 0 0 3px rgba(169,0,0,0.1);
+            background: white;
+        }
+
+        select.form-control-custom { cursor: pointer; }
+
+        /* ========== SAVE BUTTON ========== */
+        .btn-save {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #d00000, #a80000);
+            color: white; font-size: 14px; font-weight: 700;
+            border: none; border-radius: 30px; cursor: pointer;
+            letter-spacing: 0.3px;
+            box-shadow: 0 6px 18px rgba(200,0,0,0.24);
+            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+            margin-top: 28px;
+            position: relative; overflow: hidden;
+        }
+
+        .btn-save::after {
+            content: '';
+            position: absolute; top: -50%; left: -60%;
+            width: 40%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(25deg);
+            transition: left 0.5s ease; pointer-events: none;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(200,0,0,0.32);
+        }
+
+        .btn-save:hover::after { left: 130%; }
+
+        /* ========== ALERTS ========== */
+        .alert-custom {
+            padding: 12px 16px; border-radius: 12px;
+            font-size: 13px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px;
+            border: none;
+        }
+
+        .alert-success-custom {
+            background: #f0fdf4; color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert-danger-custom {
+            background: #fff1f2; color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        
+        /* Mobile Drawer Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.48);
+            backdrop-filter: blur(2px);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: 250px !important;
+                z-index: 999;
+                transform: translateX(-100%);
+                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+                box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar-uni-name, .sidebar-campus,
+            .sidebar-link span, .sidebar-logout a span {
+                display: inline !important;
+            }
+
+            .sidebar-link {
+                justify-content: flex-start !important;
+                padding: 10px 14px !important;
+            }
+
+            .sidebar-link i {
+                width: 20px !important;
+            }
+
+            .sidebar-logo-wrap {
+                width: 64px !important;
+                height: 64px !important;
+            }
+
+            .sidebar-logo {
+                width: 48px !important;
+                height: 48px !important;
+            }
+
+            .sidebar-logout a {
+                justify-content: flex-start !important;
+                padding: 10px 14px !important;
+            }
+
+            .main {
+                width: 100%;
+            }
+
+            .topbar {
+                padding: 0 16px;
+            }
+
+            .topbar-brand {
+                font-size: 16px;
+            }
+
+            .topbar-user-info {
+                display: none;
+            }
+
+            .content {
+                padding: 16px 14px 32px;
+            }
+
+            .profile-card {
+                padding: 20px 16px;
+                border-radius: 16px;
+            }
+
+            .avatar-section {
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+                gap: 14px;
+            }
+
+            .photo-info-box {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .form-control-custom {
+                font-size: 15px; /* iOS friendly */
+                padding: 11px 14px;
+            }
+
+            .btn-save {
+                width: 100%;
+                justify-content: center;
+                padding: 13px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-header">
+            <div class="sidebar-logo-wrap">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" class="sidebar-logo" alt="BulSU Logo">
+            </div>
+            <div class="sidebar-uni-name">BULACAN STATE<br>UNIVERSITY</div>
+            <div class="sidebar-campus">BUSTOS CAMPUS</div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('auth.student_dashboard') }}" class="sidebar-link">
+                <i class="bi bi-house-door-fill"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('auth.student_dashboard') }}#my-queue" class="sidebar-link">
+                <i class="bi bi-ticket-perforated-fill"></i>
+                <span>My Queue</span>
+            </a>
+            <a href="{{ url_for('auth.student_dashboard') }}#my-requests" class="sidebar-link">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>My Requests</span>
+            </a>
+            <a href="{{ url_for('auth.student_dashboard') }}#queue-history" class="sidebar-link">
+                <i class="bi bi-clock-history"></i>
+                <span>Queue History</span>
+            </a>
+            <a href="{{ url_for('auth.student_dashboard') }}#announcements" class="sidebar-link">
+                <i class="bi bi-megaphone"></i>
+                <span>Announcements</span>
+            </a>
+            <a href="{{ url_for('auth.student_dashboard') }}#help-support" class="sidebar-link">
+                <i class="bi bi-question-circle"></i>
+                <span>Help &amp; Support</span>
+            </a>
+            <a href="{{ url_for('auth.student_profile') }}" class="sidebar-link active">
+                <i class="bi bi-person-circle"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-logout">
+            <a href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <button class="topbar-menu-btn" id="menuBtn">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <div class="topbar-brand">QRESERVE</div>
+
+            <div class="topbar-right">
+                <i class="bi bi-bell topbar-bell" title="Notifications"></i>
+
+                <div class="topbar-profile">
+                    <div class="topbar-avatar">
+                        {% if profile and profile.profile_pic %}
+                            <img src="{{ url_for('static', filename='profile_pics/' ~ profile.profile_pic) }}" alt="Profile">
+                        {% else %}
+                            <i class="bi bi-person-fill"></i>
+                        {% endif %}
+                    </div>
+                    <div class="topbar-user-info">
+                        <div class="topbar-user-name">
+                            {{ profile.full_name if profile and profile.full_name else session.get('student_email', 'Student') }}
+                        </div>
+                        <div class="topbar-user-role">Student</div>
+                    </div>
+                    <i class="bi bi-chevron-down topbar-chevron"></i>
+                </div>
+            </div>
+        </header>
+
+
+        <!-- CONTENT -->
+        <div class="content">
+
+            <!-- PAGE HEADER -->
+            <div class="page-header fade-in-stagger delay-1">
+                <div class="page-header-icon">
+                    <i class="bi bi-person-lines-fill"></i>
+                </div>
+                <div>
+                    <h1>My Profile</h1>
+                    <p>Manage your personal information and profile picture.</p>
+                </div>
+            </div>
+
+            <!-- FLASH MESSAGES -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert-custom {{ 'alert-success-custom' if category == 'success' else 'alert-danger-custom' }}">
+                    <i class="bi {{ 'bi-check-circle-fill' if category == 'success' else 'bi-exclamation-circle-fill' }}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- PROFILE CARD -->
+            <div class="profile-card fade-in-stagger delay-2">
+
+                <form method="POST" action="{{ url_for('auth.student_profile') }}" enctype="multipart/form-data">
+
+                    <!-- AVATAR SECTION -->
+                    <div class="avatar-section">
+
+                        <label for="profile_pic_input" style="cursor:pointer;">
+                            <div class="avatar-preview" id="avatarPreview" title="Click to change photo">
+                                {% if profile and profile.profile_pic %}
+                                    <img id="avatarImg" src="{{ url_for('static', filename='profile_pics/' ~ profile.profile_pic) }}" alt="Profile Photo">
+                                {% else %}
+                                    <i class="bi bi-person-fill" id="avatarIcon"></i>
+                                {% endif %}
+                            </div>
+                        </label>
+
+                        <div class="avatar-actions">
+                            <h3>Profile Photo</h3>
+                            <p>Upload a clear photo of yourself.<br>Accepted: JPG, PNG, GIF, WEBP &bull; Max 5 MB.</p>
+                            <label for="profile_pic_input" class="btn-upload-pic">
+                                <i class="bi bi-camera-fill"></i>
+                                Choose Photo
+                            </label>
+                            <input type="file" id="profile_pic_input" name="profile_pic"
+                                accept="image/png,image/jpeg,image/gif,image/webp"
+                                style="display:none" onchange="previewImage(this)">
+                        </div>
+
+                    </div>
+
+                    <!-- PERSONAL INFO -->
+                    <div class="form-section-title">
+                        <i class="bi bi-person-vcard"></i> Personal Information
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group full-width">
+                            <label class="form-label" for="full_name">Full Name</label>
+                            <input type="text" id="full_name" name="full_name"
+                                class="form-control-custom"
+                                placeholder="e.g. Juan Dela Cruz"
+                                value="{{ profile.full_name if profile and profile.full_name else '' }}"
+                                maxlength="150">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="age">Age</label>
+                            <input type="number" id="age" name="age"
+                                class="form-control-custom"
+                                placeholder="e.g. 20"
+                                value="{{ profile.age if profile and profile.age else '' }}"
+                                min="10" max="100">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="course">Course / Program</label>
+                            <input type="text" id="course" name="course"
+                                class="form-control-custom"
+                                placeholder="e.g. BS Computer Science"
+                                value="{{ profile.course if profile and profile.course else '' }}"
+                                maxlength="150">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="year_level">Year Level</label>
+                            <select id="year_level" name="year_level" class="form-control-custom">
+                                <option value="" disabled {{ 'selected' if not (profile and profile.year_level) else '' }}>Select Year</option>
+                                <option value="1st Year" {{ 'selected' if profile and profile.year_level == '1st Year' else '' }}>1st Year</option>
+                                <option value="2nd Year" {{ 'selected' if profile and profile.year_level == '2nd Year' else '' }}>2nd Year</option>
+                                <option value="3rd Year" {{ 'selected' if profile and profile.year_level == '3rd Year' else '' }}>3rd Year</option>
+                                <option value="4th Year" {{ 'selected' if profile and profile.year_level == '4th Year' else '' }}>4th Year</option>
+                                <option value="5th Year" {{ 'selected' if profile and profile.year_level == '5th Year' else '' }}>5th Year</option>
+                                <option value="Graduate" {{ 'selected' if profile and profile.year_level == 'Graduate' else '' }}>Graduate</option>
+                                <option value="Alumni" {{ 'selected' if profile and profile.year_level == 'Alumni' else '' }}>Alumni</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="section">Section</label>
+                            <input type="text" id="section" name="section"
+                                class="form-control-custom"
+                                placeholder="e.g. CS-3A"
+                                value="{{ profile.section if profile and profile.section else '' }}"
+                                maxlength="50">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">Email Address</label>
+                            <input type="text"
+                                class="form-control-custom"
+                                value="{{ session.get('student_email', '') }}"
+                                disabled style="background:#f8fafc;color:#94a3b8;cursor:not-allowed;">
+                            <small style="font-size:11px;color:#94a3b8;margin-top:3px;">
+                                Email cannot be changed here.
+                            </small>
+                        </div>
+
+                        {% if profile and profile.full_name %}
+                        <!-- PASSWORD CONFIRMATION (REQUIRED WHEN UPDATING EXISTING PERSONAL INFO) -->
+                        <div class="form-group full-width" style="margin-top:12px;padding-top:14px;border-top:1.5px dashed #eaedf0;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label mb-0" for="current_password">
+                                    <i class="bi bi-shield-lock-fill text-danger me-1"></i> Current Account Password
+                                </label>
+                                <span class="badge bg-danger-subtle text-danger" style="font-size:10.5px;font-weight:700;">
+                                    Verification Required
+                                </span>
+                            </div>
+                            <div style="position: relative; width: 100%;">
+                                <input type="password" id="current_password" name="current_password"
+                                    class="form-control-custom"
+                                    style="width: 100%; padding-right: 46px;"
+                                    placeholder="Enter your account password to authorize changes"
+                                    required>
+                                <button type="button" id="togglePasswordBtn" onclick="togglePasswordVisibility();"
+                                    style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; font-size: 17px; padding: 4px; display: flex; align-items: center; justify-content: center; z-index: 5;"
+                                    title="Toggle password visibility">
+                                    <i class="bi bi-eye" id="toggleEyeIcon"></i>
+                                </button>
+                            </div>
+                            <small style="font-size:11.5px;color:#64748b;margin-top:4px;display:block;">
+                                <i class="bi bi-info-circle text-primary me-1"></i>
+                                To update personal information, type your account password. A 6-digit OTP will be sent to your email to verify.
+                            </small>
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+                    <button type="submit" class="btn-save">
+                        {% if profile and profile.full_name %}
+                            <i class="bi bi-shield-lock-fill"></i>
+                            Verify &amp; Save Changes
+                        {% else %}
+                            <i class="bi bi-check-lg"></i>
+                            Save Profile
+                        {% endif %}
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Transitions & Delays JS -->
+<script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
+
+<script>
+    // ---- Image preview before upload ----
+    function previewImage(input) {
+        if (!input.files || !input.files[0]) return;
+
+        const file = input.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File too large. Maximum size is 5 MB.');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatarPreview');
+            preview.innerHTML = `<img id="avatarImg" src="${e.target.result}" alt="Preview" style="width:100%;height:100%;object-fit:cover;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+
+        // ---- Mobile Drawer & Sidebar Toggle ----
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    let collapsed = false;
+
+    function openMobileSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.add('mobile-open');
+        if (overlay) overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.remove('mobile-open');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                if (sidebar.classList.contains('mobile-open')) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+            } else {
+                collapsed = !collapsed;
+                sidebar.style.transition = 'width 0.3s ease';
+                if (collapsed) {
+                    sidebar.style.width = '72px';
+                    sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = 'none');
+                    sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = 'center'; el.style.padding = '12px 0'; });
+                    sidebar.querySelector('.sidebar-logout a').style.justifyContent = 'center';
+                    sidebar.querySelector('.sidebar-logout a').style.padding = '10px 0';
+                } else {
+                    sidebar.style.width = '220px';
+                    sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = '');
+                    sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = ''; el.style.padding = ''; });
+                    sidebar.querySelector('.sidebar-logout a').style.justifyContent = '';
+                    sidebar.querySelector('.sidebar-logout a').style.padding = '';
+                }
+            }
+        });
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', closeMobileSidebar);
+    }
+            sidebar.querySelector('.sidebar-logout a').style.justifyContent = 'center';
+            sidebar.querySelector('.sidebar-logout a').style.padding = '10px 0';
+        } else {
+            sidebar.style.width = '220px';
+            sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = '');
+            sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = ''; el.style.padding = ''; });
+            sidebar.querySelector('.sidebar-logout a').style.justifyContent = '';
+            sidebar.querySelector('.sidebar-logout a').style.padding = '';
+        }
+    });
+
+    // ---- Password toggle ----
+    function togglePasswordVisibility() {
+        const pw = document.getElementById('current_password');
+        const icon = document.getElementById('toggleEyeIcon');
+        if (!pw || !icon) return;
+        if (pw.type === 'password') {
+            pw.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            pw.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    }
+</script>
+
+</body>
+</html>

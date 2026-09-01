@@ -7,6 +7,11 @@
 
     <title>QRESERVE | Sign Up</title>
 
+        <!-- Favicon / Browser Tab Icon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
           rel="stylesheet">
@@ -42,7 +47,7 @@
         body {
             min-height: 100vh;
             position: relative;
-            background: #ffffff;
+            background: transparent;
         }
 
 
@@ -52,10 +57,10 @@
 
         .background-image {
             position: fixed;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
 
             background-image: url("{{ url_for('static', filename='images/bulsu.jpg') }}");
             background-size: cover;
@@ -63,8 +68,10 @@
             background-repeat: no-repeat;
 
             filter: blur(3px);
+            transform: scale(1.05);
 
             z-index: -2;
+            pointer-events: none;
         }
 
         .overlay {
@@ -278,7 +285,7 @@
 
         .form-control:focus {
             border-color: #d00000;
-            background: #ffffff;
+            background: transparent;
 
             transform: translateY(-1.5px);
             box-shadow: 0 0 0 4px rgba(208, 0, 0, 0.12);
@@ -745,6 +752,8 @@
 
     </style>
 
+    <!-- Transitions & Animation Delay CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/transitions.css') }}">
 </head>
 
 
@@ -1073,6 +1082,8 @@
 
     </script>
 
+<!-- Transitions & Delays JS -->
+<script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
 </body>
 
 </html>

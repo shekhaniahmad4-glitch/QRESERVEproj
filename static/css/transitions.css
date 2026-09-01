@@ -1,0 +1,195 @@
+/* =========================================================
+   QRESERVE - Ultra-Smooth Animation Transitions & Staggered Delays
+   Butter-smooth 60-120fps GPU accelerated easing
+   ========================================================= */
+
+/* 1. Hardware-accelerated compositor hints */
+.content,
+.main,
+.tab-pane-animated,
+.sidebar-link,
+.card,
+.profile-card,
+.welcome-banner,
+.intro-card,
+.login-card {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* 2. Direct CSS Page Entrance (Immediate from Frame 1, No Flash) */
+@keyframes pageFadeSlideIn {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 14px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.content,
+.profile-card,
+.intro-card,
+.login-card {
+    animation: pageFadeSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: opacity, transform;
+}
+
+/* 3. Page Exit Transition (when changing HTMLs) */
+.page-is-exiting {
+    opacity: 0 !important;
+    transform: translate3d(0, -10px, 0) scale(0.992) !important;
+    transition: opacity 0.26s cubic-bezier(0.25, 1, 0.5, 1),
+                transform 0.26s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    pointer-events: none !important;
+    will-change: opacity, transform;
+}
+
+/* Full page exit for auth screens or logout */
+body.page-is-exiting-full {
+    opacity: 0 !important;
+    transform: translate3d(0, -8px, 0) !important;
+    transition: opacity 0.26s cubic-bezier(0.25, 1, 0.5, 1),
+                transform 0.26s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    pointer-events: none !important;
+}
+
+/* 4. Top Navigation Progress Bar (Fluid Streamlined Sweep) */
+#qreserve-top-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3.5px;
+    width: 0%;
+    background: linear-gradient(90deg, #8a0d0d 0%, #d00000 50%, #ff4d4d 100%);
+    box-shadow: 0 0 12px rgba(208, 0, 0, 0.7), 0 0 6px rgba(255, 77, 77, 0.9);
+    z-index: 999999;
+    transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    pointer-events: none;
+    opacity: 0;
+}
+
+#qreserve-top-progress.active {
+    opacity: 1;
+    width: 85%;
+}
+
+#qreserve-top-progress.finish {
+    width: 100%;
+    opacity: 0;
+    transition: width 0.18s ease-out, opacity 0.24s ease-out 0.1s;
+}
+
+/* 5. Tab Switching Transitions (Smooth Cross-Fade & Glide) */
+@keyframes tabFadeSlideIn {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 14px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes tabFadeSlideOut {
+    0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+    100% {
+        opacity: 0;
+        transform: translate3d(0, -8px, 0);
+    }
+}
+
+.tab-pane-animated {
+    display: none;
+    opacity: 0;
+}
+
+.tab-pane-animated.active {
+    display: block;
+    animation: tabFadeSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: opacity, transform;
+}
+
+.tab-pane-animated.tab-exiting {
+    display: block;
+    animation: tabFadeSlideOut 0.16s cubic-bezier(0.4, 0, 1, 1) both;
+    will-change: opacity, transform;
+    pointer-events: none;
+}
+
+/* 6. Staggered Delays for Children Elements */
+.fade-in-stagger {
+    opacity: 0;
+    animation: pageFadeSlideIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: opacity, transform;
+}
+
+.delay-1 { animation-delay: 0.03s !important; }
+.delay-2 { animation-delay: 0.07s !important; }
+.delay-3 { animation-delay: 0.11s !important; }
+.delay-4 { animation-delay: 0.15s !important; }
+.delay-5 { animation-delay: 0.19s !important; }
+.delay-6 { animation-delay: 0.23s !important; }
+
+/* 7. Active Tab Pill Animation & Sidebar Hover Transitions */
+.sidebar-link {
+    position: relative;
+    overflow: hidden;
+    transition: background 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.sidebar-link:active {
+    transform: scale(0.96) !important;
+}
+
+.sidebar-link.active {
+    position: relative;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+}
+
+.sidebar-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    height: 70%;
+    width: 3.5px;
+    background: #ffc107;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 8px rgba(255, 193, 7, 0.8);
+    animation: barPulse 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes barPulse {
+    from { height: 0; opacity: 0; transform: scaleY(0); }
+    to { height: 70%; opacity: 1; transform: scaleY(1); }
+}
+
+/* Tab click ripple or pulse effect */
+.tab-switching-pulse {
+    animation: tabSwitchGlow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tabSwitchGlow {
+    0% { transform: scale(1); }
+    35% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+/* Smooth card hover lift */
+.card, .profile-card, .welcome-banner, .tab-header-box, .announcement-card, .doc-item, .faq-item {
+    transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.26s ease;
+}

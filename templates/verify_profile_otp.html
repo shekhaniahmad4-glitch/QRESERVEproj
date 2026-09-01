@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QRESERVE | Verify Profile Update</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Transitions & Animation Delay CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/transitions.css') }}">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            background: transparent !important;
+            color: #1e293b;
+        }
+
+        .background-image {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-image: url("{{ url_for('static', filename='images/bulsu.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(3px);
+            transform: scale(1.05);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(255, 255, 255, 0.62);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Ambient Glows */
+        .ambient-glow-1 {
+            position: fixed; top: 15%; left: 10%;
+            width: 320px; height: 320px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(208, 0, 0, 0.16) 0%, rgba(208, 0, 0, 0) 70%);
+            z-index: -1; pointer-events: none;
+        }
+        .ambient-glow-2 {
+            position: fixed; bottom: 15%; right: 10%;
+            width: 340px; height: 340px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, rgba(245, 158, 11, 0) 70%);
+            z-index: -1; pointer-events: none;
+        }
+
+        /* Navigation */
+        .custom-navbar {
+            height: 72px;
+            background: #a90000;
+            border-bottom: 4px solid #e00000;
+            padding: 0 28px;
+            position: relative; z-index: 10;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+        }
+
+        .navbar-brand {
+            color: white !important;
+            text-decoration: none;
+            display: flex; align-items: center;
+        }
+        .logo {
+            width: 48px; height: 48px; object-fit: contain; margin-right: 12px;
+        }
+
+        /* Page Layout */
+        .verify-page {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: calc(100vh - 72px);
+            padding: 40px 16px;
+        }
+
+        .verify-title {
+            font-size: 24px; font-weight: 800; color: #1e293b;
+            text-align: center; margin-bottom: 4px;
+        }
+
+        .verify-subtitle {
+            font-size: 13px; color: #64748b; text-align: center;
+            margin-bottom: 24px;
+        }
+
+        /* Card */
+        .verify-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 38px 36px 32px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .verify-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #8c1010, #c01818);
+            color: white; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; margin: 0 auto 18px;
+            box-shadow: 0 6px 20px rgba(140, 16, 16, 0.28);
+        }
+
+        .verify-heading {
+            font-size: 18px; font-weight: 800; color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .verify-description {
+            font-size: 13px; color: #64748b; margin-bottom: 20px;
+            line-height: 1.55;
+        }
+
+        .email-box {
+            background: #fff7ed;
+            border: 1.5px solid #fed7aa;
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 22px;
+        }
+        .email-label {
+            font-size: 10px; font-weight: 700; color: #c2410c;
+            letter-spacing: 0.5px;
+        }
+        .email-address {
+            font-size: 13.5px; font-weight: 700; color: #1e293b;
+        }
+
+        /* OTP Input */
+        .otp-label {
+            font-size: 11.5px; font-weight: 700; color: #475569;
+            display: block; margin-bottom: 8px; text-align: left;
+        }
+
+        .otp-input {
+            width: 100%; padding: 14px;
+            font-family: 'Poppins', monospace;
+            font-size: 24px; font-weight: 800;
+            text-align: center; letter-spacing: 12px;
+            border: 2px solid #e2e8f0; border-radius: 14px;
+            background: #fafafa; outline: none;
+            transition: all 0.2s ease; margin-bottom: 20px;
+        }
+        .otp-input:focus {
+            border-color: #a90000;
+            box-shadow: 0 0 0 4px rgba(169, 0, 0, 0.1);
+            background: white;
+        }
+
+        .verify-button {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, #d00000, #a80000);
+            color: white; font-size: 14px; font-weight: 700;
+            border: none; border-radius: 30px; cursor: pointer;
+            box-shadow: 0 6px 20px rgba(200, 0, 0, 0.28);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: 0.3px;
+        }
+        .verify-button:hover {
+            background: linear-gradient(135deg, #b80000, #8a0000);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 26px rgba(200, 0, 0, 0.36);
+        }
+        .verify-button:active {
+            transform: scale(0.98);
+        }
+
+        .resend-box {
+            margin-top: 18px; font-size: 12.5px; color: #64748b;
+        }
+        .resend-link {
+            color: #a90000; font-weight: 700; text-decoration: none;
+        }
+        .resend-link:hover { text-decoration: underline; }
+
+        .cancel-box {
+            margin-top: 14px; font-size: 12px;
+        }
+        .cancel-link {
+            color: #94a3b8; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .cancel-link:hover { color: #a90000; }
+    
+        /* Mobile Phone Optimizations */
+        @media (max-width: 576px) {
+            .custom-navbar {
+                height: 60px;
+                padding: 0 16px;
+            }
+            .logo {
+                width: 36px;
+                height: 36px;
+                margin-right: 8px;
+            }
+            .custom-navbar h6 {
+                font-size: 12.5px !important;
+                line-height: 1.2;
+            }
+            .custom-navbar small {
+                font-size: 9.5px !important;
+            }
+            .verify-page {
+                padding: 24px 14px 36px;
+                min-height: calc(100vh - 60px);
+            }
+            .verify-title {
+                font-size: 19px;
+            }
+            .verify-subtitle {
+                font-size: 12px;
+                margin-bottom: 16px;
+            }
+            .verify-card {
+                padding: 26px 18px 24px;
+                border-radius: 20px;
+                margin: 0 auto;
+                width: 100%;
+            }
+            .verify-icon {
+                width: 52px;
+                height: 52px;
+                font-size: 24px;
+                border-radius: 16px;
+                margin-bottom: 14px;
+            }
+            .verify-heading {
+                font-size: 16px;
+            }
+            .verify-description {
+                font-size: 12px;
+                margin-bottom: 16px;
+            }
+            .email-box {
+                padding: 8px 12px;
+                margin-bottom: 18px;
+            }
+            .email-address {
+                font-size: 12px;
+                word-break: break-all;
+            }
+            .otp-input {
+                font-size: 22px;
+                padding: 12px 8px;
+                letter-spacing: 8px;
+                margin-bottom: 16px;
+            }
+            .verify-button {
+                font-size: 13.5px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="background-image"></div>
+    <div class="overlay"></div>
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
+
+    <nav class="navbar custom-navbar">
+        <div class="container-fluid p-0">
+            <a class="navbar-brand" href="{{ url_for('auth.student_dashboard') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo" alt="BulSU Logo">
+                <div>
+                    <h6 class="mb-0 fw-bold">BULACAN STATE UNIVERSITY</h6>
+                    <small>BUSTOS CAMPUS</small>
+                </div>
+            </a>
+        </div>
+    </nav>
+
+    <main class="verify-page">
+        <div style="width: 100%; max-width: 440px;">
+
+            <h1 class="verify-title">SECURITY VERIFICATION</h1>
+            <div class="verify-subtitle">Confirm changes to your personal information</div>
+
+            <div class="verify-card">
+
+                <div class="verify-icon">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+
+                <h2 class="verify-heading">Verify via Email OTP</h2>
+                <p class="verify-description">
+                    Password confirmed! We've sent a 6-digit authorization code to your registered BulSU student email address.
+                </p>
+
+                <div class="email-box">
+                    <div class="email-label">REGISTERED STUDENT EMAIL</div>
+                    <div class="email-address">{{ email }}</div>
+                </div>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert" style="border-radius:12px;font-size:12.5px;padding:10px 14px;margin-bottom:16px;">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('auth.student_profile_verify_otp') }}">
+                    <label for="otp" class="otp-label">Enter 6-Digit Code</label>
+                    <input
+                        type="text"
+                        id="otp"
+                        name="otp"
+                        class="otp-input"
+                        placeholder="&bull;&bull;&bull;&bull;&bull;&bull;"
+                        maxlength="6"
+                        minlength="6"
+                        inputmode="numeric"
+                        pattern="[0-9]{6}"
+                        autocomplete="one-time-code"
+                        required
+                        autofocus
+                    >
+
+                    <button type="submit" class="verify-button">
+                        <i class="bi bi-check2-circle me-1"></i> VERIFY &amp; UPDATE PROFILE
+                    </button>
+                </form>
+
+                <div class="resend-box">
+                    Didn't receive the code?
+                    <a href="{{ url_for('auth.student_profile_resend_otp') }}" class="resend-link">Resend OTP</a>
+                </div>
+
+                <div class="cancel-box">
+                    <a href="{{ url_for('auth.student_profile') }}" class="cancel-link">
+                        <i class="bi bi-x-circle"></i> Cancel and keep previous information
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const otpInput = document.getElementById("otp");
+        otpInput.addEventListener("input", function () {
+            this.value = this.value.replace(/\D/g, "");
+        });
+    </script>
+
+    <!-- Transitions & Delays JS -->
+    <script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
+
+</body>
+</html>

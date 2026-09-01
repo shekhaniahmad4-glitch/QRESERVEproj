@@ -8,171 +8,156 @@
 
     <title>QRESERVE | Guest Dashboard</title>
 
-    <!-- Bootstrap -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-        rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Bootstrap Icons -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <!-- Google Font -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Transitions & Animation Delay CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/transitions.css') }}">
 
     <style>
 
-        /* =====================================================
+        /* ===========================================
            GLOBAL
-        ===================================================== */
-
+        =========================================== */
         * {
             box-sizing: border-box;
-        }
-
-        html,
-        body {
-            width: 100%;
-            height: 100%;
             margin: 0;
             padding: 0;
         }
 
-        body {
+        html, body {
+            width: 100%;
+            height: 100%;
             font-family: 'Poppins', sans-serif;
-            background: #f8fafc;
+            background: #f5f5f5;
             color: #1e293b;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
 
-        /* =====================================================
-           DASHBOARD LAYOUT
-        ===================================================== */
-
-        .dashboard {
+        /* ===========================================
+           LAYOUT
+        =========================================== */
+        .layout {
             display: flex;
             width: 100%;
             height: 100vh;
-            min-height: 100vh;
         }
 
 
-        /* =====================================================
+        /* ===========================================
            SIDEBAR
-        ===================================================== */
-
+        =========================================== */
         .sidebar {
-            width: 250px;
+            width: 220px;
             height: 100vh;
             flex-shrink: 0;
-
-            background: linear-gradient(
-                180deg,
-                #8a0d0d 0%,
-                #a91616 40%,
-                #d01c1c 100%
-            );
-
-            color: white;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(180deg, #6e0a0a 0%, #8c1010 30%, #a91515 70%, #c01818 100%);
             display: flex;
             flex-direction: column;
+            position: relative;
             z-index: 10;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.15);
+            transition: width 0.3s ease;
         }
 
-
-        /* =====================================================
-           SIDEBAR HEADER
-        ===================================================== */
-
         .sidebar-header {
-            height: 170px;
-
-            background: rgba(0, 0, 0, 0.14);
-
+            padding: 22px 0 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
         }
 
-        .sidebar-logo {
-            width: 65px;
-            height: 65px;
-
-            object-fit: contain;
-
-            margin-bottom: 8px;
+        .sidebar-logo-wrap {
+            width: 72px;
+            height: 72px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 50%;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
             transition: transform 0.3s ease;
         }
 
-        .sidebar-header:hover .sidebar-logo {
-            transform: scale(1.06) rotate(2deg);
+        .sidebar-logo-wrap:hover {
+            transform: scale(1.05);
         }
 
-        .university-name {
-            font-size: 12px;
+        .sidebar-logo {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+        }
+
+        .sidebar-uni-name {
+            font-size: 11px;
             font-weight: 700;
-            line-height: 1.25;
+            color: white;
+            line-height: 1.3;
             letter-spacing: 0.3px;
         }
 
-        .campus-name {
-            font-size: 11px;
+        .sidebar-campus {
+            font-size: 10px;
             font-weight: 600;
+            color: rgba(255,255,255,0.8);
             letter-spacing: 0.5px;
-            color: rgba(255, 255, 255, 0.85);
             margin-top: 2px;
         }
 
-
-        /* =====================================================
-           SIDEBAR MENU
-        ===================================================== */
-
-        .sidebar-menu {
-            padding: 16px 12px;
+        /* Sidebar nav */
+        .sidebar-nav {
             flex: 1;
+            padding: 12px 10px;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 0;
         }
 
         .sidebar-link {
             display: flex;
             align-items: center;
-
-            width: 100%;
-
-            padding: 12px 18px;
-            margin-bottom: 6px;
-
-            color: rgba(255, 255, 255, 0.9);
+            gap: 10px;
+            padding: 10px 14px;
+            margin-bottom: 4px;
+            color: rgba(255,255,255,0.88);
             text-decoration: none;
-
             font-size: 13px;
             font-weight: 500;
-            border-radius: 12px;
-
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
         }
 
         .sidebar-link i {
-            width: 25px;
-            font-size: 17px;
-            transition: transform 0.25s ease;
+            font-size: 16px;
+            width: 20px;
+            flex-shrink: 0;
+            transition: transform 0.2s;
         }
 
         .sidebar-link:hover {
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(255,255,255,0.16);
             color: white;
-            transform: translateX(4px);
+            transform: translateX(3px);
         }
 
         .sidebar-link:hover i {
@@ -180,676 +165,1253 @@
         }
 
         .sidebar-link.active {
-            background: rgba(255, 255, 255, 0.24);
+            background: rgba(255,255,255,0.22);
             color: white;
-            font-weight: 600;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
         }
 
-        .logout {
-            margin-top: auto;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .sidebar-logout {
+            margin: 8px 10px 14px;
         }
 
-        .logout:hover {
-            background: rgba(255, 255, 255, 0.25) !important;
-            border-color: rgba(255, 255, 255, 0.4);
+        .sidebar-logout a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            color: rgba(255,255,255,0.88);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-logout a:hover {
+            background: rgba(255,255,255,0.18);
+            color: white;
+        }
+
+        .sidebar-logout a i {
+            font-size: 16px;
         }
 
 
-        /* =====================================================
-           MAIN AREA
-        ===================================================== */
-
-        .main-content {
+        /* ===========================================
+           MAIN CONTENT
+        =========================================== */
+        .main {
             flex: 1;
-
-            width: calc(100% - 250px);
             min-width: 0;
             height: 100vh;
-
-            background: #f8fafc;
-
-            position: relative;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            background: #f5f6fa;
+            overflow: hidden;
         }
 
 
-        /* =====================================================
+        /* ===========================================
            TOPBAR
-        ===================================================== */
-
+        =========================================== */
         .topbar {
-            width: 100%;
-            height: 70px;
-
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #eaeaea;
             display: flex;
             align-items: center;
-
-            padding: 0 28px;
-
-            background: white;
-
-            border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-            z-index: 5;
+            padding: 0 24px;
+            gap: 12px;
+            flex-shrink: 0;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
         }
 
-        .menu-button {
+        .topbar-menu-btn {
+            background: none;
             border: none;
-            background: transparent;
-
             font-size: 22px;
-
-            margin-right: 14px;
-
             color: #555;
-
             cursor: pointer;
-            border-radius: 8px;
-            padding: 4px 8px;
-            transition: background 0.2s, color 0.2s;
+            padding: 4px;
+            border-radius: 6px;
+            line-height: 1;
+            transition: color 0.2s;
         }
 
-        .menu-button:hover {
-            background: #f3f4f6;
+        .topbar-menu-btn:hover {
             color: #a90000;
         }
 
-        .page-title {
+        .topbar-brand {
             color: #a90000;
-
-            font-size: 17px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 800;
             letter-spacing: 0.3px;
+            margin-right: auto;
         }
-
-        /* Live Clock Pill */
-        .live-clock-pill {
-            margin-left: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            background: #f1f5f9;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 600;
-            color: #475569;
-        }
-
-        .live-clock-pill i {
-            color: #a90000;
-        }
-
-
-        /* =====================================================
-           TOPBAR RIGHT
-        ===================================================== */
 
         .topbar-right {
-            margin-left: auto;
-
             display: flex;
             align-items: center;
-
             gap: 16px;
         }
 
         @keyframes bellRing {
-            0%, 100% { transform: rotate(0deg); }
+            0%, 100% { transform: rotate(0); }
             20%, 60% { transform: rotate(12deg); }
             40%, 80% { transform: rotate(-12deg); }
         }
 
-        .notification {
-            font-size: 19px;
-            color: #4b5563;
+        .topbar-bell {
+            font-size: 20px;
+            color: #555;
             cursor: pointer;
-            padding: 7px 9px;
+            padding: 6px;
             border-radius: 50%;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
-        .notification:hover {
+        .topbar-bell:hover {
             color: #a90000;
             background: #fee2e2;
-            animation: bellRing 0.6s ease;
+            animation: bellRing 0.5s ease;
         }
 
-        .profile {
+        .topbar-profile {
             display: flex;
             align-items: center;
-
-            gap: 10px;
-            padding: 5px 12px;
-            border-radius: 30px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            transition: all 0.2s ease;
+            gap: 8px;
             cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: background 0.2s;
         }
 
-        .profile:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
+        .topbar-profile:hover {
+            background: #f5f5f5;
         }
 
-        .profile-picture {
-            width: 34px;
-            height: 34px;
-
+        .topbar-avatar {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-
-            background: linear-gradient(135deg, #a90000, #e00000);
+            background: linear-gradient(135deg, #e8750a, #f59e0b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            flex-shrink: 0;
             border: 2px solid #fff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+            overflow: hidden;
         }
 
-        .profile-info {
+        .topbar-user-info {
             line-height: 1.15;
         }
 
-        .profile-name {
-            font-size: 11.5px;
+        .topbar-user-name {
+            font-size: 12.5px;
             font-weight: 700;
             color: #1e293b;
         }
 
-        .profile-type {
-            font-size: 10px;
+        .topbar-user-role {
+            font-size: 10.5px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .topbar-chevron {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+
+        /* ===========================================
+           CONTENT AREA
+        =========================================== */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px 32px;
+        }
+
+        .content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+
+        /* ===========================================
+           WELCOME BANNER
+        =========================================== */
+        .welcome-banner {
+            background: linear-gradient(135deg, #fde8d8 0%, #fdf0e8 100%);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 22px;
+            border: 1px solid rgba(208, 0, 0, 0.1);
+        }
+
+        .welcome-banner h2 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .welcome-banner p {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .guest-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(169, 0, 0, 0.1);
+            border: 1px solid rgba(169, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #a90000;
+            margin-bottom: 8px;
+        }
+
+
+        /* ===========================================
+           DASHBOARD GRID
+        =========================================== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        /* ===========================================
+           CARDS SHARED
+        =========================================== */
+        .card {
+            background: white;
+            border: 1px solid #eaedf0;
+            border-radius: 18px;
+            padding: 22px 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 22px rgba(0,0,0,0.07);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 14px;
+        }
+
+
+        /* ===========================================
+           YOUR CURRENT QUEUE CARD (MATCHES USER DESIGN)
+        =========================================== */
+        .queue-field-label {
+            font-size: 11.5px;
+            color: #94a3b8;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .queue-field-value {
+            font-size: 13.5px;
+            color: #334155;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .queue-number-display {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1e293b;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+        }
+
+        .queue-number-display .dash {
+            display: inline-block;
+            width: 24px;
+            height: 3px;
+            background: #1e293b;
+            border-radius: 2px;
+            margin: 0 3px 4px;
+            vertical-align: middle;
+        }
+
+        .wait-time-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .view-queue-btn {
+            display: block;
+            width: 100%;
+            margin-top: 18px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #d00000, #a80000);
+            color: white;
+            font-size: 13.5px;
+            font-weight: 700;
+            text-align: center;
+            border-radius: 30px;
+            text-decoration: none;
+            letter-spacing: 0.3px;
+            box-shadow: 0 6px 18px rgba(200,0,0,0.24);
+            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .view-queue-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -60%;
+            width: 40%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(25deg);
+            transition: left 0.5s ease;
+            pointer-events: none;
+        }
+
+        .view-queue-btn:hover {
+            background: linear-gradient(135deg, #b80000, #8a0000);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(200,0,0,0.32);
+            color: white;
+        }
+
+        .view-queue-btn:hover::after {
+            left: 130%;
+        }
+
+
+        /* ===========================================
+           LIVE QUEUE MONITOR CARD
+        =========================================== */
+        .monitor-now-serving-label {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #a90000;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .monitor-serving-number {
+            font-size: 48px;
+            font-weight: 900;
+            color: #1e293b;
+            letter-spacing: 1px;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .monitor-counter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 18px;
+        }
+
+        .monitor-divider {
+            border: none;
+            border-top: 1.5px solid #f0f0f0;
+            margin-bottom: 16px;
+        }
+
+        .counter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f7f7f7;
+            transition: background 0.2s, padding 0.2s;
+            border-radius: 0;
+        }
+
+        .counter-row:last-child {
+            border-bottom: none;
+        }
+
+        .counter-row:hover {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 8px 8px;
+            margin: 0 -8px;
+        }
+
+        .counter-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .counter-waiting {
+            font-size: 12px;
             color: #64748b;
             font-weight: 500;
         }
 
 
-        /* =====================================================
-           CONTENT AREA
-        ===================================================== */
-
-        .dashboard-content {
-            flex: 1;
-            padding: 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-
-        /* =====================================================
-           QUEUE PREVIEW STATS CARDS
-        ===================================================== */
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-        }
-
-        .stat-card {
+        /* ===========================================
+           CLICKABLE PLACEHOLDER (UNDER DEVELOPMENT) TABS
+        =========================================== */
+        .dev-placeholder-card {
             background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 18px;
-            padding: 18px 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            border: 1px solid #eaedf0;
+            border-radius: 20px;
+            padding: 48px 36px;
+            text-align: center;
+            max-width: 580px;
+            margin: 36px auto 0;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
         }
 
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px -5px rgba(169, 0, 0, 0.10);
-            border-color: #fecaca;
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            background: #fff0f0;
-            border: 1px solid #fecaca;
+        .dev-icon-circle {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fff1f2, #fee2e2);
+            color: #a90000;
+            font-size: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
-            color: #a90000;
+            margin: 0 auto 18px;
+            border: 2px solid #fecaca;
+            box-shadow: 0 6px 18px rgba(169, 0, 0, 0.1);
         }
 
-        .stat-info {
-            flex: 1;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
-        }
-
-        .stat-value {
+        .dev-title {
             font-size: 20px;
             font-weight: 800;
             color: #1e293b;
+            margin-bottom: 8px;
         }
 
-        .stat-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-            background: #ecfdf5;
-            color: #059669;
-        }
-
-
-        /* =====================================================
-           DEVELOPMENT BOX
-        ===================================================== */
-
-        @keyframes boxPop {
-            from {
-                opacity: 0;
-                transform: scale(0.96) translateY(14px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        @keyframes toolWobble {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(1.08) rotate(-6deg); }
-            75% { transform: scale(1.08) rotate(6deg); }
-        }
-
-        .development-area {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex: 1;
-            padding: 10px 0;
-        }
-
-        .development-box {
-            width: 100%;
-            max-width: 440px;
-
-            padding: 34px 32px 30px;
-
-            background: white;
-
-            border: 1px solid #e2e8f0;
-
-            border-radius: 24px;
-
-            box-shadow:
-                0 20px 45px -12px rgba(169, 0, 0, 0.12),
-                0 8px 20px -6px rgba(0, 0, 0, 0.05);
-
-            text-align: center;
-            animation: boxPop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .development-box:hover {
-            transform: translateY(-4px);
-            box-shadow:
-                0 25px 50px -12px rgba(169, 0, 0, 0.18),
-                0 12px 24px -6px rgba(0, 0, 0, 0.07);
-        }
-
-        .development-icon-circle {
-            width: 68px;
-            height: 68px;
-            border-radius: 50%;
-            background: #fff0f0;
-            border: 2px solid #fecaca;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-        }
-
-        .development-icon-circle i {
-            font-size: 30px;
-            color: #a90000;
-            display: inline-block;
-            animation: toolWobble 3s ease-in-out infinite;
-        }
-
-        .development-box h2 {
-            margin: 0 0 8px 0;
-
-            font-size: 18px;
-
-            font-weight: 800;
-
-            color: #1e293b;
-            letter-spacing: 0.3px;
-        }
-
-        .development-box p {
-            margin: 0 0 18px 0;
-
+        .dev-desc {
             font-size: 13px;
-
-            line-height: 1.55;
-
             color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 24px;
         }
 
-        .preview-badge {
+        .dev-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 6px 14px;
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
             border-radius: 20px;
-            background: #f1f5f9;
-            color: #475569;
+            padding: 4px 14px;
             font-size: 11.5px;
-            font-weight: 600;
+            font-weight: 700;
+            margin-bottom: 22px;
         }
 
 
-        /* =====================================================
-           RESPONSIVE
-        ===================================================== */
+        /* ===========================================
+           ANNOUNCEMENTS & HELP SUPPORT
+        =========================================== */
+        .tab-header-box {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            border: 1px solid #eaedf0;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
 
+        .tab-header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #8c1010, #c01818);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(140,16,16,0.2);
+        }
+
+        .tab-header-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+
+        .tab-header-desc {
+            font-size: 12.5px;
+            color: #64748b;
+            margin: 0;
+        }
+
+        .announcement-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #eaedf0;
+            padding: 20px 22px;
+            margin-bottom: 14px;
+            transition: all 0.25s ease;
+        }
+
+        .announcement-card:hover {
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            transform: translateY(-2px);
+            border-color: #fca5a5;
+        }
+
+        .announcement-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .announcement-badge {
+            background: #fee2e2;
+            color: #a90000;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .announcement-date {
+            font-size: 11.5px;
+            color: #94a3b8;
+        }
+
+        .faq-item {
+            background: white;
+            border: 1px solid #eaedf0;
+            border-radius: 14px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .faq-question {
+            padding: 16px 20px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #1e293b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        .faq-question:hover {
+            color: #a90000;
+        }
+
+        .faq-answer {
+            padding: 0 20px 16px;
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .faq-item.open .faq-answer {
+            display: block;
+            animation: pageFadeSlideIn 0.25s ease;
+        }
+
+        .faq-item.open .bi-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .bi-chevron-down {
+            transition: transform 0.2s ease;
+        }
+
+        
+        /* Mobile Drawer Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.48);
+            backdrop-filter: blur(2px);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-
             .sidebar {
-                width: 190px;
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: 250px !important;
+                z-index: 999;
+                transform: translateX(-100%);
+                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+                box-shadow: 4px 0 24px rgba(0,0,0,0.25);
             }
 
-            .main-content {
-                width: calc(100% - 190px);
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar-uni-name, .sidebar-campus,
+            .sidebar-link span, .sidebar-logout a span {
+                display: inline !important;
             }
 
             .sidebar-link {
-                font-size: 11px;
-                padding: 10px 12px;
+                justify-content: flex-start !important;
+                padding: 10px 14px !important;
+            }
+
+            .sidebar-link i {
+                width: 20px !important;
+            }
+
+            .sidebar-logo-wrap {
+                width: 64px !important;
+                height: 64px !important;
+            }
+
+            .sidebar-logo {
+                width: 48px !important;
+                height: 48px !important;
+            }
+
+            .sidebar-logout a {
+                justify-content: flex-start !important;
+                padding: 10px 14px !important;
+            }
+
+            .main {
+                width: 100%;
             }
 
             .topbar {
                 padding: 0 16px;
             }
 
-            .page-title {
-                font-size: 14px;
+            .topbar-brand {
+                font-size: 16px;
             }
 
-            .live-clock-pill {
-                display: none;
-            }
-        }
-
-
-        @media (max-width: 576px) {
-
-            .sidebar {
-                width: 70px;
-            }
-
-            .main-content {
-                width: calc(100% - 70px);
-            }
-
-            .sidebar-header {
-                height: 110px;
-            }
-
-            .sidebar-logo {
-                width: 45px;
-                height: 45px;
-            }
-
-            .university-name,
-            .campus-name,
-            .sidebar-link span {
+            .topbar-user-info {
                 display: none;
             }
 
-            .sidebar-link {
-                justify-content: center;
-                padding: 14px 0;
+            .content {
+                padding: 16px 14px 28px;
             }
 
-            .sidebar-link i {
-                width: auto;
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
 
-            .topbar {
-                padding: 0 12px;
+            .card {
+                padding: 18px 16px;
             }
 
-            .menu-button {
-                font-size: 20px;
-                margin-right: 8px;
+            .welcome-banner {
+                padding: 16px 18px;
+                border-radius: 14px;
             }
 
-            .page-title {
+            .welcome-banner h2 {
+                font-size: 16.5px;
+            }
+
+            .welcome-banner p {
                 font-size: 12px;
             }
 
-            .topbar-right {
-                gap: 10px;
+            .monitor-serving-number {
+                font-size: 38px;
             }
 
-            .topbar-right .profile-info {
-                display: none;
+            .dev-placeholder-card {
+                padding: 32px 20px;
+                margin: 20px auto 0;
             }
 
-            .dashboard-content {
-                padding: 16px;
+            .dev-icon-circle {
+                width: 60px;
+                height: 60px;
+                font-size: 26px;
+            }
+
+            .dev-title {
+                font-size: 17.5px;
+            }
+
+            .dev-desc {
+                font-size: 12.5px;
             }
         }
 
+        @media (max-width: 480px) {
+            .topbar-brand {
+                font-size: 15px;
+            }
+            .monitor-serving-number {
+                font-size: 34px;
+            }
+        }
     </style>
 
 </head>
 
-
 <body>
 
-<div class="dashboard">
+<div class="layout">
 
-
-    <!-- =====================================================
+    <!-- =============================================
          SIDEBAR
-    ====================================================== -->
-
-    <aside class="sidebar">
+    ============================================= -->
+    <aside class="sidebar" id="sidebar">
 
         <div class="sidebar-header">
-
-            <img
-                src="{{ url_for('static', filename='images/logo.png') }}"
-                class="sidebar-logo"
-                alt="Bulacan State University Logo">
-
-            <div class="university-name">
-                BULACAN STATE<br>
-                UNIVERSITY
+            <div class="sidebar-logo-wrap">
+                <img
+                    src="{{ url_for('static', filename='images/logo.png') }}"
+                    class="sidebar-logo"
+                    alt="BulSU Logo">
             </div>
-
-            <div class="campus-name">
-                BUSTOS CAMPUS
-            </div>
-
+            <div class="sidebar-uni-name">BULACAN STATE<br>UNIVERSITY</div>
+            <div class="sidebar-campus">BUSTOS CAMPUS</div>
         </div>
 
-
-        <nav class="sidebar-menu">
-
-            <!-- Dashboard -->
-            <a href="#" class="sidebar-link active">
-                <i class="bi bi-house-door"></i>
+        <nav class="sidebar-nav">
+            
+            <!-- Dashboard (Active Focus) -->
+            <a href="#" data-tab-target="tab-dashboard" class="sidebar-link active">
+                <i class="bi bi-house-door-fill"></i>
                 <span>Dashboard</span>
             </a>
 
-            <!-- Extra items based on role -->
-            
-
-            <!-- Logout -->
-            <a
-                href="{{ url_for('auth.login') }}"
-                class="sidebar-link logout">
-
-                <i class="bi bi-box-arrow-left"></i>
-
-                <span>Logout</span>
-
+            <!-- My Queue (Clickable, No Function / Upcoming) -->
+            <a href="#" data-tab-target="tab-my-queue" class="sidebar-link">
+                <i class="bi bi-ticket-perforated-fill"></i>
+                <span>My Queue</span>
             </a>
 
+            <!-- My Requests (Clickable, No Function / Upcoming) -->
+            <a href="#" data-tab-target="tab-my-requests" class="sidebar-link">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>My Requests</span>
+            </a>
+
+            <!-- Queue History (Clickable, No Function / Upcoming) -->
+            <a href="#" data-tab-target="tab-queue-history" class="sidebar-link">
+                <i class="bi bi-clock-history"></i>
+                <span>Queue History</span>
+            </a>
+
+            <!-- Announcements (Active Focus) -->
+            <a href="#" data-tab-target="tab-announcements" class="sidebar-link">
+                <i class="bi bi-megaphone"></i>
+                <span>Announcements</span>
+            </a>
+
+            <!-- Help & Support (Active Focus) -->
+            <a href="#" data-tab-target="tab-help-support" class="sidebar-link">
+                <i class="bi bi-question-circle"></i>
+                <span>Help &amp; Support</span>
+            </a>
+
+            <!-- Profile (Active Focus - Navigates to Profile HTML) -->
+            <a href="{{ url_for('auth.guest_profile') }}" class="sidebar-link">
+                <i class="bi bi-person"></i>
+                <span>Profile</span>
+            </a>
         </nav>
 
+        <div class="sidebar-logout">
+            <a href="{{ url_for('auth.login') }}">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Exit Guest</span>
+            </a>
+        </div>
+
     </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 
-
-    <!-- =====================================================
+    <!-- =============================================
          MAIN CONTENT
-    ====================================================== -->
-
-    <main class="main-content">
+    ============================================= -->
+    <div class="main">
 
 
         <!-- TOPBAR -->
         <header class="topbar">
 
-            <button class="menu-button">
+            <button class="topbar-menu-btn" id="menuBtn">
                 <i class="bi bi-list"></i>
             </button>
 
-            <div class="page-title">
-                QRESERVE REQUEST
-            </div>
+            <div class="topbar-brand">QRESERVE</div>
 
-            <div class="live-clock-pill">
-                <i class="bi bi-clock"></i>
-                <span id="liveClockDisplay">--:--:--</span>
-            </div>
-
-            <!-- Right Side -->
             <div class="topbar-right">
 
-                <i class="bi bi-bell notification" title="Notifications"></i>
+                <i class="bi bi-bell topbar-bell" title="Notifications"></i>
 
-                <!-- Profile -->
-                <div class="profile">
-
-                    <div class="profile-picture"></div>
-
-                    <div class="profile-info">
-
-                        <div class="profile-name">
-                            Guest
-                        </div>
-
-                        <div class="profile-type">
-                            Guest User
-                        </div>
-
+                <a href="{{ url_for('auth.guest_profile') }}" class="topbar-profile" title="View Profile">
+                    <div class="topbar-avatar">
+                        <i class="bi bi-person-fill"></i>
                     </div>
-
-                    <i class="bi bi-chevron-down" style="font-size: 11px; color: #94a3b8;"></i>
-
-                </div>
+                    <div class="topbar-user-info">
+                        <div class="topbar-user-name">{{ guest_name }}</div>
+                        <div class="topbar-user-role">{{ guest_category if guest_category else 'Guest User' }}</div>
+                    </div>
+                    <i class="bi bi-chevron-down topbar-chevron"></i>
+                </a>
 
             </div>
 
         </header>
 
 
-        <!-- DASHBOARD BODY -->
-        <div class="dashboard-content">
+        <!-- CONTENT AREA (ANIMATED TABS) -->
+        <div class="content">
 
-            <!-- STATS PREVIEW CARDS -->
-            <div class="stats-grid">
+            <!-- FLASH MESSAGES -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show fade-in-stagger delay-1" role="alert" style="border-radius:12px;border:none;font-size:13px;margin-bottom:14px;">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <div class="stat-info">
-                        <div class="stat-label">Active Queue</div>
-                        <div class="stat-value">18 <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span></div>
-                    </div>
+
+            <!-- =============================================
+                 TAB 1: DASHBOARD (MAIN FOCUS)
+            ============================================= -->
+            <div id="tab-dashboard" class="tab-pane-animated active">
+
+                <!-- WELCOME BANNER -->
+                <div class="welcome-banner fade-in-stagger delay-1">
+                    <div class="guest-tag">
+                    <i class="bi bi-person-badge"></i>
+                    {{ guest_category if guest_category else 'Guest Access' }}
+                </div>
+                    <h2>Welcome, {{ guest_name }}!</h2>
+                    <p>You can reserve your queue number and request documents from the Registrar, Cashier, and Admissions offices.</p>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-ticket-detailed-fill"></i>
-                    </div>
-                    <div class="stat-info">
-                        <div class="stat-label">Now Serving</div>
-                        <div class="stat-value text-danger">#A-104</div>
-                    </div>
-                </div>
+                <!-- DASHBOARD GRID -->
+                <div class="dashboard-grid">
 
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-stopwatch-fill"></i>
+                    <!-- CARD 1: YOUR CURRENT QUEUE (DEFAULT ADAPTIVE STATE) -->
+                    <div class="card fade-in-stagger delay-2">
+                        <div class="card-title">Your Current Queue</div>
+
+                        <div class="queue-field-label">Queue Number</div>
+                        <div class="queue-number-display">
+                            <span class="dash"></span>
+                            <span class="dash"></span>
+                            <span class="dash"></span>
+                            <span class="dash"></span>
+                            <span class="dash"></span>
+                        </div>
+
+                        <div class="queue-field-label">Counter</div>
+                        <div class="queue-field-value">&mdash;&mdash;</div>
+
+                        <div class="queue-field-label">Estimated Wait Time</div>
+                        <div class="wait-time-value">0 minutes</div>
+
+                        <div class="queue-field-label">Service</div>
+                        <div class="queue-field-value">No document requested</div>
+
+                        <div class="queue-field-label">Requested Document</div>
+                        <div class="queue-field-value">No document requested</div>
+
+                        <!-- View Queue Button (Clickable, switches to My Queue tab) -->
+                        <a href="#" class="view-queue-btn" onclick="QReserve.switchTab('my-queue'); return false;">
+                            View my Queue &mdash;&mdash;&gt;
+                        </a>
                     </div>
-                    <div class="stat-info">
-                        <div class="stat-label">Est. Wait Time</div>
-                        <div class="stat-value">~4 min</div>
+
+
+                    <!-- CARD 2: LIVE QUEUE MONITOR -->
+                    <div class="card fade-in-stagger delay-3">
+                        <div class="card-title">Live Queue Monitor</div>
+
+                        <div class="monitor-now-serving-label">NOW SERVING</div>
+                        <div class="monitor-serving-number" id="nowServingNum">A-006</div>
+                        <div class="monitor-counter-label">Counter <strong>4</strong></div>
+
+                        <hr class="monitor-divider">
+
+                        <div class="counter-row">
+                            <div class="counter-name">A Registrar</div>
+                            <div class="counter-waiting">24 waiting</div>
+                        </div>
+
+                        <div class="counter-row">
+                            <div class="counter-name">B Cashier</div>
+                            <div class="counter-waiting">2 waiting</div>
+                        </div>
+
+                        <div class="counter-row">
+                            <div class="counter-name">C Admissions</div>
+                            <div class="counter-waiting">5 waiting</div>
+                        </div>
+
                     </div>
+
                 </div>
 
             </div>
 
 
-            <!-- DEVELOPMENT AREA -->
-            <section class="development-area">
+            <!-- =============================================
+                 TAB 2: MY QUEUE (CLICKABLE - NO FUNCTION / UPCOMING QUOTA)
+            ============================================= -->
+            <div id="tab-my-queue" class="tab-pane-animated">
 
-                <div class="development-box">
-
-                    <div class="development-icon-circle">
-                        <i class="bi bi-cpu"></i>
+                <div class="dev-placeholder-card fade-in-stagger delay-1">
+                    <div class="dev-icon-circle">
+                        <i class="bi bi-ticket-perforated"></i>
                     </div>
-
-                    <h2>SYSTEM ONLINE</h2>
-
-                    <p>
-                        The Guest Queue Service is currently preparing for dispatch.
+                    <div class="dev-badge">
+                        <i class="bi bi-clock-history"></i> Scheduled for Next Release
+                    </div>
+                    <h3 class="dev-title">My Queue &bull; Coming Soon</h3>
+                    <p class="dev-desc">
+                        Live queue ticketing and active counter monitoring are currently being integrated and will be activated in the next development cycle.
+                        <br><br>
+                        For this week's quota, please explore <strong>Dashboard</strong>, <strong>Profile</strong>, <strong>Announcements</strong>, and <strong>Help &amp; Support</strong>.
                     </p>
-
-                    <div class="preview-badge">
-                        <i class="bi bi-stars text-warning"></i> QRESERVE Version 1.0 &bull; Ready for next module
-                    </div>
-
+                    <button type="button" class="btn btn-dark rounded-pill px-4 py-2" style="font-size:13px;font-weight:600;" onclick="QReserve.switchTab('dashboard');">
+                        <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
+                    </button>
                 </div>
 
-            </section>
+            </div>
+
+
+            <!-- =============================================
+                 TAB 3: MY REQUESTS (CLICKABLE - NO FUNCTION / UPCOMING QUOTA)
+            ============================================= -->
+            <div id="tab-my-requests" class="tab-pane-animated">
+
+                <div class="dev-placeholder-card fade-in-stagger delay-1">
+                    <div class="dev-icon-circle">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="dev-badge">
+                        <i class="bi bi-clock-history"></i> Scheduled for Next Release
+                    </div>
+                    <h3 class="dev-title">Document Requests &bull; Coming Soon</h3>
+                    <p class="dev-desc">
+                        Online document credential requests (Transcript of Records, Certificate of Registration, and Good Moral) are currently being linked to the Registrar database.
+                        <br><br>
+                        This module will be fully active in the upcoming release.
+                    </p>
+                    <button type="button" class="btn btn-dark rounded-pill px-4 py-2" style="font-size:13px;font-weight:600;" onclick="QReserve.switchTab('dashboard');">
+                        <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
+                    </button>
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 TAB 4: QUEUE HISTORY (CLICKABLE - NO FUNCTION / UPCOMING QUOTA)
+            ============================================= -->
+            <div id="tab-queue-history" class="tab-pane-animated">
+
+                <div class="dev-placeholder-card fade-in-stagger delay-1">
+                    <div class="dev-icon-circle">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="dev-badge">
+                        <i class="bi bi-clock-history"></i> Scheduled for Next Release
+                    </div>
+                    <h3 class="dev-title">Queue History &bull; Coming Soon</h3>
+                    <p class="dev-desc">
+                        Your historical visits and completed campus counter logs will be automatically archived here once live transactions begin.
+                    </p>
+                    <button type="button" class="btn btn-dark rounded-pill px-4 py-2" style="font-size:13px;font-weight:600;" onclick="QReserve.switchTab('dashboard');">
+                        <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
+                    </button>
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 TAB 5: ANNOUNCEMENTS (ACTIVE FOCUS)
+            ============================================= -->
+            <div id="tab-announcements" class="tab-pane-animated">
+
+                <div class="tab-header-box fade-in-stagger delay-1">
+                    <div class="tab-header-icon">
+                        <i class="bi bi-megaphone-fill"></i>
+                    </div>
+                    <div>
+                        <div class="tab-header-title">Campus Announcements</div>
+                        <p class="tab-header-desc">Official university updates, office hours, and queue advisories for Bustos Campus.</p>
+                    </div>
+                </div>
+
+                <div class="announcement-card fade-in-stagger delay-2">
+                    <div class="announcement-meta">
+                        <span class="announcement-badge">ADVISORY</span>
+                        <span class="announcement-date">September 1, 2026 &bull; BulSU Bustos Admin</span>
+                    </div>
+                    <h5 style="font-weight:700;color:#1e293b;margin-bottom:6px;">QRESERVE Online Queue System Deployment</h5>
+                    <p style="font-size:13px;color:#475569;margin-bottom:0;line-height:1.6;">
+                        Students, guests, and alumni can now track real-time queue numbers, manage personal profile records, and check live counter calls directly through their dashboard portal.
+                    </p>
+                </div>
+
+                <div class="announcement-card fade-in-stagger delay-3">
+                    <div class="announcement-meta">
+                        <span class="announcement-badge" style="background:#e0f2fe;color:#0284c7;">SCHEDULE</span>
+                        <span class="announcement-date">August 28, 2026 &bull; Office of the Registrar</span>
+                    </div>
+                    <h5 style="font-weight:700;color:#1e293b;margin-bottom:6px;">Document Processing Operating Windows</h5>
+                    <p style="font-size:13px;color:#475569;margin-bottom:0;line-height:1.6;">
+                        Registrar windows are open Monday through Friday from 8:00 AM to 5:00 PM. Cut-off time for same-day queue reservations is at 4:00 PM.
+                    </p>
+                </div>
+
+                <div class="announcement-card fade-in-stagger delay-4">
+                    <div class="announcement-meta">
+                        <span class="announcement-badge" style="background:#fef3c7;color:#92400e;">CASHIER</span>
+                        <span class="announcement-date">August 24, 2026 &bull; Accounting Office</span>
+                    </div>
+                    <h5 style="font-weight:700;color:#1e293b;margin-bottom:6px;">Tuition and Graduation Fee Evaluation Windows</h5>
+                    <p style="font-size:13px;color:#475569;margin-bottom:0;line-height:1.6;">
+                        Cashier Counter 1 and Counter 2 accept assessment validations and graduation fee receipts daily. Please ensure student IDs are ready before approaching windows.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 TAB 6: HELP & SUPPORT (ACTIVE FOCUS)
+            ============================================= -->
+            <div id="tab-help-support" class="tab-pane-animated">
+
+                <div class="tab-header-box fade-in-stagger delay-1">
+                    <div class="tab-header-icon">
+                        <i class="bi bi-question-circle-fill"></i>
+                    </div>
+                    <div>
+                        <div class="tab-header-title">Help &amp; Support</div>
+                        <p class="tab-header-desc">Frequently asked questions and contact directories for campus offices.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item open fade-in-stagger delay-2">
+                    <div class="faq-question" onclick="this.parentElement.classList.toggle('open');">
+                        <span>How does the QRESERVE queue system work?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        After reserving a queue slot, your ticket number appears on your dashboard. When your number is called, the live monitor updates with the assigned counter. Please proceed to the window promptly.
+                    </div>
+                </div>
+
+                <div class="faq-item fade-in-stagger delay-3">
+                    <div class="faq-question" onclick="this.parentElement.classList.toggle('open');">
+                        <span>How do I update my profile details and photo?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Navigate to the <strong>Profile</strong> tab in the sidebar panel. You can enter your full name, age, course/program, year level, section, and upload a custom profile picture (JPG, PNG, GIF, or WEBP).
+                    </div>
+                </div>
+
+                <div class="faq-item fade-in-stagger delay-4">
+                    <div class="faq-question" onclick="this.parentElement.classList.toggle('open');">
+                        <span>Can former students or guests request credentials?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! Alumni, graduates, and transferees can log in through the Guest portal, select their category, and view queue monitors and campus office updates.
+                    </div>
+                </div>
+
+                <div class="faq-item fade-in-stagger delay-5">
+                    <div class="faq-question" onclick="this.parentElement.classList.toggle('open');">
+                        <span>What should I do if I miss my turn at the counter?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Tickets that are missed will be placed on brief hold for 10 minutes. If unclaimed, you may easily request a new queue number through your dashboard.
+                    </div>
+                </div>
+
+                <!-- Office Contact Directory -->
+                <div class="card mt-4 fade-in-stagger delay-6">
+                    <div class="card-title mb-3">Campus Office Directory &bull; Bustos Campus</div>
+                    <div class="row g-3" style="font-size:12.5px;">
+                        <div class="col-md-4">
+                            <strong style="color:#a90000;"><i class="bi bi-building me-1"></i> Registrar Office</strong>
+                            <div class="text-muted mt-1">Ground Floor, Admin Bldg.</div>
+                            <div class="text-muted">registrar.bustos@bulsu.edu.ph</div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong style="color:#a90000;"><i class="bi bi-cash-coin me-1"></i> Cashier's Window</strong>
+                            <div class="text-muted mt-1">Window 1 &amp; 2, Admin Bldg.</div>
+                            <div class="text-muted">cashier.bustos@bulsu.edu.ph</div>
+                        </div>
+                        <div class="col-md-4">
+                            <strong style="color:#a90000;"><i class="bi bi-person-workspace me-1"></i> Admissions Office</strong>
+                            <div class="text-muted mt-1">2nd Floor, Student Center</div>
+                            <div class="text-muted">admissions.bustos@bulsu.edu.ph</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
 
         </div>
 
-    </main>
+    </div>
 
 </div>
 
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Transitions & Delays JS -->
+<script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
+
+<!-- Sidebar Toggle -->
 <script>
-    function updateClock() {
-        const el = document.getElementById('liveClockDisplay');
-        if (!el) return;
-        const now = new Date();
-        el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        // ---- Mobile Drawer & Sidebar Toggle ----
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    let collapsed = false;
+
+    function openMobileSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.add('mobile-open');
+        if (overlay) overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
-    setInterval(updateClock, 1000);
-    updateClock();
+
+    function closeMobileSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.remove('mobile-open');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                if (sidebar.classList.contains('mobile-open')) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+            } else {
+                collapsed = !collapsed;
+                sidebar.style.transition = 'width 0.3s ease';
+                if (collapsed) {
+                    sidebar.style.width = '72px';
+                    sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = 'none');
+                    sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = 'center'; el.style.padding = '12px 0'; });
+                    sidebar.querySelector('.sidebar-logout a').style.justifyContent = 'center';
+                    sidebar.querySelector('.sidebar-logout a').style.padding = '10px 0';
+                } else {
+                    sidebar.style.width = '220px';
+                    sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = '');
+                    sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = ''; el.style.padding = ''; });
+                    sidebar.querySelector('.sidebar-logout a').style.justifyContent = '';
+                    sidebar.querySelector('.sidebar-logout a').style.padding = '';
+                }
+            }
+        });
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', closeMobileSidebar);
+    }
+            sidebar.querySelector('.sidebar-logout a').style.justifyContent = 'center';
+            sidebar.querySelector('.sidebar-logout a').style.padding = '10px 0';
+        } else {
+            sidebar.style.width = '220px';
+            sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = '');
+            sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = ''; el.style.padding = ''; });
+            sidebar.querySelector('.sidebar-logout a').style.justifyContent = '';
+            sidebar.querySelector('.sidebar-logout a').style.padding = '';
+        }
+    });
+
+        // Auto-close mobile drawer when switching tabs on phone
+        document.querySelectorAll('[data-tab-target]').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    closeMobileSidebar();
+                }
+            });
+        });
+    
 </script>
 
 </body>
-
 </html>

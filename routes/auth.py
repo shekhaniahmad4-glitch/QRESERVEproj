@@ -9,6 +9,7 @@ from flask import (
     current_app
 )
 
+import os
 import re
 import secrets
 import smtplib
@@ -21,8 +22,9 @@ from werkzeug.security import (
     generate_password_hash,
     check_password_hash
 )
+from werkzeug.utils import secure_filename
 
-from database import db, Student
+from database import db, Student, StudentProfile
 
 from extensions import limiter
 
@@ -165,6 +167,35 @@ Bulacan State University - Bustos Campus
 """
     )
 
+
+# =======================================================
+# SEND OTP EMAIL (PROFILE UPDATE)
+# =======================================================
+
+def send_profile_update_otp_email(recipient_email, otp):
+
+    _send_email(
+        recipient_email,
+        "QRESERVE - Profile Update Verification",
+        f"""\
+Hello,
+
+You requested to update your personal information on QRESERVE.
+
+Your verification code is:
+
+{otp}
+
+This OTP will expire in 5 minutes.
+
+If you did not request this update, please check your account security immediately.
+
+--------------------------------------------------
+QRESERVE
+Bulacan State University - Bustos Campus
+--------------------------------------------------
+"""
+    )
 
 # =======================================================
 # BACKGROUND EMAIL SENDER
@@ -1100,6 +1131,238 @@ def reset_password():
 
 
 # =======================================================
+# STUDENT PROFILE
+# =======================================================
+
+ALLOWED_PIC_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
+def _allowed_pic(filename):
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_PIC_EXTENSIONS
+    )
+
+
+@auth.route(
+    "/student/profile",
+    methods=["GET", "POST"]
+)
+def student_profile():
+
+    if not session.get("student_id"):
+        flash("Please log in first.", "warning")
+        return redirect(url_for("auth.login"))
+
+    student = Student.query.get(session["student_id"])
+    profile = student.profile  # may be None
+
+    # Check if student already has saved profile information
+    is_existing_info = bool(profile and profile.full_name)
+
+    if request.method == "POST":
+
+        full_name  = request.form.get("full_name",  "").strip()
+        age_raw    = request.form.get("age",        "").strip()
+        course     = request.form.get("course",     "").strip()
+        year_level = request.form.get("year_level", "").strip()
+        section    = request.form.get("section",    "").strip()
+
+        # Basic validation
+        age = None
+        if age_raw:
+            if not age_raw.isdigit() or not (10 <= int(age_raw) <= 100):
+                flash("Please enter a valid age (10–100).", "danger")
+                return render_template(
+                    "student_profile.html",
+                    profile=profile
+                )
+            age = int(age_raw)
+
+        # Profile picture upload
+        pic_filename = profile.profile_pic if profile else None
+        pic_file = request.files.get("profile_pic")
+
+        if pic_file and pic_file.filename:
+            if not _allowed_pic(pic_file.filename):
+                flash("Only PNG, JPG, GIF, or WEBP images are allowed.", "danger")
+                return render_template(
+                    "student_profile.html",
+                    profile=profile
+                )
+
+            upload_dir = os.path.join(
+                current_app.static_folder, "profile_pics"
+            )
+            os.makedirs(upload_dir, exist_ok=True)
+
+            ext = pic_file.filename.rsplit(".", 1)[1].lower()
+            safe_name = f"student_{student.id}.{ext}"
+            pic_file.save(os.path.join(upload_dir, safe_name))
+            pic_filename = safe_name
+
+        # If personal info was ALREADY initially provided:
+        # Require password verification and email OTP
+        if is_existing_info:
+            current_password = request.form.get("current_password", "").strip()
+
+            if not current_password:
+                flash("Please enter your current account password to authorize changes.", "danger")
+                return render_template(
+                    "student_profile.html",
+                    profile=profile
+                )
+
+            if not check_password_hash(student.password_hash, current_password):
+                flash("Incorrect password. Please enter your valid account password to make changes.", "danger")
+                return render_template(
+                    "student_profile.html",
+                    profile=profile
+                )
+
+            # Generate OTP for email verification
+            otp = str(secrets.randbelow(900000) + 100000)
+
+            session["pending_profile_update"] = {
+                "student_id": student.id,
+                "full_name": full_name or None,
+                "age": age,
+                "course": course or None,
+                "year_level": year_level or None,
+                "section": section or None,
+                "pic_filename": pic_filename,
+                "otp": otp,
+                "expires_at": (
+                    datetime.utcnow() + timedelta(minutes=5)
+                ).isoformat()
+            }
+
+            _send_in_background(send_profile_update_otp_email, student.email, otp)
+
+            flash("Password verified! A 6-digit verification code has been sent to your email to confirm profile changes.", "success")
+            return redirect(url_for("auth.student_profile_verify_otp"))
+
+        # Initial profile setup (first time): save directly
+        if profile is None:
+            profile = StudentProfile(student_id=student.id)
+            db.session.add(profile)
+
+        profile.full_name  = full_name  or None
+        profile.age        = age
+        profile.course     = course     or None
+        profile.year_level = year_level or None
+        profile.section    = section    or None
+        profile.profile_pic = pic_filename
+
+        db.session.commit()
+
+        flash("Profile saved successfully!", "success")
+        return redirect(url_for("auth.student_profile"))
+
+    return render_template(
+        "student_profile.html",
+        profile=profile
+    )
+
+
+# =======================================================
+# VERIFY PROFILE UPDATE OTP
+# =======================================================
+
+@auth.route("/student/profile/verify-otp", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
+def student_profile_verify_otp():
+
+    if not session.get("student_id"):
+        flash("Please log in first.", "warning")
+        return redirect(url_for("auth.login"))
+
+    student = Student.query.get(session["student_id"])
+    pending = session.get("pending_profile_update")
+
+    if not pending or pending.get("student_id") != student.id:
+        flash("No pending profile update found.", "warning")
+        return redirect(url_for("auth.student_profile"))
+
+    if request.method == "POST":
+
+        otp_input = request.form.get("otp", "").strip()
+
+        # Check expiration
+        try:
+            expires_at = datetime.fromisoformat(pending["expires_at"])
+            if datetime.utcnow() > expires_at:
+                session.pop("pending_profile_update", None)
+                flash("Verification code has expired. Please submit your update again.", "danger")
+                return redirect(url_for("auth.student_profile"))
+        except Exception:
+            pass
+
+        # Check match
+        if otp_input != pending.get("otp"):
+            flash("Invalid verification code. Please check your email and try again.", "danger")
+            return render_template(
+                "verify_profile_otp.html",
+                email=student.email
+            )
+
+        # Verified! Apply changes to database
+        profile = student.profile
+        if profile is None:
+            profile = StudentProfile(student_id=student.id)
+            db.session.add(profile)
+
+        profile.full_name  = pending.get("full_name")
+        profile.age        = pending.get("age")
+        profile.course     = pending.get("course")
+        profile.year_level = pending.get("year_level")
+        profile.section    = pending.get("section")
+        if pending.get("pic_filename"):
+            profile.profile_pic = pending.get("pic_filename")
+
+        db.session.commit()
+        session.pop("pending_profile_update", None)
+
+        flash("Personal information updated successfully!", "success")
+        return redirect(url_for("auth.student_profile"))
+
+    return render_template(
+        "verify_profile_otp.html",
+        email=student.email
+    )
+
+
+# =======================================================
+# RESEND PROFILE UPDATE OTP
+# =======================================================
+
+@auth.route("/student/profile/resend-otp")
+@limiter.limit("3 per minute")
+def student_profile_resend_otp():
+
+    if not session.get("student_id"):
+        return redirect(url_for("auth.login"))
+
+    student = Student.query.get(session["student_id"])
+    pending = session.get("pending_profile_update")
+
+    if not pending or pending.get("student_id") != student.id:
+        flash("No pending profile update found.", "warning")
+        return redirect(url_for("auth.student_profile"))
+
+    otp = str(secrets.randbelow(900000) + 100000)
+    pending["otp"] = otp
+    pending["expires_at"] = (
+        datetime.utcnow() + timedelta(minutes=5)
+    ).isoformat()
+    session["pending_profile_update"] = pending
+
+    _send_in_background(send_profile_update_otp_email, student.email, otp)
+
+    flash("A fresh verification code has been sent to your email.", "success")
+    return redirect(url_for("auth.student_profile_verify_otp"))
+
+
+# =======================================================
 # STUDENT DASHBOARD
 # =======================================================
 
@@ -1121,8 +1384,12 @@ def student_dashboard():
             url_for("auth.login")
         )
 
+    student = Student.query.get(session["student_id"])
+    profile = student.profile if student else None
+
     return render_template(
-        "student_dashboard.html"
+        "student_dashboard.html",
+        profile=profile
     )
 
 
@@ -1149,11 +1416,73 @@ def logout():
 # GUEST
 # =======================================================
 
-@auth.route("/guest")
+@auth.route("/guest", methods=["GET", "POST"])
 def guest():
 
+    if request.method == "POST":
+
+        guest_name     = request.form.get("guest_name",     "").strip()
+        guest_category = request.form.get("guest_category", "").strip()
+
+        # Store in session (optional — may be empty)
+        session["guest_name"]     = guest_name     or "Guest"
+        session["guest_category"] = guest_category or ""
+
+        return redirect(url_for("auth.guest_dashboard"))
+
+    # GET — show the optional info form
+    return render_template("guest_intro.html")
+
+
+# =======================================================
+# GUEST SKIP (bypasses optional info form)
+# =======================================================
+
+@auth.route("/guest/skip")
+def guest_skip():
+
+    session["guest_name"]     = "Guest"
+    session["guest_category"] = ""
+
+    return redirect(url_for("auth.guest_dashboard"))
+
+
+# =======================================================
+# GUEST DASHBOARD
+# =======================================================
+
+@auth.route("/guest/dashboard")
+def guest_dashboard():
+
     return render_template(
-        "guest_login.html"
+        "guest_login.html",
+        guest_name=session.get("guest_name", "Guest"),
+        guest_category=session.get("guest_category", "")
+    )
+
+
+# =======================================================
+# GUEST PROFILE
+# =======================================================
+
+@auth.route("/guest/profile", methods=["GET", "POST"])
+def guest_profile():
+
+    if request.method == "POST":
+
+        guest_name     = request.form.get("guest_name",     "").strip()
+        guest_category = request.form.get("guest_category", "").strip()
+
+        session["guest_name"]     = guest_name     or "Guest"
+        session["guest_category"] = guest_category or ""
+
+        flash("Profile updated successfully!", "success")
+        return redirect(url_for("auth.guest_profile"))
+
+    return render_template(
+        "guest_profile.html",
+        guest_name=session.get("guest_name", "Guest"),
+        guest_category=session.get("guest_category", "")
     )
 
 

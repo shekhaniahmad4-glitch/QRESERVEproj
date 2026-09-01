@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRESERVE | Guest Access</title>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            width: 100%; height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background: #f5f6fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* ── Background blobs ── */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::before {
+            width: 500px; height: 500px;
+            background: #a90000;
+            top: -100px; left: -120px;
+        }
+        body::after {
+            width: 400px; height: 400px;
+            background: #e07000;
+            bottom: -80px; right: -80px;
+        }
+
+        /* ── Card ── */
+        .intro-card {
+            position: relative; z-index: 1;
+            background: white;
+            border-radius: 24px;
+            padding: 40px 44px 36px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            animation: cardEnter 0.45s cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(28px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+
+        /* ── Header ── */
+        .card-icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #8c1010, #c01818);
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; color: white;
+            box-shadow: 0 6px 20px rgba(140,16,16,0.3);
+            margin-bottom: 18px;
+        }
+
+        .card-title {
+            font-size: 22px; font-weight: 800; color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .card-subtitle {
+            font-size: 13px; color: #64748b; margin-bottom: 28px;
+            line-height: 1.55;
+        }
+
+        .optional-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 11.5px; font-weight: 600; color: #c2410c;
+            margin-bottom: 20px;
+        }
+
+        /* ── Form ── */
+        .form-label-custom {
+            font-size: 11.5px; font-weight: 600;
+            color: #475569; letter-spacing: 0.2px;
+            display: block; margin-bottom: 5px;
+        }
+
+        .form-field {
+            width: 100%;
+            padding: 11px 15px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13.5px; color: #1e293b;
+            background: #fafafa;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            margin-bottom: 16px;
+        }
+
+        .form-field:focus {
+            border-color: #a90000;
+            box-shadow: 0 0 0 3px rgba(169,0,0,0.1);
+            background: white;
+        }
+
+        select.form-field { cursor: pointer; }
+
+        /* ── Divider ── */
+        .divider {
+            display: flex; align-items: center; gap: 10px;
+            margin: 8px 0 20px;
+            color: #94a3b8; font-size: 12px; font-weight: 500;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1;
+            height: 1px; background: #e2e8f0;
+        }
+
+        /* ── Buttons ── */
+        .btn-continue {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, #d00000, #a80000);
+            color: white; font-size: 14px; font-weight: 700;
+            border: none; border-radius: 30px; cursor: pointer;
+            letter-spacing: 0.3px;
+            box-shadow: 0 6px 18px rgba(200,0,0,0.25);
+            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+            position: relative; overflow: hidden; text-decoration: none;
+            margin-bottom: 12px;
+        }
+
+        .btn-continue::after {
+            content: '';
+            position: absolute; top: -50%; left: -60%;
+            width: 40%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(25deg);
+            transition: left 0.5s ease; pointer-events: none;
+        }
+
+        .btn-continue:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 26px rgba(200,0,0,0.32);
+            color: white;
+        }
+
+        .btn-continue:hover::after { left: 130%; }
+
+        .btn-skip {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            width: 100%; padding: 12px;
+            background: transparent;
+            color: #64748b; font-size: 13px; font-weight: 600;
+            border: 1.5px solid #e2e8f0; border-radius: 30px;
+            cursor: pointer; text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-skip:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #475569;
+        }
+
+        /* ── Back link ── */
+        .back-link {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 12px; color: #94a3b8;
+            text-decoration: none;
+            margin-top: 20px;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: #a90000; }
+    </style>
+    <!-- Transitions & Animation Delay CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/transitions.css') }}">
+</head>
+
+<body>
+
+    <div class="intro-card">
+
+        <!-- Header -->
+        <div class="card-icon">
+            <i class="bi bi-person-badge"></i>
+        </div>
+
+        <div class="card-title">Guest Access</div>
+        <div class="card-subtitle">
+            Welcome to <strong>QRESERVE</strong>! You can optionally tell us a little about yourself
+            before proceeding — or just skip straight to the dashboard.
+        </div>
+
+        <div class="optional-badge">
+            <i class="bi bi-info-circle"></i> Optional — you can skip this
+        </div>
+
+        <!-- Form -->
+        <form method="POST" action="{{ url_for('auth.guest') }}">
+
+            <label class="form-label-custom" for="guest_name">Your Name</label>
+            <input
+                type="text"
+                id="guest_name"
+                name="guest_name"
+                class="form-field"
+                placeholder="e.g. Maria Santos"
+                maxlength="100"
+                autocomplete="off">
+
+            <label class="form-label-custom" for="guest_category">Category</label>
+            <select id="guest_category" name="guest_category" class="form-field">
+                <option value="" selected>— Select a category —</option>
+                <option value="Alumni">Alumni</option>
+                <option value="Graduate">Graduate</option>
+                <option value="Parent / Guardian">Parent / Guardian</option>
+                <option value="Faculty / Staff">Faculty / Staff</option>
+                <option value="Transferee">Transferee</option>
+                <option value="Others">Others</option>
+            </select>
+
+            <div class="divider">or</div>
+
+            <!-- Continue with info -->
+            <button type="submit" class="btn-continue">
+                <i class="bi bi-arrow-right-circle"></i>
+                Continue to Dashboard
+            </button>
+
+        </form>
+
+        <!-- Skip — bypasses form entirely -->
+        <a href="{{ url_for('auth.guest_skip') }}" class="btn-skip">
+            <i class="bi bi-skip-forward"></i>
+            Skip — go to dashboard
+        </a>
+
+        <a href="{{ url_for('auth.login') }}" class="back-link">
+            <i class="bi bi-chevron-left"></i> Back to Login
+        </a>
+
+    </div>
+
+<!-- Transitions & Delays JS -->
+<script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
+</body>
+</html>
