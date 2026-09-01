@@ -1340,7 +1340,7 @@
 
 <!-- Sidebar Toggle -->
 <script>
-        // ---- Mobile Drawer & Sidebar Toggle ----
+    // ---- Mobile Drawer & Sidebar Toggle ----
     const menuBtn = document.getElementById('menuBtn');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -1375,14 +1375,14 @@
                     sidebar.style.width = '72px';
                     sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = 'none');
                     sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = 'center'; el.style.padding = '12px 0'; });
-                    sidebar.querySelector('.sidebar-logout a').style.justifyContent = 'center';
-                    sidebar.querySelector('.sidebar-logout a').style.padding = '10px 0';
+                    const logoutSpan = sidebar.querySelector('.sidebar-logout a span');
+                    if (logoutSpan) logoutSpan.style.display = 'none';
                 } else {
                     sidebar.style.width = '220px';
                     sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = '');
                     sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = ''; el.style.padding = ''; });
-                    sidebar.querySelector('.sidebar-logout a').style.justifyContent = '';
-                    sidebar.querySelector('.sidebar-logout a').style.padding = '';
+                    const logoutSpan = sidebar.querySelector('.sidebar-logout a span');
+                    if (logoutSpan) logoutSpan.style.display = '';
                 }
             }
         });
@@ -1391,26 +1391,15 @@
     if (overlay) {
         overlay.addEventListener('click', closeMobileSidebar);
     }
-            sidebar.querySelector('.sidebar-logout a').style.justifyContent = 'center';
-            sidebar.querySelector('.sidebar-logout a').style.padding = '10px 0';
-        } else {
-            sidebar.style.width = '220px';
-            sidebar.querySelectorAll('.sidebar-uni-name, .sidebar-campus, .sidebar-link span, .sidebar-logout a span').forEach(el => el.style.display = '');
-            sidebar.querySelectorAll('.sidebar-link').forEach(el => { el.style.justifyContent = ''; el.style.padding = ''; });
-            sidebar.querySelector('.sidebar-logout a').style.justifyContent = '';
-            sidebar.querySelector('.sidebar-logout a').style.padding = '';
-        }
-    });
 
-        // Auto-close mobile drawer when switching tabs on phone
-        document.querySelectorAll('[data-tab-target]').forEach(link => {
-            link.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    closeMobileSidebar();
-                }
-            });
+    // Auto-close mobile drawer when switching tabs on phone
+    document.querySelectorAll('[data-tab-target]').forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeMobileSidebar();
+            }
         });
-    
+    });
 </script>
 
 </body>
