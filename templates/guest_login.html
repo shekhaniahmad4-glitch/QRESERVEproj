@@ -907,11 +907,527 @@
                 font-size: 34px;
             }
         }
+
+        /* Monitor live-pulse animation */
+        @keyframes monitorPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(1.4); }
+        }
+
+        .monitor-value-fade {
+            animation: monitorValueFade 0.4s ease;
+        }
+
+        @keyframes monitorValueFade {
+            from { opacity: 0.3; transform: scale(0.97); }
+            to   { opacity: 1;   transform: scale(1);    }
+        }
+
+
+        /* ===========================================
+           MY QUEUE TAB
+        =========================================== */
+        .my-queue-card {
+            background: white;
+            border: 1px solid #eaedf0;
+            border-radius: 18px;
+            padding: 24px 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .my-queue-card-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .my-queue-split {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+        }
+
+        .my-queue-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .my-queue-qr-box {
+            width: 160px;
+            height: 160px;
+            flex-shrink: 0;
+            border: 2px dashed #dde3ea;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+
+        .my-queue-qr-box canvas,
+        .my-queue-qr-box img {
+            width: 140px !important;
+            height: 140px !important;
+        }
+
+        .my-queue-qr-empty {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+            padding: 12px;
+        }
+
+        .my-queue-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .btn-download-qr {
+            flex: 1;
+            padding: 11px 16px;
+            background: #14532d;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .btn-download-qr:hover {
+            background: #166534;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(20,83,45,0.25);
+        }
+
+        .btn-make-request {
+            flex: 1;
+            padding: 11px 16px;
+            background: linear-gradient(135deg, #8c1010, #6e0a0a);
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .btn-make-request:hover {
+            background: linear-gradient(135deg, #a91515, #8c1010);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(140,16,16,0.28);
+        }
+
+        @media (max-width: 600px) {
+            .my-queue-split { flex-direction: column-reverse; }
+            .my-queue-qr-box { width: 100%; height: 130px; }
+            .my-queue-actions { flex-direction: column; }
+        }
+
+
+        /* ===========================================
+           DOCUMENT REQUEST SELECTION FORM (PILLS)
+        =========================================== */
+        .requests-page-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .doc-cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            max-width: 720px;
+            margin: 0 auto 28px;
+        }
+
+        @media (max-width: 640px) {
+            .doc-cards-grid { grid-template-columns: 1fr; }
+        }
+
+        .doc-card {
+            background: white;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 35px;
+            padding: 16px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        /* Dark red border ONLY when cursor is pointing (hover) or selected */
+        .doc-card:hover {
+            border: 2px solid #6e0a0a !important;
+            box-shadow: 0 4px 16px rgba(110,10,10,0.12);
+            transform: translateY(-1px);
+        }
+
+        .doc-card.selected {
+            border: 2px solid #6e0a0a !important;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(110,10,10,0.15);
+        }
+
+        .doc-card-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .doc-card-note {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .doc-card-time {
+            font-size: 11.5px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .request-now-wrap {
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .btn-request-now {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 48px;
+            background: #047857;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(4,120,87,0.25);
+        }
+
+        .btn-request-now:hover {
+            background: #065f46;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(4,120,87,0.35);
+        }
+
+
+        /* ===========================================
+           MY REQUESTS LIST CARDS (PILLS MATCHING MOCKUP)
+        =========================================== */
+        .my-requests-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        .my-request-pill {
+            background: white;
+            border-radius: 35px;
+            padding: 16px 26px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .my-request-pill:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        }
+
+        .my-request-pill.status-processing {
+            border: 2px solid #eab308;
+        }
+
+        .my-request-pill.status-pickup {
+            border: 2px solid #16a34a;
+        }
+
+        .my-request-pill.status-completed {
+            border: 1.5px solid #cbd5e1;
+        }
+
+        .my-request-pill-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .my-request-pill-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1.5px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #475569;
+            flex-shrink: 0;
+            background: #f8fafc;
+        }
+
+        .my-request-pill-info {
+            min-width: 0;
+        }
+
+        .my-request-pill-name {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.25;
+        }
+
+        .my-request-pill-date {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .my-request-pill-status {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+        }
+
+
+        /* ===========================================
+           QUEUE HISTORY TAB (LAYOUT MATCHING MOCKUP)
+        =========================================== */
+        .history-layout {
+            display: flex;
+            gap: 20px;
+            max-width: 920px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .history-layout {
+                flex-direction: column;
+            }
+        }
+
+        /* Filter Sidebar Card */
+        .history-filter-card {
+            width: 190px;
+            flex-shrink: 0;
+            background: white;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 24px;
+            padding: 20px 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            height: fit-content;
+        }
+
+        @media (max-width: 768px) {
+            .history-filter-card {
+                width: 100%;
+            }
+        }
+
+        .filter-header-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        .filter-group {
+            margin-bottom: 16px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .filter-value {
+            font-size: 12px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            width: 100%;
+            font-size: 12px;
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            color: #334155;
+            background: #f8fafc;
+            outline: none;
+            margin-top: 2px;
+        }
+
+        /* History Cards List Container */
+        .history-cards-container {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* History Card Item */
+        .history-item-card {
+            background: white;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 24px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .history-item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+        }
+
+        .history-item-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .history-item-icon {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .history-item-icon.icon-spinner {
+            color: #334155;
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .history-item-icon.icon-check {
+            color: #16a34a;
+        }
+
+        .history-item-title-wrap {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-item-name {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.25;
+        }
+
+        .history-item-queue {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 1px;
+        }
+
+        .history-item-date {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .history-item-status-text {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            margin-left: 20px;
+            text-align: right;
+        }
+
+        /* Detail Metadata Grid */
+        .history-item-details {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 4px 16px;
+            font-size: 12px;
+            line-height: 1.45;
+            padding-left: 50px;
+        }
+
+        @media (max-width: 540px) {
+            .history-item-details { padding-left: 0; }
+        }
+
+        .history-item-labels {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .history-item-values {
+            color: #334155;
+            font-weight: 500;
+        }
     </style>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/queue-views.css') }}">
 
 </head>
 
-<body>
+<body data-qreserve-user="guest">
 
 <div class="layout">
 
@@ -1090,29 +1606,27 @@
 
                     <!-- CARD 2: LIVE QUEUE MONITOR -->
                     <div class="card fade-in-stagger delay-3">
-                        <div class="card-title">Live Queue Monitor</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                            <div class="card-title" style="margin-bottom:0;">Live Queue Monitor</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:#15803d;">
+                                <span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;animation:monitorPulse 1.4s ease-in-out infinite;"></span>
+                                LIVE
+                            </div>
+                        </div>
 
                         <div class="monitor-now-serving-label">NOW SERVING</div>
-                        <div class="monitor-serving-number" id="nowServingNum">A-006</div>
-                        <div class="monitor-counter-label">Counter <strong>4</strong></div>
+                        <div class="monitor-serving-number" id="monitorNowServing">---</div>
+                        <div class="monitor-counter-label" id="monitorPrimaryCounter">Connecting...</div>
 
                         <hr class="monitor-divider">
 
-                        <div class="counter-row">
-                            <div class="counter-name">A Registrar</div>
-                            <div class="counter-waiting">24 waiting</div>
+                        <div id="monitorCounterRows">
+                            <div style="text-align:center;padding:12px;color:#94a3b8;font-size:12px;">Loading counters...</div>
                         </div>
 
-                        <div class="counter-row">
-                            <div class="counter-name">B Cashier</div>
-                            <div class="counter-waiting">2 waiting</div>
+                        <div style="text-align:right;margin-top:8px;">
+                            <span id="monitorLastUpdated" style="font-size:10.5px;color:#94a3b8;font-weight:600;"></span>
                         </div>
-
-                        <div class="counter-row">
-                            <div class="counter-name">C Admissions</div>
-                            <div class="counter-waiting">5 waiting</div>
-                        </div>
-
                     </div>
 
                 </div>
@@ -1121,78 +1635,72 @@
 
 
             <!-- =============================================
-                 TAB 2: MY QUEUE (CLICKABLE - NO FUNCTION / UPCOMING QUOTA)
+                 TAB 2: MY QUEUE — GUEST
             ============================================= -->
             <div id="tab-my-queue" class="tab-pane-animated">
-
-                <div class="dev-placeholder-card fade-in-stagger delay-1">
-                    <div class="dev-icon-circle">
-                        <i class="bi bi-ticket-perforated"></i>
-                    </div>
-                    <div class="dev-badge">
-                        <i class="bi bi-clock-history"></i> Scheduled for Next Release
-                    </div>
-                    <h3 class="dev-title">My Queue &bull; Coming Soon</h3>
-                    <p class="dev-desc">
-                        Live queue ticketing and active counter monitoring are currently being integrated and will be activated in the next development cycle.
-                        <br><br>
-                        For this week's quota, please explore <strong>Dashboard</strong>, <strong>Profile</strong>, <strong>Announcements</strong>, and <strong>Help &amp; Support</strong>.
-                    </p>
-                    <button type="button" class="btn btn-dark rounded-pill px-4 py-2" style="font-size:13px;font-weight:600;" onclick="QReserve.switchTab('dashboard');">
-                        <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
-                    </button>
+                <div id="myQueueViewContainer">
+                    <!-- Dynamically rendered by QReserveApp -->
                 </div>
-
             </div>
 
 
             <!-- =============================================
-                 TAB 3: MY REQUESTS (CLICKABLE - NO FUNCTION / UPCOMING QUOTA)
+                 TAB 3: MY REQUESTS — GUEST VERSION
             ============================================= -->
             <div id="tab-my-requests" class="tab-pane-animated">
-
-                <div class="dev-placeholder-card fade-in-stagger delay-1">
-                    <div class="dev-icon-circle">
-                        <i class="bi bi-file-earmark-text"></i>
-                    </div>
-                    <div class="dev-badge">
-                        <i class="bi bi-clock-history"></i> Scheduled for Next Release
-                    </div>
-                    <h3 class="dev-title">Document Requests &bull; Coming Soon</h3>
-                    <p class="dev-desc">
-                        Online document credential requests (Transcript of Records, Certificate of Registration, and Good Moral) are currently being linked to the Registrar database.
-                        <br><br>
-                        This module will be fully active in the upcoming release.
-                    </p>
-                    <button type="button" class="btn btn-dark rounded-pill px-4 py-2" style="font-size:13px;font-weight:600;" onclick="QReserve.switchTab('dashboard');">
-                        <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
-                    </button>
+                <div id="myRequestsViewContainer">
+                    <!-- Dynamically rendered by QReserveApp -->
                 </div>
-
             </div>
 
 
             <!-- =============================================
-                 TAB 4: QUEUE HISTORY (CLICKABLE - NO FUNCTION / UPCOMING QUOTA)
+                 TAB 4: QUEUE HISTORY (MATCHING MOCKUP LAYOUT)
             ============================================= -->
             <div id="tab-queue-history" class="tab-pane-animated">
+                <div class="history-layout">
+                    
+                    <!-- Left Sidebar Filter Card -->
+                    <div class="history-filter-card">
+                        <div class="filter-header-title">Filter</div>
+                                              <div class="filter-group">
+                            <div class="filter-label">Date range</div>
+                            <select id="historyFilterDate" class="filter-select" onchange="QReserveApp.renderQueueHistory()">
+                                <option value="all" selected>All Dates</option>
+                                <option value="July 2026">July 2026</option>
+                                <option value="April 2026">April 2026</option>
+                            </select>
+                        </div>
 
-                <div class="dev-placeholder-card fade-in-stagger delay-1">
-                    <div class="dev-icon-circle">
-                        <i class="bi bi-clock-history"></i>
+                        <div class="filter-group">
+                            <div class="filter-label">Document type</div>
+                            <select id="historyFilterDoc" class="filter-select" onchange="QReserveApp.renderQueueHistory()">
+                                <option value="all" selected>All documents</option>
+                                <option value="True Copy Certificate of Registration">True Copy Certificate of Registration</option>
+                                <option value="True Copy Report of Grades">True Copy Report of Grades</option>
+                                <option value="Transcript of Records">Transcript of Records</option>
+                                <option value="Good Moral">Good Moral</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="filter-label">Status</div>
+                            <select id="historyFilterStatus" class="filter-select" onchange="QReserveApp.renderQueueHistory()">
+                                <option value="all" selected>All Statuses</option>
+                                <option value="Ready for pickup">Ready for pickup</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="dev-badge">
-                        <i class="bi bi-clock-history"></i> Scheduled for Next Release
+
+                    <!-- Right Cards Container -->
+                    <div class="history-cards-container" id="historyCardsListContainer">
+                        <!-- Dynamically rendered by QReserveApp -->
                     </div>
-                    <h3 class="dev-title">Queue History &bull; Coming Soon</h3>
-                    <p class="dev-desc">
-                        Your historical visits and completed campus counter logs will be automatically archived here once live transactions begin.
-                    </p>
-                    <button type="button" class="btn btn-dark rounded-pill px-4 py-2" style="font-size:13px;font-weight:600;" onclick="QReserve.switchTab('dashboard');">
-                        <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
-                    </button>
+
                 </div>
-
             </div>
 
 
@@ -1258,70 +1766,59 @@
                     </div>
                     <div>
                         <div class="tab-header-title">Help &amp; Support</div>
-                        <p class="tab-header-desc">Frequently asked questions and contact directories for campus offices.</p>
+                        <p class="tab-header-desc">Frequently asked questions and direct campus contact information.</p>
                     </div>
                 </div>
 
-                <div class="faq-item open fade-in-stagger delay-2">
-                    <div class="faq-question" onclick="this.parentElement.classList.toggle('open');">
-                        <span>How does the QRESERVE queue system work?</span>
-                        <i class="bi bi-chevron-down"></i>
-                    </div>
-                    <div class="faq-answer">
-                        After reserving a queue slot, your ticket number appears on your dashboard. When your number is called, the live monitor updates with the assigned counter. Please proceed to the window promptly.
-                    </div>
-                </div>
+                <div class="support-card fade-in-stagger delay-2">
 
-                <div class="faq-item fade-in-stagger delay-3">
-                    <div class="faq-question" onclick="this.parentElement.classList.toggle('open');">
-                        <span>How do I update my profile details and photo?</span>
-                        <i class="bi bi-chevron-down"></i>
-                    </div>
-                    <div class="faq-answer">
-                        Navigate to the <strong>Profile</strong> tab in the sidebar panel. You can enter your full name, age, course/program, year level, section, and upload a custom profile picture (JPG, PNG, GIF, or WEBP).
-                    </div>
-                </div>
-
-                <div class="faq-item fade-in-stagger delay-4">
-                    <div class="faq-question" onclick="this.parentElement.classList.toggle('open');">
-                        <span>Can former students or guests request credentials?</span>
-                        <i class="bi bi-chevron-down"></i>
-                    </div>
-                    <div class="faq-answer">
-                        Yes! Alumni, graduates, and transferees can log in through the Guest portal, select their category, and view queue monitors and campus office updates.
-                    </div>
-                </div>
-
-                <div class="faq-item fade-in-stagger delay-5">
-                    <div class="faq-question" onclick="this.parentElement.classList.toggle('open');">
-                        <span>What should I do if I miss my turn at the counter?</span>
-                        <i class="bi bi-chevron-down"></i>
-                    </div>
-                    <div class="faq-answer">
-                        Tickets that are missed will be placed on brief hold for 10 minutes. If unclaimed, you may easily request a new queue number through your dashboard.
-                    </div>
-                </div>
-
-                <!-- Office Contact Directory -->
-                <div class="card mt-4 fade-in-stagger delay-6">
-                    <div class="card-title mb-3">Campus Office Directory &bull; Bustos Campus</div>
-                    <div class="row g-3" style="font-size:12.5px;">
-                        <div class="col-md-4">
-                            <strong style="color:#a90000;"><i class="bi bi-building me-1"></i> Registrar Office</strong>
-                            <div class="text-muted mt-1">Ground Floor, Admin Bldg.</div>
-                            <div class="text-muted">registrar.bustos@bulsu.edu.ph</div>
-                        </div>
-                        <div class="col-md-4">
-                            <strong style="color:#a90000;"><i class="bi bi-cash-coin me-1"></i> Cashier's Window</strong>
-                            <div class="text-muted mt-1">Window 1 &amp; 2, Admin Bldg.</div>
-                            <div class="text-muted">cashier.bustos@bulsu.edu.ph</div>
-                        </div>
-                        <div class="col-md-4">
-                            <strong style="color:#a90000;"><i class="bi bi-person-workspace me-1"></i> Admissions Office</strong>
-                            <div class="text-muted mt-1">2nd Floor, Student Center</div>
-                            <div class="text-muted">admissions.bustos@bulsu.edu.ph</div>
+                    <div class="faq-item">
+                        <div class="faq-question"><span><i class="bi bi-patch-question"></i>&nbsp; How do I request an official document?</span><i class="bi bi-chevron-down"></i></div>
+                        <div class="faq-answer">
+                            <p style="margin-bottom:12px;font-size:13.5px;color:#475569;line-height:1.5;font-weight:500;">Requesting an official document takes just a few simple steps. Follow these:</p>
+                            <div style="display:flex;flex-direction:column;gap:14px;padding-left:4px;">
+                                <div style="display:flex;gap:14px;align-items:flex-start;">
+                                    <div style="width:28px;height:28px;flex-shrink:0;border-radius:50%;background:#8c1010;color:#fff;font-weight:800;font-size:13.5px;display:flex;align-items:center;justify-content:center;">1</div>
+                                    <div>
+                                        <div style="font-weight:800;color:#0f172a;font-size:14px;">Go to the "My Requests" tab</div>
+                                        <div style="font-size:13.5px;color:#475569;margin-top:2px;line-height:1.5;font-weight:500;">Click "My Requests" on the left sidebar. You'll see all the available document types on this page.</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:14px;align-items:flex-start;">
+                                    <div style="width:28px;height:28px;flex-shrink:0;border-radius:50%;background:#8c1010;color:#fff;font-weight:800;font-size:13.5px;display:flex;align-items:center;justify-content:center;">2</div>
+                                    <div>
+                                        <div style="font-weight:800;color:#0f172a;font-size:14px;">Choose your document</div>
+                                        <div style="font-size:13.5px;color:#475569;margin-top:2px;line-height:1.5;font-weight:500;">Click the type you need — like Transcript of Records, Report of Grades, Certificate of Registration, or Good Moral.</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:14px;align-items:flex-start;">
+                                    <div style="width:28px;height:28px;flex-shrink:0;border-radius:50%;background:#8c1010;color:#fff;font-weight:800;font-size:13.5px;display:flex;align-items:center;justify-content:center;">3</div>
+                                    <div>
+                                        <div style="font-weight:800;color:#0f172a;font-size:14px;">Click "Request now"</div>
+                                        <div style="font-size:13.5px;color:#475569;margin-top:2px;line-height:1.5;font-weight:500;">Press the "Request now" button below the document cards. Your request is submitted instantly.</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:14px;align-items:flex-start;">
+                                    <div style="width:28px;height:28px;flex-shrink:0;border-radius:50%;background:#8c1010;color:#fff;font-weight:800;font-size:13.5px;display:flex;align-items:center;justify-content:center;">4</div>
+                                    <div>
+                                        <div style="font-weight:800;color:#0f172a;font-size:14px;">Get your queue ticket</div>
+                                        <div style="font-size:13.5px;color:#475569;margin-top:2px;line-height:1.5;font-weight:500;">You'll be taken to "My Queue" where your ticket (queue number, counter, and QR code) is shown. Download the QR code and bring it when picking up your document.</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question"><span><i class="bi bi-patch-question"></i>&nbsp; What should I bring when picking up documents?</span><i class="bi bi-chevron-down"></i></div>
+                        <div class="faq-answer">Please bring your digital QR Code (downloadable from My Queue) along with your official BulSU Student ID or valid photo ID when your queue number is called.</div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question"><span><i class="bi bi-patch-question"></i>&nbsp; What are the registrar office hours?</span><i class="bi bi-chevron-down"></i></div>
+                        <div class="faq-answer">The Registrar and Finance offices operate Monday through Friday, 8:00 AM to 5:00 PM (excluding official holidays).</div>
+                    </div>
+
                 </div>
 
             </div>
@@ -1337,6 +1834,9 @@
 
 <!-- Transitions & Delays JS -->
 <script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
+
+<!-- QR Code JS (qrcode.js) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <!-- Sidebar Toggle -->
 <script>
@@ -1400,6 +1900,558 @@
             }
         });
     });
+</script>
+
+<!-- QReserve Application State & Rendering Engine (Database Backed) -->
+<script>
+    var QReserveApp = {
+        userType: 'guest',
+        selectedDoc: 'True Copy Certificate of Registration',
+        cachedRequests: [],
+
+        fetchRequests: function(callback) {
+            var self = this;
+            fetch('/api/requests')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        self.cachedRequests = data.requests || [];
+                    }
+                    if (callback) callback();
+                })
+                .catch(function(err) {
+                    console.error('API Error:', err);
+                    if (callback) callback();
+                });
+        },
+
+        getActiveRequest: function() {
+            return this.cachedRequests.find(function(r) {
+                return r.status === 'Processing' || r.status === 'Ready for pickup';
+            });
+        },
+
+        selectCard: function(cardEl, docName) {
+            var grid = cardEl.closest('.doc-cards-grid');
+            if (grid) {
+                grid.querySelectorAll('.doc-card').forEach(function(c) { c.classList.remove('selected'); });
+            }
+            cardEl.classList.add('selected');
+            this.selectedDoc = docName;
+        },
+
+        submitRequest: function() {
+            var active = this.getActiveRequest();
+            if (active) {
+                alert('You currently have an active request (' + active.queueNum + '). Please complete or cancel it before requesting another.');
+                return;
+            }
+
+            var docName = this.selectedDoc || 'True Copy Certificate of Registration';
+            var self = this;
+
+            fetch('/api/request/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ doc_name: docName })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    self.fetchRequests(function() {
+                        self.renderAll();
+                        if (typeof QReserve !== 'undefined' && QReserve.switchTab) {
+                            QReserve.switchTab('my-requests');
+                        }
+                    });
+                }
+            })
+            .catch(function(err) {
+                alert('Error creating request: ' + err);
+            });
+        },
+
+        cancelActive: function(dbId) {
+            if (!confirm('Are you sure you want to cancel your active request?')) return;
+            var self = this;
+            if (!dbId) return;
+
+            fetch('/api/request/' + dbId + '/cancel', { method: 'POST' })
+                .then(function(res) { return res.json(); })
+                .then(function() {
+                    self.fetchRequests(function() { self.renderAll(); });
+                });
+        },
+
+        completeActive: function(dbId) {
+            var self = this;
+            if (!dbId) return;
+
+            fetch('/api/request/' + dbId + '/complete', { method: 'POST' })
+                .then(function(res) { return res.json(); })
+                .then(function() {
+                    self.fetchRequests(function() { self.renderAll(); });
+                });
+        },
+
+        renderAll: function() {
+            this.renderMyQueue();
+            this.renderMyRequests();
+            this.renderQueueHistory();
+            this.updateDashboardQueueCard();
+        },
+
+        updateDashboardQueueCard: function() {
+            var active = this.getActiveRequest();
+            var numDisplay = document.querySelector('#tab-dashboard .queue-number-display');
+            var counterVal = document.querySelectorAll('#tab-dashboard .queue-field-value')[0];
+            var waitVal = document.querySelector('#tab-dashboard .wait-time-value');
+            var serviceVal = document.querySelectorAll('#tab-dashboard .queue-field-value')[1];
+            var reqDocVal = document.querySelectorAll('#tab-dashboard .queue-field-value')[2];
+
+            if (active) {
+                if (numDisplay) numDisplay.innerHTML = '<span style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:1px;">Queue ' + active.queueNum + '</span>';
+                if (counterVal) counterVal.textContent = active.counter;
+                if (waitVal) waitVal.textContent = active.waitTime;
+                if (serviceVal) serviceVal.textContent = active.service;
+                if (reqDocVal) reqDocVal.textContent = active.docName;
+            } else {
+                if (numDisplay) numDisplay.innerHTML = '<span class="dash"></span><span class="dash"></span><span class="dash"></span><span class="dash"></span><span class="dash"></span>';
+                if (counterVal) counterVal.textContent = '——';
+                if (waitVal) waitVal.textContent = '0 minutes';
+                if (serviceVal) serviceVal.textContent = 'No document requested';
+                if (reqDocVal) reqDocVal.textContent = 'No document requested';
+            }
+        },
+
+        renderMyQueue: function() {
+            var container = document.getElementById('myQueueViewContainer');
+            if (!container) return;
+
+            var active = this.getActiveRequest();
+            if (!active) {
+                container.innerHTML = 
+                    '<div class="queue-empty-state">' +
+                        '<i class="bi bi-ticket-perforated"></i>' +
+                        '<div class="queue-empty-title">No active request right now</div>' +
+                        '<p class="queue-empty-copy">Your queue ticket will show here once you have a processing or ready-for-pickup request.</p>' +
+                        '<button class="btn-request-now mt-3" type="button" onclick="QReserve.switchTab(\'my-requests\')">' +
+                            '<i class="bi bi-plus-circle"></i> Request a document' +
+                        '</button>' +
+                    '</div>';
+            } else {
+                var qrBoxId = this.userType + 'ActiveQrBox';
+                var dbId = active.db_id || '';
+
+                container.innerHTML = 
+                    '<div class="my-queue-card fade-in-stagger delay-1">' +
+                        '<div class="d-flex justify-content-between align-items-center mb-3">' +
+                            '<div class="my-queue-card-title mb-0">Your Current Queue</div>' +
+                            '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill" style="font-size:12px;font-weight:700;">' + active.status + '</span>' +
+                        '</div>' +
+                        '<div class="my-queue-split">' +
+                            '<div class="my-queue-info">' +
+                                '<div class="queue-field-label">Queue Number</div>' +
+                                '<div class="queue-number-display" style="font-size:26px;font-weight:900;color:#1e293b;letter-spacing:1px;margin-bottom:10px;">Queue ' + active.queueNum + '</div>' +
+                                '<div class="queue-field-label">Counter</div>' +
+                                '<div class="queue-field-value" style="font-weight:700;">' + active.counter + '</div>' +
+                                '<div class="queue-field-label">Estimated Wait Time</div>' +
+                                '<div class="wait-time-value" style="font-size:20px;font-weight:800;color:#1e293b;">' + active.waitTime + '</div>' +
+                                '<div class="queue-field-label">Service</div>' +
+                                '<div class="queue-field-value">' + active.service + '</div>' +
+                                '<div class="queue-field-label">Requested Document</div>' +
+                                '<div class="queue-field-value" style="font-weight:700;color:#8c1010;">' + active.docName + '</div>' +
+                            '</div>' +
+                            '<div class="my-queue-qr-box" id="' + qrBoxId + '"></div>' +
+                        '</div>' +
+                        '<div class="my-queue-actions">' +
+                            '<button class="btn-download-qr" onclick="QReserveApp.downloadActiveQR(\'' + qrBoxId + '\')">' +
+                                '<i class="bi bi-qr-code-scan"></i> Download QR' +
+                            '</button>' +
+                            '<button class="btn btn-outline-success rounded-pill fw-bold" onclick="QReserveApp.completeActive(\'' + dbId + '\')">' +
+                                '<i class="bi bi-check2-circle"></i> Complete' +
+                            '</button>' +
+                            '<button class="btn btn-outline-danger rounded-pill fw-bold" onclick="QReserveApp.cancelActive(\'' + dbId + '\')">' +
+                                '<i class="bi bi-x-circle"></i> Cancel' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>';
+
+                setTimeout(function() {
+                    var box = document.getElementById(qrBoxId);
+                    if (box && typeof QRCode !== 'undefined') {
+                        box.innerHTML = '';
+                        new QRCode(box, {
+                            text: active.transactionId,
+                            width: 140,
+                            height: 140,
+                            colorDark: '#1e293b',
+                            colorLight: '#f8fafc',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    }
+                }, 50);
+            }
+        },
+
+        downloadActiveQR: function(qrBoxId) {
+            var box = document.getElementById(qrBoxId);
+            if (!box) return;
+            var qrCanvas = box.querySelector('canvas');
+            if (!qrCanvas) { alert('QR code not ready yet.'); return; }
+
+            var active = this.getActiveRequest();
+            if (!active) return;
+            var queueNum = active.queueNum || '---';
+            var docName = active.docName || 'Document Request';
+            var txId = active.transactionId || '';
+            var counter = active.counter || '';
+            var dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            var W = 640;
+            var H = 820;
+            var padding = 40;
+
+            var card = document.createElement('canvas');
+            card.width = W;
+            card.height = H;
+            var ctx = card.getContext('2d');
+
+            // Card background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+
+            // Top accent bar
+            ctx.fillStyle = '#8c1010';
+            ctx.fillRect(0, 0, W, 14);
+
+            // Branding
+            ctx.fillStyle = '#8c1010';
+            ctx.font = '900 34px Poppins, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('QRESERVE', W / 2, 92);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '600 14px Poppins, sans-serif';
+            ctx.fillText('Queue Reservation Ticket', W / 2, 118);
+
+            // Divider
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, 138);
+            ctx.lineTo(W - padding, 138);
+            ctx.stroke();
+
+            // Card label box around QR
+            var qrSize = 320;
+            var qrX = (W - qrSize) / 2;
+            var qrY = 165;
+
+            // Soft card behind QR (like login card)
+            var cardPad = 18;
+            ctx.fillStyle = '#f8fafc';
+            this._roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad * 2, qrSize + cardPad * 2, 20);
+            ctx.fill();
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1.5;
+            this._roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad * 2, qrSize + cardPad * 2, 20);
+            ctx.stroke();
+
+            // Draw the QR code into the card
+            ctx.imageSmoothingEnabled = true;
+            ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+
+            // Queue number
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '800 26px Poppins, sans-serif';
+            ctx.fillText('Queue ' + queueNum, W / 2, qrY + qrSize + 62);
+
+            // Detail rows
+            ctx.fillStyle = '#64748b';
+            ctx.font = '600 15px Poppins, sans-serif';
+            ctx.fillText(docName, W / 2, qrY + qrSize + 92);
+            ctx.fillText((counter || '') + '   |   ' + dateStr, W / 2, qrY + qrSize + 116);
+
+            // Transaction ID at bottom
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, H - 90);
+            ctx.lineTo(W - padding, H - 90);
+            ctx.stroke();
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '600 13px Poppins, sans-serif';
+            ctx.fillText('Transaction ID', W / 2, H - 62);
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '700 15px Poppins, sans-serif';
+            ctx.fillText(txId, W / 2, H - 38);
+
+            var link = document.createElement('a');
+            link.download = 'QRESERVE-Ticket-' + queueNum + '.png';
+            link.href = card.toDataURL('image/png');
+            link.click();
+        },
+
+        _roundRect: function(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        },
+
+        renderMyRequests: function() {
+            var container = document.getElementById('myRequestsViewContainer');
+            if (!container) return;
+
+            var list = this.cachedRequests;
+            var isStudent = (this.userType === 'student');
+            var gradNote = isStudent ? '<div class="doc-card-note">ONLY APPLICABLE FOR GRADUATES</div>' : '';
+
+            var html = '<div class="fade-in-stagger delay-1">';
+
+            if (!this.getActiveRequest()) {
+                html += 
+                    '<div class="requests-page-title">No on going request right now</div>' +
+                    '<div class="doc-cards-grid">' +
+                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'Transcript of Records\')">' +
+                            '<div class="doc-card-name">Transcript of Records</div>' +
+                            gradNote +
+                            '<div class="doc-card-time">Process within 3–5 days</div>' +
+                        '</div>' +
+                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'True Copy Report of Grades\')">' +
+                            '<div class="doc-card-name">True Copy Report of Grades</div>' +
+                            '<div class="doc-card-time">Processing within 3–5 days</div>' +
+                        '</div>' +
+                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'True Copy Certificate of Registration\')">' +
+                            '<div class="doc-card-name">True Copy Certificate of Registration</div>' +
+                            '<div class="doc-card-time">Processing within 3–5 days</div>' +
+                        '</div>' +
+                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'Others\')">' +
+                            '<div class="doc-card-name">Others</div>' +
+                            '<div class="doc-card-time">Customized Request</div>' +
+                        '</div>' +
+                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'Good Moral\')">' +
+                            '<div class="doc-card-name">Good Moral</div>' +
+                            '<div class="doc-card-time">Processing within 1 day</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="request-now-wrap">' +
+                        '<button class="btn-request-now" type="button" onclick="QReserveApp.submitRequest()">' +
+                            '<i class="bi bi-check-circle"></i> Request now' +
+                        '</button>' +
+                    '</div>';
+            }
+
+            if (list.length === 0) {
+                if (this.getActiveRequest()) {
+                    html +=
+                        '<div class="queue-empty-state" style="margin-top:28px;">' +
+                            '<i class="bi bi-file-earmark-text"></i>' +
+                            '<div class="queue-empty-title">No requests yet</div>' +
+                            '<p class="queue-empty-copy">Choose a document above and click Request now.</p>' +
+                        '</div>';
+                }
+            } else {
+                html += '<div class="my-requests-list" style="margin-top:24px;">';
+                list.forEach(function(item) {
+                    var badgeClass = 'status-completed';
+                    if (item.status === 'Processing') badgeClass = 'status-processing';
+                    else if (item.status === 'Ready for pickup') badgeClass = 'status-pickup';
+
+                    html += 
+                        '<div class="my-request-pill ' + badgeClass + '">' +
+                            '<div class="my-request-pill-left">' +
+                                '<div class="my-request-pill-icon"><i class="bi bi-file-earmark-text"></i></div>' +
+                                '<div class="my-request-pill-info">' +
+                                    '<div class="my-request-pill-name">' + item.docName + '</div>' +
+                                    '<div class="my-request-pill-date">' + item.dateTime + '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="my-request-pill-status">' + item.status + '</div>' +
+                        '</div>';
+                });
+                html += '</div>';
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        },
+
+        rebuildHistoryDateFilter: function() {
+            var sel = document.getElementById('historyFilterDate');
+            if (!sel) return;
+            var previous = sel.value || 'all';
+            var groups = [];
+            this.cachedRequests.forEach(function(item) {
+                if (item.dateGroup && groups.indexOf(item.dateGroup) === -1) {
+                    groups.push(item.dateGroup);
+                }
+            });
+            sel.innerHTML = '<option value="all">All Dates</option>';
+            groups.forEach(function(group) {
+                var option = document.createElement('option');
+                option.value = group;
+                option.textContent = group;
+                sel.appendChild(option);
+            });
+            var stillValid = previous === 'all' || groups.indexOf(previous) !== -1;
+            sel.value = stillValid ? previous : 'all';
+        },
+
+        renderQueueHistory: function() {
+            var container = document.getElementById('historyCardsListContainer');
+            if (!container) return;
+
+            this.rebuildHistoryDateFilter();
+
+            var list = this.cachedRequests;
+
+            var dateFilter = document.getElementById('historyFilterDate') ? document.getElementById('historyFilterDate').value : 'all';
+            var docFilter = document.getElementById('historyFilterDoc') ? document.getElementById('historyFilterDoc').value : 'all';
+            var statusFilter = document.getElementById('historyFilterStatus') ? document.getElementById('historyFilterStatus').value : 'all';
+
+            var filtered = list.filter(function(item) {
+                if (dateFilter !== 'all' && item.dateGroup !== dateFilter) return false;
+                if (docFilter !== 'all' && item.docName !== docFilter) return false;
+                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML =
+                    '<div class="queue-empty-state" style="margin-top:0;">' +
+                        '<i class="bi bi-inbox"></i>' +
+                        '<div class="queue-empty-title">No matching queue history</div>' +
+                        '<p class="queue-empty-copy">Requests from My Queue and My Requests show up here after they are created.</p>' +
+                    '</div>';
+                return;
+            }
+
+            var html = '';
+            filtered.forEach(function(item) {
+                var iconHtml = (item.status === 'Completed') 
+                    ? '<div class="history-item-icon icon-check"><i class="bi bi-check-circle-fill"></i></div>'
+                    : '<div class="history-item-icon icon-spinner"><i class="bi bi-arrow-repeat"></i></div>';
+
+                var statusCls = 'is-completed';
+                if (item.status === 'Processing') statusCls = 'is-processing';
+                else if (item.status === 'Ready for pickup') statusCls = 'is-pickup';
+
+                html += 
+                    '<div class="history-item-card">' +
+                        '<div class="history-item-top">' +
+                            iconHtml +
+                            '<div class="history-item-title-wrap">' +
+                                '<div class="history-item-name">' + item.docName + '</div>' +
+                                '<div class="history-item-queue">Queue ' + item.queueNum + '</div>' +
+                            '</div>' +
+                            '<div class="history-item-date">' + item.dateTime + '</div>' +
+                            '<div class="history-item-status-text ' + statusCls + '">' + item.status + '</div>' +
+                        '</div>' +
+                        '<div class="history-item-details">' +
+                            '<div class="history-item-labels">' +
+                                '<div>Service</div>' +
+                                '<div>Counter</div>' +
+                                '<div>Waiting time</div>' +
+                                '<div>Transaction ID</div>' +
+                            '</div>' +
+                            '<div class="history-item-values">' +
+                                '<div>' + item.service + '</div>' +
+                                '<div>' + item.counter + '</div>' +
+                                '<div>' + item.waitTime + '</div>' +
+                                '<div>' + item.transactionId + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+            });
+
+            container.innerHTML = html;
+        }
+    };
+
+    // Initialize application on DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+        QReserveApp.fetchRequests(function() {
+            QReserveApp.renderAll();
+        });
+
+        // FAQ accordion toggling
+        document.querySelectorAll('.faq-item .faq-question').forEach(function(q) {
+            q.addEventListener('click', function() {
+                var item = q.closest('.faq-item');
+                item.classList.toggle('open');
+            });
+        });
+    });
+</script>
+
+
+<!-- Live Queue Monitor Polling -->
+<script>
+(function() {
+    'use strict';
+    var POLL_INTERVAL = 5000;
+    var _lastServing = null;
+
+    function animateFade(el) {
+        if (!el) return;
+        el.classList.remove('monitor-value-fade');
+        void el.offsetWidth;
+        el.classList.add('monitor-value-fade');
+    }
+
+    function updateMonitor(data) {
+        var servingEl = document.getElementById('monitorNowServing');
+        var counterEl = document.getElementById('monitorPrimaryCounter');
+        var rowsEl    = document.getElementById('monitorCounterRows');
+        var updatedEl = document.getElementById('monitorLastUpdated');
+
+        if (data.now_serving !== _lastServing) {
+            _lastServing = data.now_serving;
+            if (servingEl) { servingEl.textContent = data.now_serving; animateFade(servingEl); }
+        }
+        if (counterEl) counterEl.textContent = data.primary_counter;
+
+        if (rowsEl && data.counters) {
+            var html = '';
+            data.counters.forEach(function(c) {
+                var waitLabel = c.waiting_count === 1 ? '1 waiting' : (c.waiting_count + ' waiting');
+                html += '<div class="counter-row">' +
+                    '<div class="counter-name">' + c.counter_name + '</div>' +
+                    '<div class="counter-waiting">' +
+                        '<span style="' + (c.now_serving_number > 0 ? 'color:#22c55e;font-weight:700;' : 'color:#94a3b8;') + '">' +
+                            (c.now_serving_number > 0 ? 'Now: ' + c.now_serving + ' &nbsp;&bull;&nbsp; ' : '') +
+                        '</span>' +
+                        waitLabel +
+                    '</div></div>';
+            });
+            rowsEl.innerHTML = html;
+        }
+        if (updatedEl) {
+            var now = new Date();
+            updatedEl.textContent = 'Updated ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        }
+    }
+
+    function pollMonitor() {
+        fetch('/api/monitor')
+            .then(function(r) { return r.json(); })
+            .then(function(data) { if (data.success) updateMonitor(data); })
+            .catch(function() {
+                var el = document.getElementById('monitorPrimaryCounter');
+                if (el) el.textContent = 'Connection lost — retrying...';
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        pollMonitor();
+        setInterval(pollMonitor, POLL_INTERVAL);
+    });
+})();
 </script>
 
 </body>

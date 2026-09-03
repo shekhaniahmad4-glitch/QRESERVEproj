@@ -6,7 +6,8 @@ from flask import (
     url_for,
     flash,
     session,
-    current_app
+    current_app,
+    jsonify
 )
 
 import os
@@ -14,6 +15,7 @@ import re
 import secrets
 import smtplib
 import threading
+import random
 
 from datetime import datetime, timedelta
 from email.message import EmailMessage
@@ -24,7 +26,7 @@ from werkzeug.security import (
 )
 from werkzeug.utils import secure_filename
 
-from database import db, Student, StudentProfile
+from database import db, Student, StudentProfile, QueueRequest, QueueCounter
 
 from extensions import limiter
 
@@ -1596,3 +1598,211 @@ def admin_logout():
     return redirect(
         url_for("auth.admin_login")
     )
+
+
+# =======================================================
+# PRIVATE QUEUE API ROUTES (DATABASE persist & privacy)
+# =======================================================
+
+def _get_guest_session_key():
+    if "guest_session_key" not in session:
+        session["guest_session_key"] = f"guest_{secrets.token_hex(16)}"
+    return session["guest_session_key"]
+
+
+@auth.route("/api/requests", methods=["GET"])
+def get_user_requests():
+    student_id = session.get("student_id")
+
+    if student_id:
+        requests_query = QueueRequest.query.filter_by(
+            student_id=student_id
+        ).order_by(QueueRequest.id.desc()).all()
+    else:
+        guest_key = _get_guest_session_key()
+        requests_query = QueueRequest.query.filter_by(
+            guest_session_key=guest_key
+        ).order_by(QueueRequest.id.desc()).all()
+
+    return jsonify({"success": True, "requests": [r.to_dict() for r in requests_query]})
+
+
+@auth.route("/api/request/create", methods=["POST"])
+def create_queue_request():
+    data = request.get_json() or {}
+    doc_name = data.get("doc_name", "True Copy Certificate of Registration").strip()
+
+    num_int = str(random.randint(100, 999))
+    queue_number = f"A-{num_int}"
+
+    now = datetime.utcnow()
+    tx_id = f"QRS-2026-{now.strftime('%m%d')}-{num_int}"
+
+    student_id = session.get("student_id")
+    guest_key = None if student_id else _get_guest_session_key()
+
+    new_req = QueueRequest(
+        student_id=student_id,
+        guest_session_key=guest_key,
+        doc_name=doc_name,
+        queue_number=queue_number,
+        counter="Counter 4",
+        service="Registrar – Document request",
+        wait_time="10–15 minutes",
+        transaction_id=tx_id,
+        status="Processing"
+    )
+
+    db.session.add(new_req)
+    db.session.commit()
+
+    return jsonify({"success": True, "request": new_req.to_dict()})
+
+
+@auth.route("/api/request/<int:req_id>/complete", methods=["POST"])
+def complete_queue_request(req_id):
+    req_obj = QueueRequest.query.get(req_id)
+    if req_obj:
+        req_obj.status = "Completed"
+        db.session.commit()
+        return jsonify({"success": True})
+    return jsonify({"success": False, "error": "Not found"}), 404
+
+
+@auth.route("/api/request/<int:req_id>/cancel", methods=["POST"])
+def cancel_queue_request(req_id):
+    req_obj = QueueRequest.query.get(req_id)
+    if req_obj:
+        db.session.delete(req_obj)
+        db.session.commit()
+        return jsonify({"success": True})
+    return jsonify({"success": False, "error": "Not found"}), 404
+
+
+# =======================================================
+# LIVE QUEUE MONITOR — PUBLIC API
+# =======================================================
+# Polled every 5 seconds by the Student and Guest dashboards.
+# Returns all active counters and the "primary" now-serving ticket.
+
+@auth.route("/api/monitor", methods=["GET"])
+def get_monitor():
+    counters = QueueCounter.query.filter_by(is_active=True).order_by(QueueCounter.counter_code).all()
+
+    data = [c.to_dict() for c in counters]
+
+    # Primary "Now Serving" = first active counter that is actually serving
+    primary = next((c for c in counters if c.now_serving_number > 0), None)
+    primary_serving = primary.now_serving if primary else "---"
+    primary_counter = primary.counter_name if primary else "No Active Counter"
+
+    return jsonify({
+        "success": True,
+        "now_serving": primary_serving,
+        "primary_counter": primary_counter,
+        "counters": data
+    })
+
+
+# =======================================================
+# ADMIN COUNTER API — LIST ALL COUNTERS
+# =======================================================
+
+@auth.route("/api/admin/counters", methods=["GET"])
+def admin_get_counters():
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    counters = QueueCounter.query.order_by(QueueCounter.counter_code).all()
+    return jsonify({"success": True, "counters": [c.to_dict() for c in counters]})
+
+
+# =======================================================
+# ADMIN COUNTER API — CALL NEXT (AUTO-INCREMENT)
+# =======================================================
+
+@auth.route("/api/admin/counter/<int:counter_id>/next", methods=["POST"])
+def admin_counter_next(counter_id):
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    counter = QueueCounter.query.get(counter_id)
+    if not counter:
+        return jsonify({"success": False, "error": "Counter not found"}), 404
+
+    counter.now_serving_number += 1
+    counter.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({"success": True, "counter": counter.to_dict()})
+
+
+# =======================================================
+# ADMIN COUNTER API — MANUAL SET NOW SERVING
+# =======================================================
+
+@auth.route("/api/admin/counter/<int:counter_id>/set", methods=["POST"])
+def admin_counter_set(counter_id):
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    counter = QueueCounter.query.get(counter_id)
+    if not counter:
+        return jsonify({"success": False, "error": "Counter not found"}), 404
+
+    data = request.get_json() or {}
+    new_number = data.get("now_serving_number")
+    is_active = data.get("is_active")
+
+    if new_number is not None:
+        try:
+            counter.now_serving_number = int(new_number)
+        except (ValueError, TypeError):
+            return jsonify({"success": False, "error": "Invalid number"}), 400
+
+    if is_active is not None:
+        counter.is_active = bool(is_active)
+
+    counter.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({"success": True, "counter": counter.to_dict()})
+
+
+# =======================================================
+# ADMIN — UPDATE A QUEUE REQUEST STATUS
+# =======================================================
+
+@auth.route("/api/admin/request/<int:req_id>/status", methods=["POST"])
+def admin_update_request_status(req_id):
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    req_obj = QueueRequest.query.get(req_id)
+    if not req_obj:
+        return jsonify({"success": False, "error": "Not found"}), 404
+
+    data = request.get_json() or {}
+    new_status = data.get("status", "").strip()
+
+    allowed_statuses = {"Processing", "Ready for pickup", "Completed"}
+    if new_status not in allowed_statuses:
+        return jsonify({"success": False, "error": f"Status must be one of {allowed_statuses}"}), 400
+
+    req_obj.status = new_status
+    db.session.commit()
+
+    return jsonify({"success": True, "request": req_obj.to_dict()})
+
+
+# =======================================================
+# ADMIN — GET ALL QUEUE REQUESTS (FOR MONITOR PANEL)
+# =======================================================
+
+@auth.route("/api/admin/requests", methods=["GET"])
+def admin_get_requests():
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    reqs = QueueRequest.query.order_by(QueueRequest.id.desc()).limit(50).all()
+    return jsonify({"success": True, "requests": [r.to_dict() for r in reqs]})

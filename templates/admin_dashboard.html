@@ -781,64 +781,88 @@
         <!-- DASHBOARD BODY -->
         <div class="dashboard-content">
 
-            <!-- STATS PREVIEW CARDS -->
+            <!-- LIVE STAT CARDS -->
             <div class="stats-grid">
 
                 <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
+                    <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
                     <div class="stat-info">
                         <div class="stat-label">Active Queue</div>
-                        <div class="stat-value">18 <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span></div>
+                        <div class="stat-value" id="statActiveQueue">
+                            — <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-ticket-detailed-fill"></i>
-                    </div>
+                    <div class="stat-icon"><i class="bi bi-ticket-detailed-fill"></i></div>
                     <div class="stat-info">
                         <div class="stat-label">Now Serving</div>
-                        <div class="stat-value text-danger">#A-104</div>
+                        <div class="stat-value text-danger" id="statNowServing">—</div>
                     </div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="bi bi-stopwatch-fill"></i>
-                    </div>
+                    <div class="stat-icon"><i class="bi bi-stopwatch-fill"></i></div>
                     <div class="stat-info">
-                        <div class="stat-label">Est. Wait Time</div>
-                        <div class="stat-value">~4 min</div>
+                        <div class="stat-label">Requests Today</div>
+                        <div class="stat-value" id="statToday">—</div>
                     </div>
                 </div>
 
             </div>
 
 
-            <!-- DEVELOPMENT AREA -->
-            <section class="development-area">
+            <!-- QUEUE CONTROL CENTER -->
+            <div style="margin-top:20px;">
 
-                <div class="development-box">
-
-                    <div class="development-icon-circle">
-                        <i class="bi bi-cpu"></i>
+                <!-- Section header -->
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <div style="font-size:16px;font-weight:800;color:#1e293b;">
+                        <i class="bi bi-display" style="color:#a90000;margin-right:8px;"></i>Queue Control Center
                     </div>
-
-                    <h2>SYSTEM ONLINE</h2>
-
-                    <p>
-                        The Administrator Queue Monitor & Counter Controller are being hooked up.
-                    </p>
-
-                    <div class="preview-badge">
-                        <i class="bi bi-stars text-warning"></i> QRESERVE Version 1.0 &bull; Ready for next module
+                    <div style="display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#15803d;">
+                        <span id="adminLiveDot" style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;animation:livePulse 1.4s ease-in-out infinite;"></span>
+                        LIVE
                     </div>
-
                 </div>
 
-            </section>
+                <!-- Counter control cards -->
+                <div id="counterControlGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px;">
+                    <!-- Populated by JS -->
+                    <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;grid-column:1/-1;">Loading counters...</div>
+                </div>
+
+                <!-- Queue Requests Table -->
+                <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                    <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+                        <div style="font-size:14px;font-weight:700;color:#1e293b;">
+                            <i class="bi bi-list-ul" style="color:#a90000;margin-right:6px;"></i>Live Queue Requests
+                        </div>
+                        <button onclick="AdminQM.loadRequests()" style="background:none;border:1px solid #e2e8f0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#475569;cursor:pointer;transition:all 0.2s;">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+                            <thead>
+                                <tr style="background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">
+                                    <th style="padding:10px 16px;text-align:left;">Queue #</th>
+                                    <th style="padding:10px 16px;text-align:left;">Document</th>
+                                    <th style="padding:10px 16px;text-align:left;">Counter</th>
+                                    <th style="padding:10px 16px;text-align:left;">Date & Time</th>
+                                    <th style="padding:10px 16px;text-align:left;">Status</th>
+                                    <th style="padding:10px 16px;text-align:center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queueRequestsTable">
+                                <tr><td colspan="6" style="padding:20px;text-align:center;color:#94a3b8;">Loading requests...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
 
         </div>
 
@@ -847,6 +871,7 @@
 </div>
 
 <script>
+    // ----- Live Clock -----
     function updateClock() {
         const el = document.getElementById('liveClockDisplay');
         if (!el) return;
@@ -855,6 +880,218 @@
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    // ----- Admin Queue Manager -----
+    var AdminQM = {
+        counters: [],
+        requests: [],
+
+        init: function() {
+            this.loadCounters();
+            this.loadRequests();
+            setInterval(function() { AdminQM.loadCounters(); }, 6000);
+            setInterval(function() { AdminQM.loadRequests(); }, 10000);
+        },
+
+        loadCounters: function() {
+            fetch('/api/admin/counters')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        AdminQM.counters = data.counters;
+                        AdminQM.renderCounters();
+                        AdminQM.updateStatCards();
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('adminLiveDot').style.background = '#ef4444';
+                });
+        },
+
+        loadRequests: function() {
+            fetch('/api/admin/requests')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        AdminQM.requests = data.requests;
+                        AdminQM.renderRequestsTable();
+                        AdminQM.updateStatCards();
+                    }
+                });
+        },
+
+        updateStatCards: function() {
+            // Active (Processing) count
+            var active = this.requests.filter(function(r) { return r.status === 'Processing'; }).length;
+            var el = document.getElementById('statActiveQueue');
+            if (el) el.innerHTML = active + ' <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span>';
+
+            // Now Serving (first counter with number > 0)
+            var serving = '—';
+            for (var i = 0; i < this.counters.length; i++) {
+                if (this.counters[i].now_serving_number > 0) {
+                    serving = this.counters[i].now_serving;
+                    break;
+                }
+            }
+            var ns = document.getElementById('statNowServing');
+            if (ns) ns.textContent = serving;
+
+            // Today's total
+            var today = document.getElementById('statToday');
+            if (today) today.textContent = this.requests.length + ' total';
+        },
+
+        renderCounters: function() {
+            var grid = document.getElementById('counterControlGrid');
+            if (!grid) return;
+
+            var html = '';
+            this.counters.forEach(function(c) {
+                var codeColor = c.is_active ? '#22c55e' : '#94a3b8';
+                var cardBorder = c.is_active ? '2px solid #bbf7d0' : '1.5px solid #e2e8f0';
+                var servingDisplay = c.now_serving_number > 0 ? c.now_serving : '---';
+
+                html += '<div style="background:white;border:' + cardBorder + ';border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">' +
+
+                    // Header
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">' +
+                        '<div style="font-size:14px;font-weight:800;color:#1e293b;">' + c.counter_name + '</div>' +
+                        '<span style="width:8px;height:8px;border-radius:50%;background:' + codeColor + ';display:inline-block;"></span>' +
+                    '</div>' +
+
+                    // Now Serving Display
+                    '<div style="text-align:center;margin-bottom:14px;">' +
+                        '<div style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:2px;">Now Serving</div>' +
+                        '<div id="counterServing_' + c.id + '" style="font-size:36px;font-weight:900;color:#a90000;letter-spacing:-1px;line-height:1;">' + servingDisplay + '</div>' +
+                        '<div style="font-size:11px;color:#64748b;margin-top:4px;">' + c.waiting_count + ' waiting</div>' +
+                    '</div>' +
+
+                    // Call Next button
+                    '<button onclick="AdminQM.callNext(' + c.id + ')" ' +
+                        'style="width:100%;padding:10px;background:linear-gradient(135deg,#8c1010,#6e0a0a);color:white;border:none;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;transition:all 0.2s;" ' +
+                        'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 18px rgba(140,16,16,0.3)\';" ' +
+                        'onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\';">' +
+                        '<i class="bi bi-arrow-right-circle-fill" style="margin-right:6px;"></i>Call Next' +
+                    '</button>' +
+
+                    // Manual set
+                    '<div style="display:flex;gap:6px;">' +
+                        '<input type="number" id="manualInput_' + c.id + '" min="0" max="999" placeholder="Set # manually" ' +
+                            'style="flex:1;padding:7px 10px;border:1px solid #e2e8f0;border-radius:20px;font-size:12px;font-family:Poppins,sans-serif;outline:none;">' +
+                        '<button onclick="AdminQM.manualSet(' + c.id + ')" ' +
+                            'style="padding:7px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;color:#475569;">' +
+                            'Set' +
+                        '</button>' +
+                    '</div>' +
+
+                '</div>';
+            });
+
+            grid.innerHTML = html || '<div style="padding:20px;text-align:center;color:#94a3b8;grid-column:1/-1;">No counters found.</div>';
+        },
+
+        callNext: function(counterId) {
+            fetch('/api/admin/counter/' + counterId + '/next', { method: 'POST' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        // Instant UI update without waiting for next poll
+                        var el = document.getElementById('counterServing_' + counterId);
+                        if (el) {
+                            el.textContent = data.counter.now_serving;
+                            el.style.animation = 'none';
+                            void el.offsetWidth;
+                            el.style.animation = 'counterPop 0.35s cubic-bezier(0.16,1,0.3,1)';
+                        }
+                        // Refresh all
+                        AdminQM.loadCounters();
+                    }
+                });
+        },
+
+        manualSet: function(counterId) {
+            var input = document.getElementById('manualInput_' + counterId);
+            if (!input) return;
+            var val = parseInt(input.value, 10);
+            if (isNaN(val) || val < 0) { alert('Please enter a valid number (0–999).'); return; }
+
+            fetch('/api/admin/counter/' + counterId + '/set', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ now_serving_number: val })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    input.value = '';
+                    AdminQM.loadCounters();
+                }
+            });
+        },
+
+        renderRequestsTable: function() {
+            var tbody = document.getElementById('queueRequestsTable');
+            if (!tbody) return;
+
+            if (!this.requests.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding:28px;text-align:center;color:#94a3b8;font-size:13px;">No queue requests yet.</td></tr>';
+                return;
+            }
+
+            var statusColors = {
+                'Processing':      { bg:'#fefce8', color:'#854d0e', border:'#fde68a' },
+                'Ready for pickup':{ bg:'#f0fdf4', color:'#14532d', border:'#bbf7d0' },
+                'Completed':       { bg:'#f8fafc', color:'#475569', border:'#e2e8f0' }
+            };
+
+            var html = '';
+            this.requests.forEach(function(r) {
+                var sc = statusColors[r.status] || statusColors['Completed'];
+                var badge = '<span style="background:' + sc.bg + ';color:' + sc.color + ';border:1px solid ' + sc.border + ';border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">' + r.status + '</span>';
+
+                html += '<tr style="border-top:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\';" onmouseout="this.style.background=\'\';">' +
+                    '<td style="padding:11px 16px;font-weight:700;color:#1e293b;">' + r.queueNum + '</td>' +
+                    '<td style="padding:11px 16px;color:#334155;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.docName + '</td>' +
+                    '<td style="padding:11px 16px;color:#64748b;">' + (r.counter || '—') + '</td>' +
+                    '<td style="padding:11px 16px;color:#94a3b8;font-size:11.5px;">' + r.dateTime + '</td>' +
+                    '<td style="padding:11px 16px;">' + badge + '</td>' +
+                    '<td style="padding:11px 16px;text-align:center;">' +
+                        '<select onchange="AdminQM.updateStatus(' + r.db_id + ', this.value)" ' +
+                            'style="font-size:11px;font-family:Poppins,sans-serif;border:1px solid #e2e8f0;border-radius:20px;padding:4px 8px;color:#475569;background:white;cursor:pointer;">' +
+                            '<option value="Processing"' + (r.status === 'Processing' ? ' selected' : '') + '>Processing</option>' +
+                            '<option value="Ready for pickup"' + (r.status === 'Ready for pickup' ? ' selected' : '') + '>Ready for pickup</option>' +
+                            '<option value="Completed"' + (r.status === 'Completed' ? ' selected' : '') + '>Completed</option>' +
+                        '</select>' +
+                    '</td>' +
+                '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        },
+
+        updateStatus: function(reqId, newStatus) {
+            fetch('/api/admin/request/' + reqId + '/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) AdminQM.loadRequests();
+            });
+        }
+    };
+
+    // Counter number pop animation
+    var style = document.createElement('style');
+    style.textContent = '@keyframes counterPop { from { transform: scale(1.25); color: #22c55e; } to { transform: scale(1); color: #a90000; } }' +
+        '@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.4)} }';
+    document.head.appendChild(style);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        AdminQM.init();
+    });
 </script>
 
 <!-- Transitions & Delays JS -->
