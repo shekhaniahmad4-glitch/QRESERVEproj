@@ -2016,7 +2016,7 @@
             var reqDocVal = document.querySelectorAll('#tab-dashboard .queue-field-value')[2];
 
             if (active) {
-                if (numDisplay) numDisplay.innerHTML = '<span style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:1px;">Queue ' + active.queueNum + '</span>';
+                if (numDisplay) numDisplay.innerHTML = '<span style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:1px;">' + active.queueNum + '</span>';
                 if (counterVal) counterVal.textContent = active.counter;
                 if (waitVal) waitVal.textContent = active.waitTime;
                 if (serviceVal) serviceVal.textContent = active.service;
@@ -2058,7 +2058,7 @@
                         '<div class="my-queue-split">' +
                             '<div class="my-queue-info">' +
                                 '<div class="queue-field-label">Queue Number</div>' +
-                                '<div class="queue-number-display" style="font-size:26px;font-weight:900;color:#1e293b;letter-spacing:1px;margin-bottom:10px;">Queue ' + active.queueNum + '</div>' +
+                                '<div class="queue-number-display" style="font-size:26px;font-weight:900;color:#1e293b;letter-spacing:1px;margin-bottom:10px;">' + active.queueNum + '</div>' +
                                 '<div class="queue-field-label">Counter</div>' +
                                 '<div class="queue-field-value" style="font-weight:700;">' + active.counter + '</div>' +
                                 '<div class="queue-field-label">Estimated Wait Time</div>' +
@@ -2171,7 +2171,7 @@
             // Queue number
             ctx.fillStyle = '#1e293b';
             ctx.font = '800 26px Poppins, sans-serif';
-            ctx.fillText('Queue ' + queueNum, W / 2, qrY + qrSize + 62);
+            ctx.fillText(queueNum, W / 2, qrY + qrSize + 62);
 
             // Detail rows
             ctx.fillStyle = '#64748b';
@@ -2353,7 +2353,7 @@
                             iconHtml +
                             '<div class="history-item-title-wrap">' +
                                 '<div class="history-item-name">' + item.docName + '</div>' +
-                                '<div class="history-item-queue">Queue ' + item.queueNum + '</div>' +
+                                '<div class="history-item-queue">' + item.queueNum + '</div>' +
                             '</div>' +
                             '<div class="history-item-date">' + item.dateTime + '</div>' +
                             '<div class="history-item-status-text ' + statusCls + '">' + item.status + '</div>' +

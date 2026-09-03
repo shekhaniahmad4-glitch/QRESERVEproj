@@ -1632,11 +1632,22 @@ def create_queue_request():
     data = request.get_json() or {}
     doc_name = data.get("doc_name", "True Copy Certificate of Registration").strip()
 
-    num_int = str(random.randint(100, 999))
-    queue_number = f"A-{num_int}"
+    # Sequential queue number: find maximum existing A-### and increment by 1
+    import re as _re
+    all_a_reqs = QueueRequest.query.filter(QueueRequest.queue_number.like("A-%")).all()
+    max_num = 0
+    for r in all_a_reqs:
+        m = _re.search(r"A-(\d+)", r.queue_number or "")
+        if m:
+            val = int(m.group(1))
+            if val > max_num:
+                max_num = val
+
+    num_int = max_num + 1
+    queue_number = f"A-{num_int:03d}"
 
     now = datetime.utcnow()
-    tx_id = f"QRS-2026-{now.strftime('%m%d')}-{num_int}"
+    tx_id = f"QRS-2026-{now.strftime('%m%d')}-{num_int:03d}"
 
     student_id = session.get("student_id")
     guest_key = None if student_id else _get_guest_session_key()
