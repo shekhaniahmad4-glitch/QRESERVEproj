@@ -61,14 +61,14 @@ const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
             password.type = "text";
 
             togglePassword.innerHTML =
-                '<i class="bi bi-eye-slash"></i>';
+                '<i class="bi bi-eye"></i>';
 
         } else {
 
             password.type = "password";
 
             togglePassword.innerHTML =
-                '<i class="bi bi-eye"></i>';
+                '<i class="bi bi-eye-slash"></i>';
 
         }
 
@@ -87,14 +87,14 @@ if (toggleConfirmPassword && confirmPassword) {
             confirmPassword.type = "text";
 
             toggleConfirmPassword.innerHTML =
-                '<i class="bi bi-eye-slash"></i>';
+                '<i class="bi bi-eye"></i>';
 
         } else {
 
             confirmPassword.type = "password";
 
             toggleConfirmPassword.innerHTML =
-                '<i class="bi bi-eye"></i>';
+                '<i class="bi bi-eye-slash"></i>';
 
         }
 

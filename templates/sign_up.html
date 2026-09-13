@@ -902,7 +902,7 @@
                                 id="togglePassword"
                                 aria-label="Show password"
                             >
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye-slash"></i>
                             </button>
 
                         </div>
@@ -965,7 +965,7 @@
                                 id="toggleConfirmPassword"
                                 aria-label="Show confirm password"
                             >
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye-slash"></i>
                             </button>
 
                         </div>
@@ -1021,11 +1021,11 @@
         togglePassword.addEventListener("click", function () {
             if (password.type === "password") {
                 password.type = "text";
-                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                this.innerHTML = '<i class="bi bi-eye"></i>';
                 this.setAttribute("aria-label", "Hide password");
             } else {
                 password.type = "password";
-                this.innerHTML = '<i class="bi bi-eye"></i>';
+                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
                 this.setAttribute("aria-label", "Show password");
             }
         });
@@ -1037,11 +1037,11 @@
         toggleConfirmPassword.addEventListener("click", function () {
             if (confirmPassword.type === "password") {
                 confirmPassword.type = "text";
-                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                this.innerHTML = '<i class="bi bi-eye"></i>';
                 this.setAttribute("aria-label", "Hide confirm password");
             } else {
                 confirmPassword.type = "password";
-                this.innerHTML = '<i class="bi bi-eye"></i>';
+                this.innerHTML = '<i class="bi bi-eye-slash"></i>';
                 this.setAttribute("aria-label", "Show confirm password");
             }
         });

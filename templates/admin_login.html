@@ -497,7 +497,7 @@
                                 id="togglePassword"
                                 aria-label="Show password"
                             >
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-eye-slash"></i>
                             </button>
                         </div>
                     </div>
@@ -527,11 +527,11 @@
         togglePassword.addEventListener("click", function () {
             if (passwordInput.type === "password") {
                 passwordInput.type = "text";
-                togglePassword.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                togglePassword.innerHTML = '<i class="bi bi-eye"></i>';
                 togglePassword.setAttribute("aria-label", "Hide password");
             } else {
                 passwordInput.type = "password";
-                togglePassword.innerHTML = '<i class="bi bi-eye"></i>';
+                togglePassword.innerHTML = '<i class="bi bi-eye-slash"></i>';
                 togglePassword.setAttribute("aria-label", "Show password");
             }
         });

@@ -768,7 +768,7 @@
                                 <button type="button" id="togglePasswordBtn" onclick="togglePasswordVisibility();"
                                     style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; font-size: 17px; padding: 4px; display: flex; align-items: center; justify-content: center; z-index: 5;"
                                     title="Toggle password visibility">
-                                    <i class="bi bi-eye" id="toggleEyeIcon"></i>
+                                    <i class="bi bi-eye-slash" id="toggleEyeIcon"></i>
                                 </button>
                             </div>
                             <small style="font-size:11.5px;color:#64748b;margin-top:4px;display:block;">
@@ -897,10 +897,10 @@
         if (!pw || !icon) return;
         if (pw.type === 'password') {
             pw.type = 'text';
-            icon.className = 'bi bi-eye-slash';
+            icon.className = 'bi bi-eye';
         } else {
             pw.type = 'password';
-            icon.className = 'bi bi-eye';
+            icon.className = 'bi bi-eye-slash';
         }
     }
 </script>

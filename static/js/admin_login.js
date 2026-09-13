@@ -193,7 +193,7 @@
                                     type="button"
                                     id="toggleAdminPassword">
 
-                                    <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye-slash"></i>
 
                                 </button>
 
@@ -281,8 +281,8 @@ if (toggleAdminPassword) {
 
         this.innerHTML =
             type === "password"
-                ? '<i class="bi bi-eye"></i>'
-                : '<i class="bi bi-eye-slash"></i>';
+                ? '<i class="bi bi-eye-slash"></i>'
+                : '<i class="bi bi-eye"></i>';
 
     });
 
