@@ -222,6 +222,7 @@
     font-size: 12px;
     line-height: 1.45;
     padding-left: 48px;
+    align-items: start;
 }
 
 .history-item-labels {
@@ -230,6 +231,16 @@
 }
 
 .history-item-values {
+    color: #334155;
+    font-weight: 500;
+}
+
+.history-item-label {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.history-item-value {
     color: #334155;
     font-weight: 500;
 }

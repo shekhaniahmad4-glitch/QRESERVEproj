@@ -1077,6 +1077,47 @@
             .doc-cards-grid { grid-template-columns: 1fr; }
         }
 
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto 24px;
+            max-width: 720px;
+        }
+
+        .category-tab {
+            flex: 1;
+            max-width: 220px;
+            padding: 11px 18px;
+            border-radius: 30px;
+            border: 1.5px solid #cbd5e1;
+            background: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .category-tab i {
+            font-size: 16px;
+        }
+
+        .category-tab.active {
+            background: #a90000;
+            border-color: #a90000;
+            color: #fff;
+        }
+
+        .category-tab:not(.active):hover {
+            border-color: #a90000;
+            color: #a90000;
+        }
+
         .doc-card {
             background: white;
             border: 1.5px solid #cbd5e1;
@@ -1148,6 +1189,26 @@
             background: #065f46;
             transform: translateY(-2px);
             box-shadow: 0 8px 22px rgba(4,120,87,0.35);
+        }
+
+        .request-summary-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 14px auto 6px;
+            max-width: 560px;
+            padding: 12px 18px;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 12px;
+            color: #065f46;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .req-summary-total {
+            color: #047857;
+            font-weight: 800;
         }
 
 
@@ -1424,6 +1485,16 @@
             color: #334155;
             font-weight: 500;
         }
+
+        .history-item-label {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .history-item-value {
+            color: #334155;
+            font-weight: 500;
+        }
     </style>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/queue-views.css') }}">
@@ -1596,10 +1667,10 @@
                         <div class="wait-time-value">0 minutes</div>
 
                         <div class="queue-field-label">Service</div>
-                        <div class="queue-field-value">No document requested</div>
+                        <div class="queue-field-value">No request yet</div>
 
-                        <div class="queue-field-label">Requested Document</div>
-                        <div class="queue-field-value">No document requested</div>
+                        <div class="queue-field-label">Requests</div>
+                        <div class="queue-field-value">No request yet</div>
 
                         <!-- View Queue Button (Clickable, switches to My Queue tab) -->
                         <a href="#" class="view-queue-btn" onclick="QReserve.switchTab('my-queue'); return false;">
@@ -1912,7 +1983,8 @@
 <script>
     var QReserveApp = {
         userType: 'student',
-        selectedDoc: 'True Copy Certificate of Registration',
+        selectedItems: [],
+        selectedCategory: 'Registrar',
         cachedRequests: [],
 
         fetchRequests: function(callback) {
@@ -1932,18 +2004,100 @@
         },
 
         getActiveRequest: function() {
-            return this.cachedRequests.find(function(r) {
+            var active = this.cachedRequests.filter(function(r) {
                 return r.status === 'Processing' || r.status === 'Ready for pickup';
             });
+            if (!active.length) return null;
+
+            // The "current" ticket is the one with the LOWEST queue number
+            // (front of the line). A lower-numbered ticket stays visible until
+            // it is finished, even if the live queue monitor has moved past it
+            // or the user has a newer active request.
+            active.sort(function(a, b) {
+                var pa = String(a.queueNum || '').split('-');
+                var pb = String(b.queueNum || '').split('-');
+                var la = pa[0] || '', lb = pb[0] || '';
+                if (la !== lb) return la < lb ? -1 : 1;
+                return (parseInt(pa[1], 10) || 0) - (parseInt(pb[1], 10) || 0);
+            });
+            return active[0];
         },
 
-        selectCard: function(cardEl, docName) {
-            var grid = cardEl.closest('.doc-cards-grid');
-            if (grid) {
-                grid.querySelectorAll('.doc-card').forEach(function(c) { c.classList.remove('selected'); });
+        getDisplayDocName: function(r) {
+            if (r.queueStep === 'processing' && r.items && r.items.length) {
+                var academic = r.items.filter(function(it) { return it.type === 'academic'; });
+                if (academic.length) return academic.map(function(it) { return it.name; }).join(', ');
             }
-            cardEl.classList.add('selected');
-            this.selectedDoc = docName;
+            return r.docName;
+        },
+
+        getDisplayService: function(r) {
+            if (r.queueStep === 'processing' && r.items && r.items.length) {
+                var academic = r.items.filter(function(it) { return it.type === 'academic'; });
+                if (academic.length) return 'Registrar \u2013 ' + academic.map(function(it) { return it.name; }).join(', ');
+            }
+            return r.service;
+        },
+
+        selectCard: function(cardEl, serviceName, docName) {
+            // Toggle selection (multi-select allowed across both tabs)
+            var idx = -1;
+            for (var i = 0; i < this.selectedItems.length; i++) {
+                if (this.selectedItems[i].name === docName) { idx = i; break; }
+            }
+            if (idx !== -1) {
+                this.selectedItems.splice(idx, 1);
+                cardEl.classList.remove('selected');
+            } else {
+                var isCashier = (serviceName === 'Cashier');
+                var price = isCashier ? 0 : 100;
+                this.selectedItems.push({
+                    name: docName,
+                    type: isCashier ? 'payment' : 'academic',
+                    price: price
+                });
+                cardEl.classList.add('selected');
+            }
+            this.renderRequestSummary();
+        },
+
+        isSelected: function(docName) {
+            for (var i = 0; i < this.selectedItems.length; i++) {
+                if (this.selectedItems[i].name === docName) return true;
+            }
+            return false;
+        },
+
+        renderRequestSummary: function() {
+            var el = document.getElementById('requestSummaryBar');
+            if (!el) return;
+            var n = this.selectedItems.length;
+            var total = 0;
+            for (var i = 0; i < this.selectedItems.length; i++) {
+                total += (this.selectedItems[i].price || 0);
+            }
+            el.style.display = n > 0 ? 'flex' : 'none';
+            if (n > 0) {
+                el.querySelector('.req-summary-count').textContent = n + (n === 1 ? ' item' : ' items') + ' selected';
+                var totalEl = el.querySelector('.req-summary-total');
+                if (totalEl) {
+                    if (total > 0) {
+                        totalEl.textContent = '₱' + total + '.00';
+                        totalEl.style.display = '';
+                    } else {
+                        totalEl.textContent = '';
+                        totalEl.style.display = 'none';
+                    }
+                }
+            }
+        },
+
+        switchCategory: function(category) {
+            this.selectedCategory = category;
+            if (typeof this.renderMyRequests === 'function') {
+                this.renderMyRequests();
+            }
+            this.renderRequestSummary();
         },
 
         submitRequest: function() {
@@ -1953,23 +2107,30 @@
                 return;
             }
 
-            var docName = this.selectedDoc || 'True Copy Certificate of Registration';
+            if (!this.selectedItems.length) {
+                alert('Please select at least one item to request.');
+                return;
+            }
+
             var self = this;
 
             fetch('/api/request/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ doc_name: docName })
+                body: JSON.stringify({ items: self.selectedItems })
             })
             .then(function(res) { return res.json(); })
             .then(function(data) {
                 if (data.success) {
+                    self.selectedItems = [];
                     self.fetchRequests(function() {
                         self.renderAll();
                         if (typeof QReserve !== 'undefined' && QReserve.switchTab) {
                             QReserve.switchTab('my-queue');
                         }
                     });
+                } else {
+                    alert(data.error || 'Failed to create request.');
                 }
             })
             .catch(function(err) {
@@ -2019,14 +2180,14 @@
                 if (numDisplay) numDisplay.innerHTML = '<span style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:1px;">' + active.queueNum + '</span>';
                 if (counterVal) counterVal.textContent = active.counter;
                 if (waitVal) waitVal.textContent = active.waitTime;
-                if (serviceVal) serviceVal.textContent = active.service;
-                if (reqDocVal) reqDocVal.textContent = active.docName;
+                if (serviceVal) serviceVal.textContent = this.getDisplayService(active);
+                if (reqDocVal) reqDocVal.textContent = this.getDisplayDocName(active);
             } else {
                 if (numDisplay) numDisplay.innerHTML = '<span class="dash"></span><span class="dash"></span><span class="dash"></span><span class="dash"></span><span class="dash"></span>';
                 if (counterVal) counterVal.textContent = '——';
                 if (waitVal) waitVal.textContent = '0 minutes';
-                if (serviceVal) serviceVal.textContent = 'No document requested';
-                if (reqDocVal) reqDocVal.textContent = 'No document requested';
+                if (serviceVal) serviceVal.textContent = 'No request yet';
+                if (reqDocVal) reqDocVal.textContent = 'No request yet';
             }
         },
 
@@ -2055,18 +2216,49 @@
                             '<div class="my-queue-card-title mb-0">Your Current Queue</div>' +
                             '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill" style="font-size:12px;font-weight:700;">' + active.status + '</span>' +
                         '</div>' +
+                        (active.queueStep === 'payment'
+                            ? '<div style="background:linear-gradient(135deg,#d97706 0%,#f59e0b 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;">' +
+                                '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
+                                    '<i class="bi bi-wallet2" style="font-size:22px;color:#fff;"></i>' +
+                                '</div>' +
+                                '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">Pay at Cashier</div>' +
+                                '<div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:4px;font-weight:500;">' +
+                                    (active.price > 0
+                                        ? 'Please proceed to ' + active.counter + ' to pay ₱' + active.price + '.00'
+                                        : 'Please proceed to ' + active.counter + ' for payment / transaction') +
+                                '</div>' +
+                                '<div style="font-size:11.5px;color:rgba(255,255,255,0.7);margin-top:6px;">Your queue will update after payment is confirmed</div>' +
+                              '</div>'
+                            : active.aheadCount === 0
+                                ? '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;">' +
+                                    '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
+                                        '<i class="bi bi-person-raised-hand" style="font-size:22px;color:#fff;"></i>' +
+                                    '</div>' +
+                                    '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">You\'re Up Next</div>' +
+                                    '<div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:4px;font-weight:500;">Head to ' + active.counter + ' and have your documents ready</div>' +
+                                  '</div>'
+                                : '<div style="margin-bottom:16px;">' +
+                                    '<div class="queue-field-label">Estimated Wait Time</div>' +
+                                    '<div id="queueWaitTime" class="wait-time-value" style="font-size:20px;font-weight:800;color:#1e293b;">' + active.waitTime + '</div>' +
+                                    '<div id="queueAheadLabel" style="font-size:11.5px;color:#64748b;font-weight:500;">' +
+                                        '<i class="bi bi-hourglass-split"></i> ' + active.aheadCount + (active.aheadCount === 1 ? ' person' : ' people') + ' ahead of you in the queue' +
+                                    '</div>' +
+                                  '</div>'
+                        ) +
                         '<div class="my-queue-split">' +
                             '<div class="my-queue-info">' +
                                 '<div class="queue-field-label">Queue Number</div>' +
                                 '<div class="queue-number-display" style="font-size:26px;font-weight:900;color:#1e293b;letter-spacing:1px;margin-bottom:10px;">' + active.queueNum + '</div>' +
                                 '<div class="queue-field-label">Counter</div>' +
                                 '<div class="queue-field-value" style="font-weight:700;">' + active.counter + '</div>' +
-                                '<div class="queue-field-label">Estimated Wait Time</div>' +
-                                '<div class="wait-time-value" style="font-size:20px;font-weight:800;color:#1e293b;">' + active.waitTime + '</div>' +
+                                '<div class="queue-field-label">Price</div>' +
+                                '<div class="queue-field-value" style="font-weight:700;' + (active.price > 0 ? 'color:#047857;' : 'color:#64748b;') + '">' +
+                                    (active.price > 0 ? '₱' + active.price + '.00' + (active.queueStep === 'processing' ? ' – paid' : '') : '—') +
+                                '</div>' +
                                 '<div class="queue-field-label">Service</div>' +
-                                '<div class="queue-field-value">' + active.service + '</div>' +
-                                '<div class="queue-field-label">Requested Document</div>' +
-                                '<div class="queue-field-value" style="font-weight:700;color:#8c1010;">' + active.docName + '</div>' +
+                                '<div class="queue-field-value">' + this.getDisplayService(active) + '</div>' +
+                                '<div class="queue-field-label">Requests</div>' +
+                                '<div class="queue-field-value" style="font-weight:700;color:#8c1010;">' + this.getDisplayDocName(active) + '</div>' +
                             '</div>' +
                             '<div class="my-queue-qr-box" id="' + qrBoxId + '"></div>' +
                         '</div>' +
@@ -2088,7 +2280,7 @@
                     if (box && typeof QRCode !== 'undefined') {
                         box.innerHTML = '';
                         new QRCode(box, {
-                            text: active.transactionId,
+                            text: window.location.origin + '/ticket/' + active.transactionId,
                             width: 140,
                             height: 140,
                             colorDark: '#1e293b',
@@ -2109,7 +2301,7 @@
             var active = this.getActiveRequest();
             if (!active) return;
             var queueNum = active.queueNum || '---';
-            var docName = active.docName || 'Document Request';
+            var docName = this.getDisplayDocName(active) || 'Document Request';
             var txId = active.transactionId || '';
             var counter = active.counter || '';
             var dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -2220,30 +2412,75 @@
             var html = '<div class="fade-in-stagger delay-1">';
 
             if (!this.getActiveRequest()) {
+                var registrarCards =
+                    '<div class="doc-card' + (this.isSelected('Transcript of Records') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Registrar\', \'Transcript of Records\')">' +
+                        '<div class="doc-card-name">Transcript of Records</div>' +
+                        '<div class="doc-card-note">Academic Records</div>' +
+                        gradNote +
+                        '<div class="doc-card-time">Process within 3–5 days &bull; ₱100</div>' +
+                    '</div>' +
+                    '<div class="doc-card' + (this.isSelected('True Copy Report of Grades') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Registrar\', \'True Copy Report of Grades\')">' +
+                        '<div class="doc-card-name">True Copy Report of Grades</div>' +
+                        '<div class="doc-card-note">Academic Records</div>' +
+                        '<div class="doc-card-time">Processing within 3–5 days &bull; ₱100</div>' +
+                    '</div>' +
+                    '<div class="doc-card' + (this.isSelected('True Copy Certificate of Registration') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Registrar\', \'True Copy Certificate of Registration\')">' +
+                        '<div class="doc-card-name">True Copy Certificate of Registration</div>' +
+                        '<div class="doc-card-note">Academic Records</div>' +
+                        '<div class="doc-card-time">Processing within 3–5 days &bull; ₱100</div>' +
+                    '</div>' +
+                    '<div class="doc-card' + (this.isSelected('Good Moral') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Registrar\', \'Good Moral\')">' +
+                        '<div class="doc-card-name">Good Moral</div>' +
+                        '<div class="doc-card-note">Academic Records</div>' +
+                        '<div class="doc-card-time">Processing within 1 day &bull; ₱100</div>' +
+                    '</div>' +
+                    '<div class="doc-card' + (this.isSelected('OthersAcademic') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Registrar\', \'OthersAcademic\')">' +
+                        '<div class="doc-card-name">Others</div>' +
+                        '<div class="doc-card-note">Academic Records</div>' +
+                        '<div class="doc-card-time">Customized Request &bull; ₱100</div>' +
+                    '</div>';
+
+                var cashierCards =
+                    '<div class="doc-card' + (this.isSelected('Tuition Payment') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Cashier\', \'Tuition Payment\')">' +
+                        '<div class="doc-card-name">Tuition Payment</div>' +
+                        '<div class="doc-card-note">Cashier</div>' +
+                        '<div class="doc-card-time">Payment / Assessment</div>' +
+                    '</div>' +
+                    '<div class="doc-card' + (this.isSelected('Graduation Fee') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Cashier\', \'Graduation Fee\')">' +
+                        '<div class="doc-card-name">Graduation Fee</div>' +
+                        '<div class="doc-card-note">Cashier</div>' +
+                        '<div class="doc-card-time">Payment / Assessment</div>' +
+                    '</div>' +
+                    '<div class="doc-card' + (this.isSelected('Assessment Validation') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Cashier\', \'Assessment Validation\')">' +
+                        '<div class="doc-card-name">Assessment Validation</div>' +
+                        '<div class="doc-card-note">Cashier</div>' +
+                        '<div class="doc-card-time">Payment / Assessment</div>' +
+                    '</div>' +
+                    '<div class="doc-card' + (this.isSelected('OthersCashier') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Cashier\', \'OthersCashier\')">' +
+                        '<div class="doc-card-name">Others</div>' +
+                        '<div class="doc-card-note">Cashier</div>' +
+                        '<div class="doc-card-time">Customized Request</div>' +
+                    '</div>';
+
+                var activeCat = this.selectedCategory || 'Registrar';
+                var cardsHtml = activeCat === 'Cashier' ? cashierCards : registrarCards;
+                var regActive = activeCat !== 'Cashier' ? ' active' : '';
+                var cashActive = activeCat === 'Cashier' ? ' active' : '';
+
                 html += 
-                    '<div class="requests-page-title">No on going request right now</div>' +
-                    '<div class="doc-cards-grid">' +
-                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'Transcript of Records\')">' +
-                            '<div class="doc-card-name">Transcript of Records</div>' +
-                            gradNote +
-                            '<div class="doc-card-time">Process within 3–5 days</div>' +
-                        '</div>' +
-                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'True Copy Report of Grades\')">' +
-                            '<div class="doc-card-name">True Copy Report of Grades</div>' +
-                            '<div class="doc-card-time">Processing within 3–5 days</div>' +
-                        '</div>' +
-                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'True Copy Certificate of Registration\')">' +
-                            '<div class="doc-card-name">True Copy Certificate of Registration</div>' +
-                            '<div class="doc-card-time">Processing within 3–5 days</div>' +
-                        '</div>' +
-                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'Others\')">' +
-                            '<div class="doc-card-name">Others</div>' +
-                            '<div class="doc-card-time">Customized Request</div>' +
-                        '</div>' +
-                        '<div class="doc-card" onclick="QReserveApp.selectCard(this, \'Good Moral\')">' +
-                            '<div class="doc-card-name">Good Moral</div>' +
-                            '<div class="doc-card-time">Processing within 1 day</div>' +
-                        '</div>' +
+                    '<div class="requests-page-title">Select your request(s)</div>' +
+                    '<div class="category-tabs">' +
+                        '<button type="button" class="category-tab' + regActive + '" onclick="QReserveApp.switchCategory(\'Registrar\')">' +
+                            '<i class="bi bi-journal-text"></i> Academic Records' +
+                        '</button>' +
+                        '<button type="button" class="category-tab' + cashActive + '" onclick="QReserveApp.switchCategory(\'Cashier\')">' +
+                            '<i class="bi bi-cash-coin"></i> Payments' +
+                        '</button>' +
+                    '</div>' +
+                    '<div class="doc-cards-grid">' + cardsHtml + '</div>' +
+                    '<div class="request-summary-bar" id="requestSummaryBar" style="display:none;">' +
+                        '<span class="req-summary-count"></span>' +
+                        '<span class="req-summary-total"></span>' +
                     '</div>' +
                     '<div class="request-now-wrap">' +
                         '<button class="btn-request-now" type="button" onclick="QReserveApp.submitRequest()">' +
@@ -2251,6 +2488,7 @@
                         '</button>' +
                     '</div>';
             }
+
 
             if (list.length === 0) {
                 if (this.getActiveRequest()) {
@@ -2359,18 +2597,16 @@
                             '<div class="history-item-status-text ' + statusCls + '">' + item.status + '</div>' +
                         '</div>' +
                         '<div class="history-item-details">' +
-                            '<div class="history-item-labels">' +
-                                '<div>Service</div>' +
-                                '<div>Counter</div>' +
-                                '<div>Waiting time</div>' +
-                                '<div>Transaction ID</div>' +
-                            '</div>' +
-                            '<div class="history-item-values">' +
-                                '<div>' + item.service + '</div>' +
-                                '<div>' + item.counter + '</div>' +
-                                '<div>' + item.waitTime + '</div>' +
-                                '<div>' + item.transactionId + '</div>' +
-                            '</div>' +
+                            '<div class="history-item-label">Service</div>' +
+                            '<div class="history-item-value">' + item.service + '</div>' +
+                            '<div class="history-item-label">Counter</div>' +
+                            '<div class="history-item-value">' + item.counter + '</div>' +
+                            '<div class="history-item-label">Price</div>' +
+                            '<div class="history-item-value">₱' + item.price + '.00</div>' +
+                            '<div class="history-item-label">Waiting time</div>' +
+                            '<div class="history-item-value">' + item.waitTime + '</div>' +
+                            '<div class="history-item-label">Transaction ID</div>' +
+                            '<div class="history-item-value">' + item.transactionId + '</div>' +
                         '</div>' +
                     '</div>';
             });
@@ -2418,32 +2654,57 @@
         var rowsEl      = document.getElementById('monitorCounterRows');
         var updatedEl   = document.getElementById('monitorLastUpdated');
 
+        // Show only the counter the user is queued in.
+        var myCounterName = null;
+        try {
+            if (typeof QReserveApp !== 'undefined' && QReserveApp.getActiveRequest) {
+                var active = QReserveApp.getActiveRequest();
+                if (active && active.counter) myCounterName = active.counter;
+            }
+        } catch (e) { /* ignore */ }
+
+        var counters = data.counters || [];
+        var mine = null;
+        if (myCounterName) {
+            for (var i = 0; i < counters.length; i++) {
+                if (counters[i].counter_name === myCounterName) { mine = counters[i]; break; }
+            }
+        }
+
+        var nowServing = '---';
+        var primaryCounter = 'No active queue';
+
+        if (mine) {
+            nowServing = (mine.now_serving_number > 0) ? mine.now_serving : '---';
+            primaryCounter = mine.counter_name;
+        }
+
         // Update NOW SERVING with animation only when it changes
-        if (data.now_serving !== _lastServing) {
-            _lastServing = data.now_serving;
+        if (nowServing !== _lastServing) {
+            _lastServing = nowServing;
             if (servingEl) {
-                servingEl.textContent = data.now_serving;
+                servingEl.textContent = nowServing;
                 animateFade(servingEl);
             }
         }
 
-        if (counterEl) counterEl.textContent = data.primary_counter;
+        if (counterEl) counterEl.textContent = primaryCounter;
 
-        // Build counter rows
-        if (rowsEl && data.counters) {
+        // Build counter rows — only the user's counter
+        if (rowsEl) {
             var html = '';
-            data.counters.forEach(function(c) {
-                var waitLabel = c.waiting_count === 1 ? '1 waiting' : (c.waiting_count + ' waiting');
+            if (mine) {
+                var waitLabel = mine.waiting_count === 1 ? '1 waiting' : (mine.waiting_count + ' waiting');
                 html += '<div class="counter-row">' +
-                    '<div class="counter-name">' + c.counter_name + '</div>' +
+                    '<div class="counter-name">' + mine.counter_name + '</div>' +
                     '<div class="counter-waiting">' +
-                        '<span style="' + (c.now_serving_number > 0 ? 'color:#22c55e;font-weight:700;' : 'color:#94a3b8;') + '">' +
-                            (c.now_serving_number > 0 ? 'Now: ' + c.now_serving + ' &nbsp;&bull;&nbsp; ' : '') +
+                        '<span style="' + (mine.now_serving_number > 0 ? 'color:#22c55e;font-weight:700;' : 'color:#94a3b8;') + '">' +
+                            (mine.now_serving_number > 0 ? 'Now: ' + mine.now_serving + ' &nbsp;&bull;&nbsp; ' : '') +
                         '</span>' +
                         waitLabel +
                     '</div>' +
                 '</div>';
-            });
+            }
             rowsEl.innerHTML = html;
         }
 
@@ -2472,6 +2733,55 @@
     document.addEventListener('DOMContentLoaded', function() {
         pollMonitor();
         setInterval(pollMonitor, POLL_INTERVAL);
+    });
+})();
+</script>
+
+
+<!-- User Queue Ticket Live Polling -->
+<script>
+(function() {
+    'use strict';
+
+    var TICKET_POLL_MS = 5000;
+    var _lastQueueKey = '';
+    var _lastWaitTime = '';
+    var _lastActiveCount = -1;
+
+    function pollQueueTicket() {
+        if (!document.getElementById('myQueueViewContainer')) return;
+
+        QReserveApp.fetchRequests(function() {
+            var active = QReserveApp.getActiveRequest();
+            var queueKey = active ? active.queueNum + '|' + active.status : 'empty';
+            var waitTime = active ? active.waitTime : '';
+            var activeCount = QReserveApp.cachedRequests.filter(function(r) {
+                return r.status === 'Processing' || r.status === 'Ready for pickup';
+            }).length;
+
+            if (queueKey !== _lastQueueKey) {
+                _lastQueueKey = queueKey;
+                _lastWaitTime = waitTime;
+                _lastActiveCount = activeCount;
+                QReserveApp.renderMyQueue();
+                QReserveApp.renderMyRequests();
+            } else if (waitTime !== _lastWaitTime) {
+                _lastWaitTime = waitTime;
+                var waitEl = document.getElementById('queueWaitTime');
+                var aheadEl = document.getElementById('queueAheadLabel');
+                if (waitEl) waitEl.textContent = waitTime;
+                if (aheadEl && active && active.aheadCount > 0) {
+                    aheadEl.innerHTML = '<i class="bi bi-hourglass-split"></i> ' + active.aheadCount + (active.aheadCount === 1 ? ' person' : ' people') + ' ahead of you in the queue';
+                }
+            } else if (activeCount !== _lastActiveCount) {
+                _lastActiveCount = activeCount;
+                QReserveApp.renderMyRequests();
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setInterval(pollQueueTicket, TICKET_POLL_MS);
     });
 })();
 </script>

@@ -1610,7 +1610,24 @@ def _get_guest_session_key():
     return session["guest_session_key"]
 
 
+def _resolve_guest_key(explicit=None):
+    """Resolve the guest identity key.
+
+    Guests do not have a real account, so their request history is grouped under
+    an anonymous key. To let a guest recover the same tickets even after logging
+    out and back in (which clears the Flask session), the browser persists the
+    key in localStorage and sends it back explicitly. This helper prefers the
+    explicit (persisted) key and stores it back into the session so it is also
+    available on subsequent routine calls.
+    """
+    if explicit and str(explicit).startswith("guest_"):
+        session["guest_session_key"] = str(explicit)
+        return str(explicit)
+    return _get_guest_session_key()
+
+
 @auth.route("/api/requests", methods=["GET"])
+@limiter.exempt
 def get_user_requests():
     student_id = session.get("student_id")
 
@@ -1619,7 +1636,7 @@ def get_user_requests():
             student_id=student_id
         ).order_by(QueueRequest.id.desc()).all()
     else:
-        guest_key = _get_guest_session_key()
+        guest_key = _resolve_guest_key(request.args.get("guest_key"))
         requests_query = QueueRequest.query.filter_by(
             guest_session_key=guest_key
         ).order_by(QueueRequest.id.desc()).all()
@@ -1630,38 +1647,95 @@ def get_user_requests():
 @auth.route("/api/request/create", methods=["POST"])
 def create_queue_request():
     data = request.get_json() or {}
-    doc_name = data.get("doc_name", "True Copy Certificate of Registration").strip()
 
-    # Sequential queue number: find maximum existing A-### and increment by 1
-    import re as _re
-    all_a_reqs = QueueRequest.query.filter(QueueRequest.queue_number.like("A-%")).all()
-    max_num = 0
-    for r in all_a_reqs:
-        m = _re.search(r"A-(\d+)", r.queue_number or "")
-        if m:
-            val = int(m.group(1))
-            if val > max_num:
-                max_num = val
+    # Accept either a flat doc (backward compat) or a list of items.
+    # items: [{"name": "...", "type": "academic"|"payment", "price": 100}, ...]
+    items = data.get("items") or []
+    if items and not isinstance(items, list):
+        return jsonify({"success": False, "error": "items must be a list"}), 400
 
-    num_int = max_num + 1
-    queue_number = f"A-{num_int:03d}"
+    if not items:
+        # Backward-compatible single request
+        doc_name = (data.get("doc_name", "True Copy Certificate of Registration")).strip()
+        service = (data.get("service", "") or "Registrar").strip()
+        kind = "payment" if service.lower() in ("cashier", "payment", "assessment") else "academic"
+        items = [{"name": doc_name, "type": kind, "price": 100}]
+
+    # Deduplicate identical item names (same doc/payment cannot be selected twice)
+    seen = set()
+    cleaned = []
+    for it in items:
+        name = (it.get("name") or "").strip()
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        is_payment = it.get("type") in ("payment", "cashier") or any(
+            p in name.lower() for p in ["tuition", "graduation", "cashier", "assessment"]
+        )
+        price_raw = it.get("price")
+        if price_raw is not None:
+            price = int(price_raw)
+        else:
+            price = 0 if is_payment else 100
+        cleaned.append({
+            "name": name,
+            "type": "payment" if is_payment else "academic",
+            "price": price
+        })
+    items = cleaned
+
+    if not items:
+        return jsonify({"success": False, "error": "No items selected"}), 400
+
+    # Determine routing from the item types.
+    has_academic = any(it["type"] == "academic" for it in items)
+    only_payment = not has_academic
+
+    # ALL requests start at the Cashier queue (C-xxx).
+    # Requests with academic items have queue_step="payment" (go to Registrar after).
+    # Payment-only requests have queue_step=None (stay at Cashier, no Registrar step).
+    cashier_counters = QueueCounter.query.filter(
+        QueueCounter.counter_name.like("%Cashier%"),
+        QueueCounter.is_active.is_(True)
+    ).all()
+
+    if not cashier_counters:
+        return jsonify({"success": False, "error": "No active Cashier counter"}), 400
+
+    counter = cashier_counters[0]
+
+    # Ascending queue number for Cashier prefix (C-xxx) using persistent counter
+    prefix = counter.now_serving_prefix
+    counter.last_number = (counter.last_number or 0) + 1
+    num_int = counter.last_number
+    queue_number = f"{prefix}-{num_int:03d}"
+    db.session.add(counter)
 
     now = datetime.utcnow()
-    tx_id = f"QRS-2026-{now.strftime('%m%d')}-{num_int:03d}"
+    tx_id = f"QRS-2026-{now.strftime('%m%d')}-{queue_number}"
 
     student_id = session.get("student_id")
-    guest_key = None if student_id else _get_guest_session_key()
+    guest_key = None if student_id else _resolve_guest_key(data.get("guest_key"))
+
+    summary = ", ".join(it["name"] for it in items)
+    total = sum(it["price"] for it in items)
+    service_label = "Registrar" if has_academic else "Cashier"
+    # All requests pass through the Cashier payment queue first.
+    step = "payment"
 
     new_req = QueueRequest(
         student_id=student_id,
         guest_session_key=guest_key,
-        doc_name=doc_name,
+        doc_name=summary,
+        items=items,
         queue_number=queue_number,
-        counter="Counter 4",
-        service="Registrar – Document request",
-        wait_time="10–15 minutes",
+        counter=counter.counter_name,
+        service=f"{service_label} – {summary}",
+        price=total,
+        wait_time="3–5 minutes",
         transaction_id=tx_id,
-        status="Processing"
+        status="Processing",
+        queue_step=step
     )
 
     db.session.add(new_req)
@@ -1691,12 +1765,28 @@ def cancel_queue_request(req_id):
 
 
 # =======================================================
+# PUBLIC TICKET STATUS PAGE
+# =======================================================
+# Opened when someone scans the QR on their queue ticket.
+# No login required — the page simply shows the live status
+# of the request identified by its unique transaction ID.
+
+@auth.route("/ticket/<transaction_id>", methods=["GET"])
+def ticket_status(transaction_id):
+    req_obj = QueueRequest.query.filter_by(transaction_id=transaction_id).first()
+    if not req_obj:
+        return render_template("ticket_status.html", req=None, found=False), 404
+    return render_template("ticket_status.html", req=req_obj, found=True)
+
+
+# =======================================================
 # LIVE QUEUE MONITOR — PUBLIC API
 # =======================================================
 # Polled every 5 seconds by the Student and Guest dashboards.
 # Returns all active counters and the "primary" now-serving ticket.
 
 @auth.route("/api/monitor", methods=["GET"])
+@limiter.exempt
 def get_monitor():
     counters = QueueCounter.query.filter_by(is_active=True).order_by(QueueCounter.counter_code).all()
 
@@ -1720,6 +1810,7 @@ def get_monitor():
 # =======================================================
 
 @auth.route("/api/admin/counters", methods=["GET"])
+@limiter.exempt
 def admin_get_counters():
     if not session.get("admin_logged_in"):
         return jsonify({"success": False, "error": "Unauthorized"}), 403
@@ -1729,19 +1820,48 @@ def admin_get_counters():
 
 
 # =======================================================
-# ADMIN COUNTER API — CALL NEXT (AUTO-INCREMENT)
+# ADMIN COUNTER API — CALL NEXT (LOWEST NUMBER FIRST)
 # =======================================================
+# Instead of blindly incrementing the "now serving" number,
+# Call Next always moves the counter to the LOWEST queue number
+# that is still waiting (Processing). This gives the smallest
+# number the highest priority and never skips lower tickets.
 
 @auth.route("/api/admin/counter/<int:counter_id>/next", methods=["POST"])
 def admin_counter_next(counter_id):
     if not session.get("admin_logged_in"):
         return jsonify({"success": False, "error": "Unauthorized"}), 403
 
-    counter = QueueCounter.query.get(counter_id)
+    counter = db.session.get(QueueCounter, counter_id)
     if not counter:
         return jsonify({"success": False, "error": "Counter not found"}), 404
 
-    counter.now_serving_number += 1
+    prefix = counter.now_serving_prefix
+
+    def _num_of(r):
+        m = re.search(rf"{re.escape(prefix)}-(\d+)", r.queue_number or "")
+        return int(m.group(1)) if m else 0
+
+    # All tickets still waiting (Processing) OR not-yet-displayed pickups
+    # (Ready for pickup) for this counter's prefix. Lowest queue number wins.
+    candidates = [
+        r for r in QueueRequest.query.filter(
+            QueueRequest.queue_number.like(prefix + "-%"),
+            QueueRequest.status.in_(["Processing", "Ready for pickup"])
+        ).all()
+        if _num_of(r) > 0
+    ]
+
+    if candidates:
+        # Lowest queue number = highest priority.
+        next_req = min(candidates, key=_num_of)
+        counter.now_serving_number = _num_of(next_req)
+        # Keep as "Ready for pickup" so the called number stays displayed
+        # on the live counter until the user collects their document.
+        next_req.status = "Ready for pickup"
+
+    # If nobody is waiting, leave the now-serving number unchanged.
+
     counter.updated_at = datetime.utcnow()
     db.session.commit()
 
@@ -1781,6 +1901,31 @@ def admin_counter_set(counter_id):
 
 
 # =======================================================
+# ADMIN — RESET ALL COUNTERS & QUEUE
+# =======================================================
+# Resets every counter's now-serving back to 0 and removes all
+# active (Processing / Ready for pickup) requests to start a fresh queue.
+
+@auth.route("/api/admin/reset", methods=["POST"])
+def admin_reset():
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    for counter in QueueCounter.query.all():
+        counter.now_serving_number = 0
+        counter.last_number = 0
+        counter.updated_at = datetime.utcnow()
+
+    QueueRequest.query.filter(
+        QueueRequest.status.in_(["Processing", "Ready for pickup"])
+    ).delete(synchronize_session=False)
+
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+# =======================================================
 # ADMIN — UPDATE A QUEUE REQUEST STATUS
 # =======================================================
 
@@ -1807,10 +1952,99 @@ def admin_update_request_status(req_id):
 
 
 # =======================================================
+# ADMIN — CONFIRM PAYMENT (move to Registrar queue)
+# =======================================================
+# When the Cashier confirms payment for a document request,
+# move it from the Cashier queue (C-xxx) to the Registrar
+# queue (A-xxx or B-xxx, strictly alternating).
+
+@auth.route("/api/admin/request/<int:req_id>/confirm-payment", methods=["POST"])
+def admin_confirm_payment(req_id):
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    req_obj = QueueRequest.query.get(req_id)
+    if not req_obj:
+        return jsonify({"success": False, "error": "Not found"}), 404
+
+    if req_obj.queue_step != "payment":
+        return jsonify({"success": False, "error": "This request is not awaiting payment"}), 400
+
+    # Payment-only request → nothing to route to Registrar, mark completed.
+    if not req_obj.has_academic_items:
+        req_obj.status = "Completed"
+        req_obj.queue_step = None
+        req_obj.service = f"Cashier – {req_obj.item_names}"
+        db.session.commit()
+        return jsonify({"success": True, "request": req_obj.to_dict()})
+
+    # Has academic items → payment done, route to Registrar queue.
+    registrar_counters = QueueCounter.query.filter(
+        QueueCounter.counter_name.like("%Registrar%"),
+        QueueCounter.is_active.is_(True)
+    ).order_by(QueueCounter.counter_code).all()
+
+    if not registrar_counters:
+        return jsonify({"success": False, "error": "No active Registrar counter"}), 400
+
+    # Strict alternation: A → B → A → B
+    alt_a = QueueCounter.query.filter_by(counter_code="A").first()
+    last_prefix = alt_a.last_registrar_prefix if alt_a else None
+    if last_prefix == "A":
+        counter = next(c for c in registrar_counters if c.counter_code == "B")
+    else:
+        counter = next(c for c in registrar_counters if c.counter_code == "A")
+
+    # Ascending queue number for this Registrar prefix using persistent counter
+    prefix = counter.now_serving_prefix
+    counter.last_number = (counter.last_number or 0) + 1
+    num_int = counter.last_number
+    new_queue_number = f"{prefix}-{num_int:03d}"
+    db.session.add(counter)
+
+    # Update the request
+    req_obj.queue_number = new_queue_number
+    req_obj.counter = counter.counter_name
+    req_obj.queue_step = "processing"
+    req_obj.service = f"Registrar – {req_obj.item_names}"
+
+    # Update alternation state
+    if alt_a:
+        alt_a.last_registrar_prefix = prefix
+
+    db.session.commit()
+
+    return jsonify({"success": True, "request": req_obj.to_dict()})
+
+
+# =======================================================
+# ADMIN — CANCEL A QUEUE REQUEST
+# =======================================================
+# Used when a user did not show up in time or took too long.
+# Removes the request from the queue so it no longer blocks
+# Call Next (which prioritizes the lowest waiting number).
+
+@auth.route("/api/admin/request/<int:req_id>/cancel", methods=["POST"])
+def admin_cancel_request(req_id):
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    req_obj = db.session.get(QueueRequest, req_id)
+    if not req_obj:
+        return jsonify({"success": False, "error": "Not found"}), 404
+
+    db.session.delete(req_obj)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+# =======================================================
 # ADMIN — GET ALL QUEUE REQUESTS (FOR MONITOR PANEL)
 # =======================================================
 
 @auth.route("/api/admin/requests", methods=["GET"])
+@limiter.exempt
 def admin_get_requests():
     if not session.get("admin_logged_in"):
         return jsonify({"success": False, "error": "Unauthorized"}), 403
