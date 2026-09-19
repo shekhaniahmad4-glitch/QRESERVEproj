@@ -293,9 +293,6 @@
                         '<button class="btn-download-qr" type="button" onclick="QReserveApp.downloadActiveQR(\'' + qrBoxId + '\')">' +
                             '<i class="bi bi-qr-code-scan"></i> Download QR' +
                         "</button>" +
-                        '<button class="btn btn-outline-success rounded-pill fw-bold" type="button" onclick="QReserveApp.completeActive(\'' + dbId + '\')">' +
-                            '<i class="bi bi-check2-circle"></i> Complete' +
-                        "</button>" +
                         '<button class="btn btn-outline-danger rounded-pill fw-bold" type="button" onclick="QReserveApp.cancelActive(\'' + dbId + '\')">' +
                             '<i class="bi bi-x-circle"></i> Cancel' +
                         "</button>" +

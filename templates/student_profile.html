@@ -707,11 +707,18 @@
 
                         <div class="form-group">
                             <label class="form-label" for="course">Course / Program</label>
-                            <input type="text" id="course" name="course"
-                                class="form-control-custom"
-                                placeholder="e.g. BS Computer Science"
-                                value="{{ profile.course if profile and profile.course else '' }}"
-                                maxlength="150">
+                            <select id="course" name="course" class="form-control-custom">
+                                <option value="" disabled {{ 'selected' if not (profile and profile.course) else '' }}>Select Program</option>
+                                <option value="BSIT" {{ 'selected' if profile and profile.course == 'BSIT' else '' }}>BSIT</option>
+                                <option value="BIT" {{ 'selected' if profile and profile.course == 'BIT' else '' }}>BIT</option>
+                                <option value="BSED" {{ 'selected' if profile and profile.course == 'BSED' else '' }}>BSED</option>
+                                <option value="BEED" {{ 'selected' if profile and profile.course == 'BEED' else '' }}>BEED</option>
+                                <option value="BSBA" {{ 'selected' if profile and profile.course == 'BSBA' else '' }}>BSBA</option>
+                                <option value="BSE" {{ 'selected' if profile and profile.course == 'BSE' else '' }}>BSE</option>
+                                <option value="BSCpE" {{ 'selected' if profile and profile.course == 'BSCpE' else '' }}>BSCpE</option>
+                                <option value="BSIE" {{ 'selected' if profile and profile.course == 'BSIE' else '' }}>BSIE</option>
+                                <option value="BPED/BTLED" {{ 'selected' if profile and profile.course == 'BPED/BTLED' else '' }}>BPED/BTLED</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
@@ -723,8 +730,6 @@
                                 <option value="3rd Year" {{ 'selected' if profile and profile.year_level == '3rd Year' else '' }}>3rd Year</option>
                                 <option value="4th Year" {{ 'selected' if profile and profile.year_level == '4th Year' else '' }}>4th Year</option>
                                 <option value="5th Year" {{ 'selected' if profile and profile.year_level == '5th Year' else '' }}>5th Year</option>
-                                <option value="Graduate" {{ 'selected' if profile and profile.year_level == 'Graduate' else '' }}>Graduate</option>
-                                <option value="Alumni" {{ 'selected' if profile and profile.year_level == 'Alumni' else '' }}>Alumni</option>
                             </select>
                         </div>
 

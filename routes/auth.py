@@ -26,7 +26,7 @@ from werkzeug.security import (
 )
 from werkzeug.utils import secure_filename
 
-from database import db, Student, StudentProfile, QueueRequest, QueueCounter
+from database import db, Student, StudentProfile, QueueRequest, QueueCounter, ph_now
 
 from extensions import limiter
 
@@ -480,7 +480,7 @@ def signup():
         "otp": otp,
 
         "expires_at": (
-            datetime.utcnow()
+            ph_now()
             + timedelta(
                 minutes=current_app.config[
                     "OTP_EXPIRATION_MINUTES"
@@ -583,7 +583,7 @@ def verify_otp():
             pending["expires_at"]
         )
 
-        if datetime.utcnow() > expires_at:
+        if ph_now() > expires_at:
 
             session.pop(
                 "pending_registration",
@@ -779,7 +779,7 @@ def forgot_password():
         "otp": otp,
 
         "expires_at": (
-            datetime.utcnow()
+            ph_now()
             + timedelta(
                 minutes=current_app.config[
                     "OTP_EXPIRATION_MINUTES"
@@ -877,7 +877,7 @@ def verify_reset_otp():
             pending["expires_at"]
         )
 
-        if datetime.utcnow() > expires_at:
+        if ph_now() > expires_at:
 
             session.pop(
                 "password_reset",
@@ -976,7 +976,7 @@ def resend_reset_otp():
     pending["verified"] = False
 
     pending["expires_at"] = (
-        datetime.utcnow()
+        ph_now()
         + timedelta(
             minutes=current_app.config[
                 "OTP_EXPIRATION_MINUTES"
@@ -1234,7 +1234,7 @@ def student_profile():
                 "pic_filename": pic_filename,
                 "otp": otp,
                 "expires_at": (
-                    datetime.utcnow() + timedelta(minutes=5)
+                    ph_now() + timedelta(minutes=5)
                 ).isoformat()
             }
 
@@ -1292,7 +1292,7 @@ def student_profile_verify_otp():
         # Check expiration
         try:
             expires_at = datetime.fromisoformat(pending["expires_at"])
-            if datetime.utcnow() > expires_at:
+            if ph_now() > expires_at:
                 session.pop("pending_profile_update", None)
                 flash("Verification code has expired. Please submit your update again.", "danger")
                 return redirect(url_for("auth.student_profile"))
@@ -1354,7 +1354,7 @@ def student_profile_resend_otp():
     otp = str(secrets.randbelow(900000) + 100000)
     pending["otp"] = otp
     pending["expires_at"] = (
-        datetime.utcnow() + timedelta(minutes=5)
+        ph_now() + timedelta(minutes=5)
     ).isoformat()
     session["pending_profile_update"] = pending
 
@@ -1418,8 +1418,17 @@ def logout():
 # GUEST
 # =======================================================
 
+def _enter_guest_session():
+    """Ensure student credentials do not leak into guest mode."""
+    session.pop("student_id", None)
+    session.pop("student_email", None)
+    session.pop("role", None)
+    session["user_type"] = "guest"
+
+
 @auth.route("/guest", methods=["GET", "POST"])
 def guest():
+    _enter_guest_session()
 
     if request.method == "POST":
 
@@ -1442,6 +1451,7 @@ def guest():
 
 @auth.route("/guest/skip")
 def guest_skip():
+    _enter_guest_session()
 
     session["guest_name"]     = "Guest"
     session["guest_category"] = ""
@@ -1455,12 +1465,23 @@ def guest_skip():
 
 @auth.route("/guest/dashboard")
 def guest_dashboard():
+    _enter_guest_session()
 
     return render_template(
         "guest_login.html",
         guest_name=session.get("guest_name", "Guest"),
         guest_category=session.get("guest_category", "")
     )
+
+
+# =======================================================
+# GUEST EXIT
+# =======================================================
+
+@auth.route("/guest/exit")
+def guest_exit():
+    session.clear()
+    return redirect(url_for("auth.login"))
 
 
 # =======================================================
@@ -1528,9 +1549,11 @@ def admin_login():
 
             session["admin_logged_in"] = True
             session["admin_email"] = email
+            session["admin_station"] = None
+            session["admin_role_name"] = "Administrator"
 
             flash(
-                "Administrator login successful!",
+                "Administrator login successful. Select your counter from the Queue Monitor tab.",
                 "success"
             )
 
@@ -1629,16 +1652,18 @@ def _resolve_guest_key(explicit=None):
 @auth.route("/api/requests", methods=["GET"])
 @limiter.exempt
 def get_user_requests():
+    user_type = request.args.get("user_type") or session.get("user_type")
     student_id = session.get("student_id")
 
-    if student_id:
-        requests_query = QueueRequest.query.filter_by(
-            student_id=student_id
-        ).order_by(QueueRequest.id.desc()).all()
-    else:
+    # If explicitly acting as guest OR no student_id in session:
+    if user_type == "guest" or not student_id:
         guest_key = _resolve_guest_key(request.args.get("guest_key"))
         requests_query = QueueRequest.query.filter_by(
             guest_session_key=guest_key
+        ).filter(QueueRequest.student_id.is_(None)).order_by(QueueRequest.id.desc()).all()
+    else:
+        requests_query = QueueRequest.query.filter_by(
+            student_id=student_id
         ).order_by(QueueRequest.id.desc()).all()
 
     return jsonify({"success": True, "requests": [r.to_dict() for r in requests_query]})
@@ -1711,11 +1736,18 @@ def create_queue_request():
     queue_number = f"{prefix}-{num_int:03d}"
     db.session.add(counter)
 
-    now = datetime.utcnow()
+    now = ph_now()
     tx_id = f"QRS-2026-{now.strftime('%m%d')}-{queue_number}"
 
-    student_id = session.get("student_id")
-    guest_key = None if student_id else _resolve_guest_key(data.get("guest_key"))
+    user_type = data.get("user_type") or session.get("user_type")
+    if user_type == "guest" or not session.get("student_id"):
+        student_id = None
+        guest_key = _resolve_guest_key(data.get("guest_key"))
+        guest_name = data.get("guest_name") or session.get("guest_name") or "Guest User"
+    else:
+        student_id = session.get("student_id")
+        guest_key = None
+        guest_name = None
 
     summary = ", ".join(it["name"] for it in items)
     total = sum(it["price"] for it in items)
@@ -1726,6 +1758,7 @@ def create_queue_request():
     new_req = QueueRequest(
         student_id=student_id,
         guest_session_key=guest_key,
+        guest_name=guest_name,
         doc_name=summary,
         items=items,
         queue_number=queue_number,
@@ -1735,7 +1768,8 @@ def create_queue_request():
         wait_time="3–5 minutes",
         transaction_id=tx_id,
         status="Processing",
-        queue_step=step
+        queue_step=step,
+        counter_turn_done=False
     )
 
     db.session.add(new_req)
@@ -1777,6 +1811,15 @@ def ticket_status(transaction_id):
     if not req_obj:
         return render_template("ticket_status.html", req=None, found=False), 404
     return render_template("ticket_status.html", req=req_obj, found=True)
+
+
+@auth.route("/api/ticket/<transaction_id>", methods=["GET"])
+@limiter.exempt
+def api_ticket_status(transaction_id):
+    req_obj = QueueRequest.query.filter_by(transaction_id=transaction_id).first()
+    if not req_obj:
+        return jsonify({"success": False, "error": "Ticket not found"}), 404
+    return jsonify({"success": True, "ticket": req_obj.to_dict()})
 
 
 # =======================================================
@@ -1842,12 +1885,26 @@ def admin_counter_next(counter_id):
         m = re.search(rf"{re.escape(prefix)}-(\d+)", r.queue_number or "")
         return int(m.group(1)) if m else 0
 
-    # All tickets still waiting (Processing) OR not-yet-displayed pickups
-    # (Ready for pickup) for this counter's prefix. Lowest queue number wins.
+    # If the counter was previously serving a ticket, finish that student's turn at the window.
+    # The document itself stays in Processing while being worked on in the office.
+    if counter.now_serving_number > 0:
+        prev_serving_qnum = f"{prefix}-{counter.now_serving_number:03d}"
+        prev_req = QueueRequest.query.filter(
+            QueueRequest.queue_number == prev_serving_qnum,
+            QueueRequest.counter_turn_done.is_(False)
+        ).first()
+        if prev_req:
+            prev_req.counter_turn_done = True
+            prev_req.queue_step = "document_processing"
+            db.session.add(prev_req)
+
+    # All tickets still waiting for their turn at the counter window.
+    # Lowest queue number wins.
     candidates = [
         r for r in QueueRequest.query.filter(
             QueueRequest.queue_number.like(prefix + "-%"),
-            QueueRequest.status.in_(["Processing", "Ready for pickup"])
+            QueueRequest.status.in_(["Processing", "Ready for pickup"]),
+            QueueRequest.counter_turn_done.is_(False)
         ).all()
         if _num_of(r) > 0
     ]
@@ -1856,13 +1913,14 @@ def admin_counter_next(counter_id):
         # Lowest queue number = highest priority.
         next_req = min(candidates, key=_num_of)
         counter.now_serving_number = _num_of(next_req)
-        # Keep as "Ready for pickup" so the called number stays displayed
-        # on the live counter until the user collects their document.
-        next_req.status = "Ready for pickup"
+        # Document starts and stays in Processing while being worked on at counter
+        if next_req.status != "Ready for pickup":
+            next_req.status = "Processing"
+    else:
+        # Nobody waiting in queue -> clear now_serving
+        counter.now_serving_number = 0
 
-    # If nobody is waiting, leave the now-serving number unchanged.
-
-    counter.updated_at = datetime.utcnow()
+    counter.updated_at = ph_now()
     db.session.commit()
 
     return jsonify({"success": True, "counter": counter.to_dict()})
@@ -1894,9 +1952,48 @@ def admin_counter_set(counter_id):
     if is_active is not None:
         counter.is_active = bool(is_active)
 
-    counter.updated_at = datetime.utcnow()
+    counter.updated_at = ph_now()
     db.session.commit()
 
+    return jsonify({"success": True, "counter": counter.to_dict()})
+
+
+# =======================================================
+# ADMIN — RESET A SPECIFIC COUNTER & ITS QUEUE
+# =======================================================
+@auth.route("/api/admin/counter/<int:counter_id>/reset", methods=["POST"])
+def admin_counter_reset(counter_id):
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    counter = db.session.get(QueueCounter, counter_id)
+    if not counter:
+        return jsonify({"success": False, "error": "Counter not found"}), 404
+
+    prefix = counter.now_serving_prefix or counter.counter_code
+    counter.now_serving_number = 0
+    counter.last_number = 0
+    counter.updated_at = ph_now()
+
+    # Clear active requests specific to this station
+    if counter.counter_code == "C":
+        QueueRequest.query.filter(
+            db.or_(
+                QueueRequest.queue_step == "payment",
+                QueueRequest.queue_number.like(f"{prefix}-%")
+            ),
+            QueueRequest.status.in_(["Processing", "Ready for pickup"])
+        ).delete(synchronize_session=False)
+    else:
+        QueueRequest.query.filter(
+            db.or_(
+                QueueRequest.counter == counter.counter_name,
+                QueueRequest.queue_number.like(f"{prefix}-%")
+            ),
+            QueueRequest.status.in_(["Processing", "Ready for pickup"])
+        ).delete(synchronize_session=False)
+
+    db.session.commit()
     return jsonify({"success": True, "counter": counter.to_dict()})
 
 
@@ -1914,7 +2011,7 @@ def admin_reset():
     for counter in QueueCounter.query.all():
         counter.now_serving_number = 0
         counter.last_number = 0
-        counter.updated_at = datetime.utcnow()
+        counter.updated_at = ph_now()
 
     QueueRequest.query.filter(
         QueueRequest.status.in_(["Processing", "Ready for pickup"])
@@ -1946,8 +2043,74 @@ def admin_update_request_status(req_id):
         return jsonify({"success": False, "error": f"Status must be one of {allowed_statuses}"}), 400
 
     req_obj.status = new_status
+
+    if new_status in ("Ready for pickup", "Completed"):
+        req_obj.counter_turn_done = True
+
+    if new_status == "Completed":
+        req_obj.queue_step = None
+
+        # If the counter was serving this ticket, clear its now_serving display
+        m = re.match(r"^([A-Z])-(\d+)", req_obj.queue_number or "")
+        if m:
+            prefix = m.group(1)
+            num = int(m.group(2))
+            counter = QueueCounter.query.filter(
+                db.or_(
+                    QueueCounter.now_serving_prefix == prefix,
+                    QueueCounter.counter_code == prefix
+                )
+            ).first()
+            if counter and counter.now_serving_number == num:
+                counter.now_serving_number = 0
+                counter.updated_at = ph_now()
+                db.session.add(counter)
+
     db.session.commit()
 
+    return jsonify({"success": True, "request": req_obj.to_dict()})
+
+
+# =======================================================
+# ADMIN — COMPLETE TURN AT COUNTER (KEEP IN PROCESSING)
+# =======================================================
+# When an individual's turn at the Registrar counter window is done,
+# finishes their counter turn (clearing now_serving), but keeps the
+# document in Processing because it needs days to process.
+
+@auth.route("/api/admin/request/<int:req_id>/complete-turn", methods=["POST"])
+def admin_complete_counter_turn(req_id):
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    req_obj = db.session.get(QueueRequest, req_id)
+    if not req_obj:
+        return jsonify({"success": False, "error": "Not found"}), 404
+
+    # Mark student's counter window turn as finished
+    req_obj.counter_turn_done = True
+    req_obj.queue_step = "document_processing"
+    # Document stays in Processing while being worked on
+    if req_obj.status != "Ready for pickup":
+        req_obj.status = "Processing"
+
+    # If the counter was serving this ticket, clear its now_serving display
+    m = re.match(r"^([A-Z])-(\d+)", req_obj.queue_number or "")
+    if m:
+        prefix = m.group(1)
+        num = int(m.group(2))
+        counter = QueueCounter.query.filter(
+            db.or_(
+                QueueCounter.now_serving_prefix == prefix,
+                QueueCounter.counter_code == prefix
+            )
+        ).first()
+        if counter and counter.now_serving_number == num:
+            counter.now_serving_number = 0
+            counter.updated_at = ph_now()
+            db.session.add(counter)
+
+    db.session.commit()
     return jsonify({"success": True, "request": req_obj.to_dict()})
 
 
@@ -1969,6 +2132,23 @@ def admin_confirm_payment(req_id):
 
     if req_obj.queue_step != "payment":
         return jsonify({"success": False, "error": "This request is not awaiting payment"}), 400
+
+    # If the cashier counter was serving this ticket, clear its now_serving display
+    old_qnum = req_obj.queue_number or ""
+    old_m = re.match(r"^([A-Z])-(\d+)", old_qnum)
+    if old_m:
+        old_prefix = old_m.group(1)
+        old_num = int(old_m.group(2))
+        cashier_counter = QueueCounter.query.filter(
+            db.or_(
+                QueueCounter.now_serving_prefix == old_prefix,
+                QueueCounter.counter_code == old_prefix
+            )
+        ).first()
+        if cashier_counter and cashier_counter.now_serving_number == old_num:
+            cashier_counter.now_serving_number = 0
+            cashier_counter.updated_at = ph_now()
+            db.session.add(cashier_counter)
 
     # Payment-only request → nothing to route to Registrar, mark completed.
     if not req_obj.has_academic_items:
@@ -2006,6 +2186,8 @@ def admin_confirm_payment(req_id):
     req_obj.queue_number = new_queue_number
     req_obj.counter = counter.counter_name
     req_obj.queue_step = "processing"
+    req_obj.status = "Processing"
+    req_obj.counter_turn_done = False
     req_obj.service = f"Registrar – {req_obj.item_names}"
 
     # Update alternation state
@@ -2033,6 +2215,22 @@ def admin_cancel_request(req_id):
     if not req_obj:
         return jsonify({"success": False, "error": "Not found"}), 404
 
+    # If the counter was serving this ticket, clear its now_serving display
+    m = re.match(r"^([A-Z])-(\d+)", req_obj.queue_number or "")
+    if m:
+        prefix = m.group(1)
+        num = int(m.group(2))
+        counter = QueueCounter.query.filter(
+            db.or_(
+                QueueCounter.now_serving_prefix == prefix,
+                QueueCounter.counter_code == prefix
+            )
+        ).first()
+        if counter and counter.now_serving_number == num:
+            counter.now_serving_number = 0
+            counter.updated_at = ph_now()
+            db.session.add(counter)
+
     db.session.delete(req_obj)
     db.session.commit()
 
@@ -2049,5 +2247,194 @@ def admin_get_requests():
     if not session.get("admin_logged_in"):
         return jsonify({"success": False, "error": "Unauthorized"}), 403
 
-    reqs = QueueRequest.query.order_by(QueueRequest.id.desc()).limit(50).all()
+    include_completed = request.args.get("include_completed", "false").lower() == "true"
+    query = QueueRequest.query.order_by(QueueRequest.id.desc())
+    if not include_completed:
+        query = query.filter(QueueRequest.status.in_(["Processing", "Ready for pickup"]))
+
+    reqs = query.limit(100).all()
     return jsonify({"success": True, "requests": [r.to_dict() for r in reqs]})
+
+
+# =======================================================
+# ADMIN — GET REQUESTS HISTORY (ALL STUDENTS & GUESTS)
+# =======================================================
+
+@auth.route("/api/admin/history", methods=["GET"])
+@limiter.exempt
+def admin_get_history():
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    query = QueueRequest.query.order_by(QueueRequest.id.desc())
+
+    # Optional status filter
+    status_filter = request.args.get("status")
+    if status_filter and status_filter != "all":
+        query = query.filter(QueueRequest.status == status_filter)
+
+    # Optional user type filter
+    user_type = request.args.get("user_type")
+    if user_type == "student":
+        query = query.filter(QueueRequest.student_id.isnot(None))
+    elif user_type == "guest":
+        query = query.filter(QueueRequest.student_id.is_(None))
+
+    # Optional counter filter
+    counter = request.args.get("counter")
+    if counter and counter != "all":
+        query = query.filter(QueueRequest.counter.like(f"%{counter}%"))
+
+    # Optional search query
+    search = request.args.get("search", "").strip()
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            db.or_(
+                QueueRequest.queue_number.like(search_pattern),
+                QueueRequest.doc_name.like(search_pattern),
+                QueueRequest.transaction_id.like(search_pattern),
+                QueueRequest.guest_name.like(search_pattern)
+            )
+        )
+
+    reqs = query.limit(300).all()
+    return jsonify({"success": True, "requests": [r.to_dict() for r in reqs]})
+
+
+# =======================================================
+# ADMIN STUDENTS API
+# =======================================================
+
+@auth.route("/api/admin/students", methods=["GET"])
+@limiter.exempt
+def admin_get_students():
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    students = Student.query.order_by(Student.id.desc()).all()
+    return jsonify({"success": True, "students": [s.to_dict() for s in students]})
+
+
+@auth.route("/api/admin/student/<int:student_id>/requests", methods=["GET"])
+@limiter.exempt
+def admin_get_student_requests(student_id):
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    student = db.session.get(Student, student_id)
+    if not student:
+        return jsonify({"success": False, "error": "Student not found"}), 404
+
+    reqs = QueueRequest.query.filter_by(student_id=student_id).order_by(QueueRequest.id.desc()).all()
+    return jsonify({
+        "success": True,
+        "student": student.to_dict(),
+        "requests": [r.to_dict() for r in reqs]
+    })
+
+
+# =======================================================
+# ADMIN — ANALYTICS & REPORTS API
+# =======================================================
+
+@auth.route("/api/admin/analytics", methods=["GET"])
+@limiter.exempt
+def admin_get_analytics():
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    from collections import defaultdict
+    import json
+
+    all_reqs = QueueRequest.query.order_by(QueueRequest.created_at.asc()).all()
+
+    # ── 1. Requests per day (last 30 days) ──────────────────────
+    day_counts = defaultdict(int)
+    for r in all_reqs:
+        if r.created_at:
+            day_key = r.created_at.strftime("%Y-%m-%d")
+            day_counts[day_key] += 1
+
+    # Sort and keep last 30 days
+    sorted_days = sorted(day_counts.keys())[-30:]
+    requests_per_day = {
+        "labels": [d for d in sorted_days],
+        "values": [day_counts[d] for d in sorted_days]
+    }
+
+    # ── 2. Most requested documents (top 10) ────────────────────
+    doc_counts = defaultdict(int)
+    for r in all_reqs:
+        items = r.items or []
+        if items:
+            for it in items:
+                name = (it.get("name") or "").strip()
+                if name:
+                    doc_counts[name] += 1
+        elif r.doc_name:
+            doc_counts[r.doc_name.strip()] += 1
+
+    sorted_docs = sorted(doc_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+    most_requested = {
+        "labels": [d[0] for d in sorted_docs],
+        "values": [d[1] for d in sorted_docs]
+    }
+
+    # ── 3. Peak queue hours (0–23) ───────────────────────────────
+    hour_counts = defaultdict(int)
+    for r in all_reqs:
+        if r.created_at:
+            hour_counts[r.created_at.hour] += 1
+
+    peak_hours = {
+        "labels": [f"{h:02d}:00" for h in range(24)],
+        "values": [hour_counts[h] for h in range(24)]
+    }
+
+    # ── 4. Completed vs Cancelled requests ───────────────────────
+    status_counts = defaultdict(int)
+    for r in all_reqs:
+        status_counts[r.status] += 1
+
+    completed_vs_cancelled = {
+        "completed": status_counts.get("Completed", 0),
+        "processing": status_counts.get("Processing", 0),
+        "ready": status_counts.get("Ready for pickup", 0),
+        "total": len(all_reqs)
+    }
+
+    # ── 5. Average wait position per hour (proxy for avg wait time) ──
+    # Count requests per counter and compute avg ahead_count as proxy
+    # We'll use a simpler metric: avg tickets per day
+    total_days = len(day_counts) or 1
+    avg_per_day = round(len(all_reqs) / total_days, 1)
+
+    # Student vs Guest breakdown
+    student_count = sum(1 for r in all_reqs if r.student_id)
+    guest_count = len(all_reqs) - student_count
+
+    return jsonify({
+        "success": True,
+        "requests_per_day": requests_per_day,
+        "most_requested": most_requested,
+        "peak_hours": peak_hours,
+        "completed_vs_cancelled": completed_vs_cancelled,
+        "summary": {
+            "total_requests": len(all_reqs),
+            "avg_per_day": avg_per_day,
+            "student_requests": student_count,
+            "guest_requests": guest_count,
+            "completed": status_counts.get("Completed", 0),
+            "active": status_counts.get("Processing", 0) + status_counts.get("Ready for pickup", 0),
+        }
+    })
+
+
+@auth.after_request
+def add_no_cache_headers(response):
+    if request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response

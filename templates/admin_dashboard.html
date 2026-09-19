@@ -28,6 +28,9 @@
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
 
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
     <style>
 
         /* =====================================================
@@ -565,6 +568,275 @@
             font-weight: 600;
         }
 
+        /* =====================================================
+           OPERATIONAL SPACE CARDS & QUEUE MONITOR
+        ===================================================== */
+        .space-card {
+            background: white;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 28px 24px;
+            text-align: center;
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .space-card:hover {
+            transform: translateY(-5px);
+            border-color: #fca5a5;
+            box-shadow: 0 16px 32px rgba(169, 0, 0, 0.1);
+        }
+
+        .space-icon-circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #a90000;
+            margin-bottom: 16px;
+            transition: transform 0.25s ease;
+        }
+
+        .space-card:hover .space-icon-circle {
+            transform: scale(1.08);
+        }
+
+        .space-btn-enter {
+            width: 100%;
+            padding: 10px 18px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #8a0d0d 0%, #b91c1c 100%);
+            color: white;
+            border: none;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            margin-top: auto;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .space-btn-enter:hover {
+            box-shadow: 0 4px 14px rgba(138, 13, 13, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-switch-space {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .btn-switch-space:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+
+        .btn-reset-space {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #b91c1c;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .btn-reset-space:hover {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .station-btn {
+            padding: 9px 20px;
+            border-radius: 24px;
+            border: 1.5px solid #cbd5e1;
+            background: white;
+            color: #475569;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .station-btn:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        .station-btn.active {
+            background: linear-gradient(135deg, #8a0d0d 0%, #b91c1c 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(138, 13, 13, 0.28);
+        }
+
+        /* =====================================================
+           REQUESTS HISTORY
+        ===================================================== */
+        .history-filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 18px;
+            background: white;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .history-input, .history-select {
+            padding: 7px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: 'Poppins', sans-serif;
+            background: white;
+            color: #1e293b;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .history-input:focus, .history-select:focus {
+            border-color: #8a0d0d;
+            box-shadow: 0 0 0 3px rgba(138, 13, 13, 0.1);
+        }
+
+        .badge-user-student {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: 20px;
+            padding: 2px 9px;
+            font-size: 10.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-user-guest {
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
+            border-radius: 20px;
+            padding: 2px 9px;
+            font-size: 10.5px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* =====================================================
+           STUDENTS DIRECTORY & MODAL
+        ===================================================== */
+        .student-initial-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8a0d0d, #c01e1e);
+            color: white;
+            font-weight: 800;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(138, 13, 13, 0.2);
+        }
+
+        .student-initial-avatar-lg {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: 800;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .student-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .student-modal-dialog {
+            background: white;
+            border-radius: 20px;
+            max-width: 820px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid #e2e8f0;
+            animation: modalSlideIn 0.25s ease-out;
+            position: relative;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .spin {
+            animation: spinAnim 1s linear infinite;
+        }
+
+        @keyframes spinAnim {
+            100% { transform: rotate(360deg); }
+        }
+
 
         /* =====================================================
            RESPONSIVE
@@ -699,13 +971,32 @@
         <nav class="sidebar-menu">
 
             <!-- Dashboard -->
-            <a href="#" class="sidebar-link active">
+            <a href="#" class="sidebar-link active" data-tab="tab-dashboard" onclick="AdminTabs.switchTab('tab-dashboard'); return false;">
                 <i class="bi bi-house-door"></i>
                 <span>Dashboard</span>
             </a>
 
-            <!-- Extra items based on role -->
-            <a href='#' class='sidebar-link'><i class='bi bi-people'></i><span>Manage Users</span></a><a href='#' class='sidebar-link'><i class='bi bi-display'></i><span>Queue Monitor</span></a><a href='#' class='sidebar-link'><i class='bi bi-bar-chart-line'></i><span>Reports</span></a>
+            <!-- Queue Monitor -->
+            <a href="#" class="sidebar-link" data-tab="tab-queue-monitor" onclick="AdminTabs.switchTab('tab-queue-monitor'); return false;">
+                <i class="bi bi-display"></i>
+                <span>Queue Monitor</span>
+            </a>
+
+            <!-- Requests History -->
+            <a href="#" class="sidebar-link" data-tab="tab-requests-history" onclick="AdminTabs.switchTab('tab-requests-history'); return false;">
+                <i class="bi bi-clock-history"></i>
+                <span>Requests History</span>
+            </a>
+
+            <!-- Students Directory -->
+            <a href="#" class="sidebar-link" data-tab="tab-manage-users" onclick="AdminTabs.switchTab('tab-manage-users'); return false;">
+                <i class="bi bi-mortarboard-fill"></i>
+                <span>Students</span>
+            </a>
+            <a href="#" class="sidebar-link" data-tab="tab-reports" onclick="AdminTabs.switchTab('tab-reports'); return false;">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Reports</span>
+            </a>
 
             <!-- Logout -->
             <a
@@ -738,8 +1029,8 @@
                 <i class="bi bi-list"></i>
             </button>
 
-            <div class="page-title">
-                QRESERVE ADMIN
+            <div class="page-title" id="pageTitleDisplay">
+                QRESERVE ADMIN &bull; DASHBOARD
             </div>
 
             <div class="live-clock-pill">
@@ -764,7 +1055,7 @@
                         </div>
 
                         <div class="profile-type">
-                            Administrator
+                            {{ session.get("admin_role_name", "Administrator") }}
                         </div>
 
                     </div>
@@ -781,82 +1072,595 @@
         <!-- DASHBOARD BODY -->
         <div class="dashboard-content">
 
-            <!-- LIVE STAT CARDS -->
-            <div class="stats-grid">
+            <!-- =====================================================
+                 TAB 1: DASHBOARD (READ-ONLY DISPLAY)
+            ====================================================== -->
+            <div id="tab-dashboard" class="admin-tab-pane">
 
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-label">Active Queue</div>
-                        <div class="stat-value" id="statActiveQueue">
-                            — <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span>
+                <!-- LIVE STAT CARDS -->
+                <div class="stats-grid">
+
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Active Queue</div>
+                            <div class="stat-value" id="statActiveQueue">
+                                — <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span>
+                            </div>
                         </div>
                     </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-ticket-detailed-fill"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Now Serving</div>
+                            <div class="stat-value text-danger" id="statNowServing">—</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-stopwatch-fill"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Requests Today</div>
+                            <div class="stat-value" id="statToday">—</div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="bi bi-ticket-detailed-fill"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-label">Now Serving</div>
-                        <div class="stat-value text-danger" id="statNowServing">—</div>
+                <!-- QUEUE OVERVIEW (DISPLAY ONLY) -->
+                <div style="margin-top:20px;">
+
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+                        <div style="font-size:16px;font-weight:800;color:#1e293b;">
+                            <i class="bi bi-display" style="color:#a90000;margin-right:8px;"></i>System Queue Overview
+                        </div>
+                        <span style="font-size:11px;font-weight:600;color:#64748b;background:#f1f5f9;padding:5px 12px;border-radius:14px;">
+                            <i class="bi bi-eye" style="margin-right:4px;"></i>Display Only &bull; Use <strong>Queue Monitor</strong> to manage counters
+                        </span>
+                    </div>
+
+                    <!-- 3 Read-only Counter Cards -->
+                    <div id="dashboardCountersGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px;">
+                        <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;grid-column:1/-1;">Loading counters...</div>
+                    </div>
+
+                    <!-- Read-only Live Queue Requests Table -->
+                    <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                        <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+                            <div style="font-size:14px;font-weight:700;color:#1e293b;">
+                                <i class="bi bi-list-ul" style="color:#a90000;margin-right:6px;"></i>Live Queue Overview
+                            </div>
+                            <button onclick="AdminQM.loadRequests()" style="background:none;border:1px solid #e2e8f0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#475569;cursor:pointer;transition:all 0.2s;">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+                                <thead>
+                                    <tr style="background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">
+                                        <th style="padding:10px 16px;text-align:left;">Queue #</th>
+                                        <th style="padding:10px 16px;text-align:left;">Document</th>
+                                        <th style="padding:10px 16px;text-align:left;">Counter</th>
+                                        <th style="padding:10px 16px;text-align:left;">Date & Time</th>
+                                        <th style="padding:10px 16px;text-align:left;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardLiveTable">
+                                    <tr><td colspan="5" style="padding:20px;text-align:center;color:#94a3b8;">Loading requests...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 TAB 2: QUEUE MONITOR (SPACE SELECTION & WORKSPACE)
+            ====================================================== -->
+            <div id="tab-queue-monitor" class="admin-tab-pane" style="display:none;">
+
+                <!-- 1. OPERATIONAL SPACE SELECTION SCREEN -->
+                <div id="queueSpaceSelector" style="padding: 10px 0;">
+                    <div style="text-align:center;max-width:640px;margin:10px auto 28px;">
+                        <div style="font-size:22px;font-weight:800;color:#1e293b;">
+                            <i class="bi bi-display" style="color:#a90000;margin-right:8px;"></i>Choose Operational Space
+                        </div>
+                        <div style="font-size:13px;color:#64748b;margin-top:6px;">
+                            Please identify your operational counter below. Each role features dedicated ticket calling, queue processing, and counter management.
+                        </div>
+                    </div>
+
+                    <!-- 3 Space Selection Cards -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;max-width:1050px;margin:0 auto 24px;">
+
+                        <!-- Registrar 1 -->
+                        <div class="space-card" onclick="AdminQM.enterSpace('A')">
+                            <div class="space-icon-circle">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div style="font-size:18px;font-weight:800;color:#1e293b;">Registrar 1</div>
+                            <div style="font-size:12px;font-weight:600;color:#64748b;margin-top:2px;">Counter 1 &bull; Prefix <strong>A</strong></div>
+                            <p style="font-size:12px;color:#64748b;margin:14px 0 16px;line-height:1.55;">
+                                Process student &amp; guest document requests and status updates assigned to Counter 1.
+                            </p>
+                            <div style="margin-bottom:18px;font-size:12px;color:#475569;" id="spaceWaitingA">
+                                <i class="bi bi-people-fill" style="color:#a90000;margin-right:4px;"></i> Loading queue status...
+                            </div>
+                            <button type="button" class="space-btn-enter">
+                                Enter Registrar 1 Space <i class="bi bi-arrow-right" style="margin-left:4px;"></i>
+                            </button>
+                        </div>
+
+                        <!-- Registrar 2 -->
+                        <div class="space-card" onclick="AdminQM.enterSpace('B')">
+                            <div class="space-icon-circle">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div style="font-size:18px;font-weight:800;color:#1e293b;">Registrar 2</div>
+                            <div style="font-size:12px;font-weight:600;color:#64748b;margin-top:2px;">Counter 2 &bull; Prefix <strong>B</strong></div>
+                            <p style="font-size:12px;color:#64748b;margin:14px 0 16px;line-height:1.55;">
+                                Process student &amp; guest document requests and status updates assigned to Counter 2.
+                            </p>
+                            <div style="margin-bottom:18px;font-size:12px;color:#475569;" id="spaceWaitingB">
+                                <i class="bi bi-people-fill" style="color:#a90000;margin-right:4px;"></i> Loading queue status...
+                            </div>
+                            <button type="button" class="space-btn-enter">
+                                Enter Registrar 2 Space <i class="bi bi-arrow-right" style="margin-left:4px;"></i>
+                            </button>
+                        </div>
+
+                        <!-- Cashier -->
+                        <div class="space-card" onclick="AdminQM.enterSpace('C')">
+                            <div class="space-icon-circle" style="background:#fff7ed;border-color:#fed7aa;color:#ea580c;">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
+                            <div style="font-size:18px;font-weight:800;color:#1e293b;">Cashier</div>
+                            <div style="font-size:12px;font-weight:600;color:#64748b;margin-top:2px;">Counter 3 &bull; Prefix <strong>C</strong></div>
+                            <p style="font-size:12px;color:#64748b;margin:14px 0 16px;line-height:1.55;">
+                                Collect document fees, confirm cashier payments, and route paid requests to Registrar.
+                            </p>
+                            <div style="margin-bottom:18px;font-size:12px;color:#475569;" id="spaceWaitingC">
+                                <i class="bi bi-people-fill" style="color:#ea580c;margin-right:4px;"></i> Loading queue status...
+                            </div>
+                            <button type="button" class="space-btn-enter" style="background:linear-gradient(135deg,#c2410c 0%,#ea580c 100%);">
+                                Enter Cashier Space <i class="bi bi-arrow-right" style="margin-left:4px;"></i>
+                            </button>
+                        </div>
+
                     </div>
                 </div>
 
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="bi bi-stopwatch-fill"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-label">Requests Today</div>
-                        <div class="stat-value" id="statToday">—</div>
+
+                <!-- 2. DEDICATED STATION OPERATIONAL WORKSPACE -->
+                <div id="stationWorkspace" style="display:none;margin-top:4px;">
+
+                    <!-- Workspace Header with Switch Space & Reset Queue Buttons -->
+                    <div class="space-header-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:white;padding:16px 22px;border-radius:18px;border:1px solid #e2e8f0;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span id="spaceActiveIcon"></span>
+                            <div>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div style="font-size:17px;font-weight:800;color:#1e293b;" id="spaceActiveTitle">Counter Workspace</div>
+                                    <span style="background:#ecfdf5;color:#059669;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;">
+                                        <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;"></span> Active Space
+                                    </span>
+                                </div>
+                                <div style="font-size:11.5px;color:#64748b;margin-top:2px;" id="spaceActiveSubtitle">
+                                    Station Prefix: A &bull; Dedicated Workspace
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Space action controls -->
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <button type="button" class="btn-switch-space" onclick="AdminQM.showSpaceSelector()" title="Choose a different operational space">
+                                <i class="bi bi-arrow-left-right"></i> Switch Space
+                            </button>
+                            <button type="button" class="btn-reset-space" onclick="AdminQM.resetCurrentStationQueue()" title="Reset this station's queue">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset Queue
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Station Control Card -->
+                    <div id="stationControlCardWrap" style="margin-bottom:24px;">
+                        <!-- Rendered by JS -->
+                    </div>
+
+                    <!-- Station Live Requests Table -->
+                    <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.03);">
+                        <div style="padding:16px 22px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                                <div style="font-size:15px;font-weight:800;color:#1e293b;" id="stationTableHeader">
+                                    <i class="bi bi-list-check" style="color:#a90000;margin-right:6px;"></i>Station Active Queue
+                                </div>
+                                <span id="stationTableCountBadge" style="background:#f1f5f9;color:#475569;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">0 requests</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                                <div style="position:relative;">
+                                    <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11.5px;color:#94a3b8;"></i>
+                                    <input type="text" id="stationSearchInput" placeholder="Search ticket, code, student..."
+                                        oninput="AdminQM.onStationSearch(this.value)"
+                                        style="padding:6px 14px 6px 32px;font-size:12px;border:1px solid #e2e8f0;border-radius:20px;width:240px;outline:none;font-family:Poppins,sans-serif;transition:border-color 0.2s;"
+                                        onfocus="this.style.borderColor='#a90000';" onblur="this.style.borderColor='#e2e8f0';">
+                                </div>
+                                <button onclick="AdminTabs.switchTab('tab-requests-history')"
+                                    title="View completed and historical transactions in Requests History"
+                                    style="background:#fef2f2;border:1px solid #fecaca;padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:700;color:#a90000;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;"
+                                    onmouseover="this.style.background='#fee2e2';" onmouseout="this.style.background='#fef2f2';">
+                                    <i class="bi bi-clock-history"></i> Queue History
+                                </button>
+                                <button onclick="AdminQM.loadRequests()" style="background:#f8fafc;border:1px solid #e2e8f0;padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:700;color:#475569;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.2s;">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+                                <thead>
+                                    <tr style="background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e2e8f0;">
+                                        <th style="padding:12px 18px;text-align:left;">Queue #</th>
+                                        <th style="padding:12px 18px;text-align:left;">Transaction Code</th>
+                                        <th style="padding:12px 18px;text-align:left;">Document / Student</th>
+                                        <th style="padding:12px 18px;text-align:left;">Price</th>
+                                        <th style="padding:12px 18px;text-align:left;">Date &amp; Time</th>
+                                        <th style="padding:12px 18px;text-align:left;">Status &amp; Stage</th>
+                                        <th style="padding:12px 18px;text-align:center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stationRequestsTable">
+                                    <tr><td colspan="7" style="padding:28px;text-align:center;color:#94a3b8;">Loading station requests...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 TAB 3: REQUESTS HISTORY (STUDENTS & GUESTS)
+            ====================================================== -->
+            <div id="tab-requests-history" class="admin-tab-pane" style="display:none;">
+
+                <!-- Section Header -->
+                <div style="margin-bottom:18px;">
+                    <div style="font-size:18px;font-weight:800;color:#1e293b;">
+                        <i class="bi bi-clock-history" style="color:#a90000;margin-right:8px;"></i>Requests History
+                    </div>
+                    <div style="font-size:12.5px;color:#64748b;margin-top:2px;">
+                        Permanent historical record of all student and guest requests filed in the system.
+                    </div>
+                </div>
+
+                <!-- Filter Toolbar -->
+                <div class="history-filter-bar">
+                    <div style="flex:1;min-width:200px;position:relative;">
+                        <input
+                            type="text"
+                            id="historySearchInput"
+                            class="history-input"
+                            style="width:100%;padding-left:32px;"
+                            placeholder="Search Queue #, name, doc, or transaction ID..."
+                            oninput="AdminHistory.filter()"
+                        >
+                        <i class="bi bi-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;"></i>
+                    </div>
+
+                    <select id="historyUserType" class="history-select" onchange="AdminHistory.filter()">
+                        <option value="all">All Users</option>
+                        <option value="student">Students Only</option>
+                        <option value="guest">Guests Only</option>
+                    </select>
+
+                    <select id="historyStatus" class="history-select" onchange="AdminHistory.filter()">
+                        <option value="all">All Statuses</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Ready for pickup">Ready for pickup</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+
+                    <select id="historyCounter" class="history-select" onchange="AdminHistory.filter()">
+                        <option value="all">All Counters</option>
+                        <option value="Counter 1">Counter 1 – Registrar 1</option>
+                        <option value="Counter 2">Counter 2 – Registrar 2</option>
+                        <option value="Counter 3">Counter 3 – Cashier</option>
+                    </select>
+
+                    <button onclick="AdminHistory.load()" class="station-btn" style="padding:7px 16px;border-radius:20px;font-size:12px;">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- History Records Table -->
+                <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                    <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+                        <div style="font-size:13px;font-weight:700;color:#1e293b;" id="historyCountSummary">
+                            Showing all records
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                            <thead>
+                                <tr style="background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">
+                                    <th style="padding:11px 16px;text-align:left;">Queue #</th>
+                                    <th style="padding:11px 16px;text-align:left;">User</th>
+                                    <th style="padding:11px 16px;text-align:left;">Document / Request</th>
+                                    <th style="padding:11px 16px;text-align:left;">Counter</th>
+                                    <th style="padding:11px 16px;text-align:left;">Price</th>
+                                    <th style="padding:11px 16px;text-align:left;">Date &amp; Time</th>
+                                    <th style="padding:11px 16px;text-align:left;">Status</th>
+                                    <th style="padding:11px 16px;text-align:left;">Transaction ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyRequestsTable">
+                                <tr><td colspan="8" style="padding:28px;text-align:center;color:#94a3b8;">Loading requests history...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
             </div>
 
 
-            <!-- QUEUE CONTROL CENTER -->
-            <div style="margin-top:20px;">
+            <!-- =====================================================
+                 TAB 4: REGISTERED STUDENTS
+            ====================================================== -->
+            <div id="tab-manage-users" class="admin-tab-pane" style="display:none;">
 
-                <!-- Section header -->
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-                    <div style="font-size:16px;font-weight:800;color:#1e293b;">
-                        <i class="bi bi-display" style="color:#a90000;margin-right:8px;"></i>Queue Control Center
+                <!-- Section Header -->
+                <div style="margin-bottom:18px;">
+                    <div style="font-size:18px;font-weight:800;color:#1e293b;">
+                        <i class="bi bi-mortarboard-fill" style="color:#a90000;margin-right:8px;"></i>Registered Students
                     </div>
-                    <div style="display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#15803d;">
-                        <span id="adminLiveDot" style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;animation:livePulse 1.4s ease-in-out infinite;"></span>
-                        LIVE
+                    <div style="font-size:12.5px;color:#64748b;margin-top:2px;">
+                        Directory of all enrolled Bulacan State University students, academic profiles, and queue activity.
                     </div>
                 </div>
 
-                <!-- Counter control cards -->
-                <div id="counterControlGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px;">
-                    <!-- Populated by JS -->
-                    <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;grid-column:1/-1;">Loading counters...</div>
-                </div>
-
-                <!-- Queue Requests Table -->
-                <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
-                    <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
-                        <div style="font-size:14px;font-weight:700;color:#1e293b;">
-                            <i class="bi bi-list-ul" style="color:#a90000;margin-right:6px;"></i>Live Queue Requests
+                <!-- Live KPI Stat Cards -->
+                <div class="stats-grid" style="margin-bottom:20px;">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Students</div>
+                            <div class="stat-value" id="kpiTotalStudents">0</div>
                         </div>
-                        <button onclick="AdminQM.loadRequests()" style="background:none;border:1px solid #e2e8f0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;color:#475569;cursor:pointer;transition:all 0.2s;">
-                            <i class="bi bi-arrow-clockwise"></i> Refresh
-                        </button>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fffbeb;border-color:#fde68a;color:#d97706;"><i class="bi bi-hourglass-split"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Active In Queue</div>
+                            <div class="stat-value" id="kpiActiveQueueStudents" style="color:#d97706;">0</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#f0fdf4;border-color:#bbf7d0;color:#059669;"><i class="bi bi-file-earmark-check-fill"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-label">Total Student Requests</div>
+                            <div class="stat-value" id="kpiTotalStudentRequests" style="color:#059669;">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Toolbar -->
+                <div class="history-filter-bar">
+                    <div style="flex:1;min-width:220px;position:relative;">
+                        <input
+                            type="text"
+                            id="studentSearchInput"
+                            class="history-input"
+                            style="width:100%;padding-left:32px;"
+                            placeholder="Search by student #, name, email, course, section..."
+                            oninput="AdminStudents.filter()"
+                        >
+                        <i class="bi bi-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;"></i>
+                    </div>
+
+                    <select id="studentCourseFilter" class="history-select" onchange="AdminStudents.filter()">
+                        <option value="all">All Programs</option>
+                        <option value="BSIT">BSIT</option>
+                        <option value="BIT">BIT</option>
+                        <option value="BSED">BSED</option>
+                        <option value="BEED">BEED</option>
+                        <option value="BSBA">BSBA</option>
+                        <option value="BSE">BSE</option>
+                        <option value="BSCpE">BSCpE</option>
+                        <option value="BSIE">BSIE</option>
+                        <option value="BPED/BTLED">BPED/BTLED</option>
+                    </select>
+
+                    <select id="studentYearFilter" class="history-select" onchange="AdminStudents.filter()">
+                        <option value="all">All Year Levels</option>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="5th Year">5th Year</option>
+                    </select>
+
+                    <button onclick="AdminStudents.load()" class="station-btn" style="padding:7px 16px;border-radius:20px;font-size:12px;">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- Students Table Container -->
+                <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                    <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+                        <div style="font-size:13px;font-weight:700;color:#1e293b;" id="studentsCountSummary">
+                            Showing all registered students
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                            <thead>
+                                <tr style="background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">
+                                    <th style="padding:11px 16px;text-align:left;">Student</th>
+                                    <th style="padding:11px 16px;text-align:left;">Student ID</th>
+                                    <th style="padding:11px 16px;text-align:left;">Course &amp; Section</th>
+                                    <th style="padding:11px 16px;text-align:left;">Year Level</th>
+                                    <th style="padding:11px 16px;text-align:left;">Age</th>
+                                    <th style="padding:11px 16px;text-align:left;">Requests</th>
+                                    <th style="padding:11px 16px;text-align:left;">Date Registered</th>
+                                    <th style="padding:11px 16px;text-align:center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <tr><td colspan="8" style="padding:28px;text-align:center;color:#94a3b8;">Loading students directory...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Student Details Modal -->
+                <div id="studentDetailsModal" class="student-modal-backdrop" onclick="if(event.target===this) AdminStudents.closeModal();">
+                    <div class="student-modal-dialog">
+                        <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+                            <div style="font-size:15px;font-weight:800;color:#1e293b;display:flex;align-items:center;gap:8px;">
+                                <i class="bi bi-person-badge-fill" style="color:#a90000;font-size:18px;"></i>
+                                <span>Student Profile &amp; History</span>
+                            </div>
+                            <button onclick="AdminStudents.closeModal()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;padding:0 4px;line-height:1;border-radius:6px;" onmouseover="this.style.color='#1e293b';" onmouseout="this.style.color='#94a3b8';">
+                                <i class="bi bi-x-lg" style="font-size:16px;"></i>
+                            </button>
+                        </div>
+                        <div id="studentDetailsModalBody" style="padding:20px;">
+                            <!-- Injected by AdminStudents.viewDetails() -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 TAB 5: REPORTS & ANALYTICS
+            ====================================================== -->
+            <div id="tab-reports" class="admin-tab-pane" style="display:none;">
+
+                <!-- Header -->
+                <div style="margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <div style="font-size:18px;font-weight:800;color:#1e293b;">
+                            <i class="bi bi-bar-chart-line-fill" style="color:#a90000;margin-right:8px;"></i>Reports &amp; Analytics
+                        </div>
+                        <div style="font-size:12.5px;color:#64748b;margin-top:2px;">
+                            Real-time queue performance metrics, document demand, and service insights.
+                        </div>
+                    </div>
+                    <button onclick="AdminReports.load()" style="background:linear-gradient(135deg,#a90000,#7f1d1d);color:white;border:none;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(169,0,0,0.25);">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Data
+                    </button>
+                </div>
+
+                <!-- KPI Summary Cards -->
+                <div id="reportKpiGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;">
+                    <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;grid-column:1/-1;">Loading analytics...</div>
+                </div>
+
+                <!-- Charts Grid: Row 1 (2 columns) -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:18px;margin-bottom:18px;">
+
+                    <!-- Chart 1: Requests Per Day -->
+                    <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                            <div style="font-size:14px;font-weight:800;color:#1e293b;">
+                                <i class="bi bi-calendar-week" style="color:#a90000;margin-right:6px;"></i>Requests Per Day
+                            </div>
+                            <span style="font-size:10.5px;font-weight:600;color:#64748b;background:#f1f5f9;padding:3px 10px;border-radius:14px;">Last 30 days</span>
+                        </div>
+                        <div style="position:relative;height:220px;">
+                            <canvas id="chartRequestsPerDay"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Most Requested Documents -->
+                    <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                            <div style="font-size:14px;font-weight:800;color:#1e293b;">
+                                <i class="bi bi-file-earmark-bar-graph" style="color:#a90000;margin-right:6px;"></i>Most Requested Documents
+                            </div>
+                            <span style="font-size:10.5px;font-weight:600;color:#64748b;background:#f1f5f9;padding:3px 10px;border-radius:14px;">Top 10</span>
+                        </div>
+                        <div style="position:relative;height:220px;">
+                            <canvas id="chartMostRequested"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Charts Grid: Row 2 (3 columns) -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-bottom:18px;">
+
+                    <!-- Chart 3: Peak Queue Hours -->
+                    <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                            <div style="font-size:14px;font-weight:800;color:#1e293b;">
+                                <i class="bi bi-clock-history" style="color:#a90000;margin-right:6px;"></i>Peak Queue Hours
+                            </div>
+                            <span style="font-size:10.5px;font-weight:600;color:#64748b;background:#f1f5f9;padding:3px 10px;border-radius:14px;">24-hour distribution</span>
+                        </div>
+                        <div style="position:relative;height:200px;">
+                            <canvas id="chartPeakHours"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 4: Request Status Breakdown (Doughnut) -->
+                    <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                            <div style="font-size:14px;font-weight:800;color:#1e293b;">
+                                <i class="bi bi-pie-chart-fill" style="color:#a90000;margin-right:6px;"></i>Completed vs Active
+                            </div>
+                            <span style="font-size:10.5px;font-weight:600;color:#64748b;background:#f1f5f9;padding:3px 10px;border-radius:14px;">All time</span>
+                        </div>
+                        <div style="position:relative;height:200px;">
+                            <canvas id="chartStatusBreakdown"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 5: Student vs Guest Requests -->
+                    <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                            <div style="font-size:14px;font-weight:800;color:#1e293b;">
+                                <i class="bi bi-people-fill" style="color:#a90000;margin-right:6px;"></i>User Type Breakdown
+                            </div>
+                            <span style="font-size:10.5px;font-weight:600;color:#64748b;background:#f1f5f9;padding:3px 10px;border-radius:14px;">All time</span>
+                        </div>
+                        <div style="position:relative;height:200px;">
+                            <canvas id="chartUserType"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Document Ranking Table -->
+                <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                    <div style="padding:16px 22px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+                        <div style="font-size:14px;font-weight:800;color:#1e293b;">
+                            <i class="bi bi-trophy-fill" style="color:#d97706;margin-right:6px;"></i>Document Request Rankings
+                        </div>
+                        <span style="font-size:11px;color:#64748b;font-weight:600;">All-time totals</span>
                     </div>
                     <div style="overflow-x:auto;">
                         <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
                             <thead>
-                                <tr style="background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">
-                                    <th style="padding:10px 16px;text-align:left;">Queue #</th>
-                                    <th style="padding:10px 16px;text-align:left;">Document</th>
-                                    <th style="padding:10px 16px;text-align:left;">Counter</th>
-                                    <th style="padding:10px 16px;text-align:left;">Date & Time</th>
-                                    <th style="padding:10px 16px;text-align:left;">Status</th>
-                                    <th style="padding:10px 16px;text-align:center;">Action</th>
+                                <tr style="background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e2e8f0;">
+                                    <th style="padding:11px 18px;text-align:left;width:50px;">Rank</th>
+                                    <th style="padding:11px 18px;text-align:left;">Document / Service</th>
+                                    <th style="padding:11px 18px;text-align:right;width:120px;">Requests</th>
+                                    <th style="padding:11px 18px;text-align:right;width:160px;">Share</th>
                                 </tr>
                             </thead>
-                            <tbody id="queueRequestsTable">
-                                <tr><td colspan="6" style="padding:20px;text-align:center;color:#94a3b8;">Loading requests...</td></tr>
+                            <tbody id="reportDocRankingTable">
+                                <tr><td colspan="4" style="padding:28px;text-align:center;color:#94a3b8;">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -878,55 +1682,225 @@
         const now = new Date();
         el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
-    setInterval(updateClock, 1000);
-    updateClock();
+    // ----- Admin Notification Toast -----
+    function showAdminToast(message, type) {
+        var toastId = 'admin-live-toast';
+        var toast = document.getElementById(toastId);
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = toastId;
+            toast.style.position = 'fixed';
+            toast.style.bottom = '24px';
+            toast.style.right = '24px';
+            toast.style.zIndex = '99999';
+            toast.style.padding = '12px 20px';
+            toast.style.borderRadius = '12px';
+            toast.style.fontSize = '12.5px';
+            toast.style.fontWeight = '600';
+            toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.18)';
+            toast.style.display = 'flex';
+            toast.style.alignItems = 'center';
+            toast.style.gap = '8px';
+            toast.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+            toast.style.pointerEvents = 'none';
+            document.body.appendChild(toast);
+        }
+        var isSuccess = type !== 'error';
+        toast.style.background = isSuccess ? '#065f46' : '#991b1b';
+        toast.style.color = '#ffffff';
+        toast.innerHTML = (isSuccess ? '<i class="bi bi-check-circle-fill"></i> ' : '<i class="bi bi-exclamation-circle-fill"></i> ') + message;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(12px)';
+        }, 3500);
+    }
 
-    // ----- Admin Queue Manager -----
+    // =======================================================
+    // ADMIN TABS MANAGER
+    // =======================================================
+    var AdminTabs = {
+        currentTab: 'tab-dashboard',
+
+        switchTab: function(tabId) {
+            this.currentTab = tabId;
+
+            // Update tab panes
+            document.querySelectorAll('.admin-tab-pane').forEach(function(pane) {
+                pane.style.display = (pane.id === tabId) ? 'block' : 'none';
+            });
+
+            // Update sidebar links
+            document.querySelectorAll('.sidebar-link[data-tab]').forEach(function(link) {
+                if (link.getAttribute('data-tab') === tabId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Update page title
+            var titleEl = document.getElementById('pageTitleDisplay');
+            if (titleEl) {
+                var titles = {
+                    'tab-dashboard': 'QRESERVE ADMIN \u2022 DASHBOARD',
+                    'tab-queue-monitor': 'QRESERVE ADMIN \u2022 QUEUE CONTROL CENTER',
+                    'tab-requests-history': 'QRESERVE ADMIN \u2022 REQUESTS HISTORY',
+                    'tab-manage-users': 'QRESERVE ADMIN \u2022 REGISTERED STUDENTS',
+                    'tab-reports': 'QRESERVE ADMIN \u2022 REPORTS'
+                };
+                titleEl.textContent = titles[tabId] || 'QRESERVE ADMIN';
+            }
+
+            // Trigger specific loaders
+            if (tabId === 'tab-requests-history') {
+                AdminHistory.load();
+            } else if (tabId === 'tab-manage-users') {
+                AdminStudents.load();
+            } else if (tabId === 'tab-queue-monitor') {
+                AdminQM.onOpenQueueMonitor();
+            } else if (tabId === 'tab-dashboard') {
+                AdminQM.renderDashboardOverview();
+            } else if (tabId === 'tab-reports') {
+                AdminReports.load();
+            }
+        }
+    };
+
+
+    // =======================================================
+    // ADMIN QUEUE MANAGER (COUNTERS & ACTIVE QUEUE)
+    // =======================================================
     var AdminQM = {
         counters: [],
         requests: [],
+        selectedSpace: null, // User is asked: Registrar 1, Registrar 2, or Cashier
+        currentStation: 'A',
+        activeStationFilter: 'all',
+        stationSearchQuery: '',
 
         init: function() {
             this.loadCounters();
             this.loadRequests();
-            setInterval(function() { AdminQM.loadCounters(); }, 6000);
-            setInterval(function() { AdminQM.loadRequests(); }, 10000);
+            setInterval(function() { AdminQM.loadCounters(); }, 1500);
+            setInterval(function() { AdminQM.loadRequests(); }, 1500);
+        },
+
+        // Triggered when clicking Queue Monitor in sidebar
+        onOpenQueueMonitor: function() {
+            if (!this.selectedSpace) {
+                this.showSpaceSelector();
+            } else {
+                this.enterSpace(this.selectedSpace);
+            }
+        },
+
+        // Show Space Selection Screen
+        showSpaceSelector: function() {
+            this.selectedSpace = null;
+            var selector = document.getElementById('queueSpaceSelector');
+            var workspace = document.getElementById('stationWorkspace');
+            if (selector) selector.style.display = 'block';
+            if (workspace) workspace.style.display = 'none';
+
+            var titleEl = document.getElementById('queueMonitorSubtitle');
+            if (titleEl) titleEl.textContent = 'Please choose your assigned operational space to manage queue and service tickets.';
+
+            var banner = document.getElementById('currentSpaceBanner');
+            if (banner) banner.style.display = 'none';
+
+            this.updateSpaceSelectorCounts();
+        },
+
+        // Enter Specific Operational Space
+        enterSpace: function(stationCode) {
+            this.selectedSpace = stationCode;
+            this.currentStation = stationCode;
+            this.activeStationFilter = 'all';
+            this.stationSearchQuery = '';
+            var sInput = document.getElementById('stationSearchInput');
+            if (sInput) sInput.value = '';
+
+            var selector = document.getElementById('queueSpaceSelector');
+            var workspace = document.getElementById('stationWorkspace');
+            if (selector) selector.style.display = 'none';
+            if (workspace) workspace.style.display = 'block';
+
+            var counter = this.counters.find(function(c) { return c.counter_code === stationCode; });
+            var cName = counter ? counter.counter_name : 'Counter Workspace';
+
+            var titleEl = document.getElementById('pageTitleDisplay');
+            if (titleEl) titleEl.textContent = 'QRESERVE ADMIN \u2022 ' + cName.toUpperCase();
+
+            this.renderStation();
+        },
+
+        updateSpaceSelectorCounts: function() {
+            var counterA = this.counters.find(function(c) { return c.counter_code === 'A'; });
+            var counterB = this.counters.find(function(c) { return c.counter_code === 'B'; });
+            var counterC = this.counters.find(function(c) { return c.counter_code === 'C'; });
+
+            var elA = document.getElementById('spaceWaitingA');
+            if (elA && counterA) {
+                elA.innerHTML = '<i class="bi bi-people-fill" style="color:#1e3a8a;margin-right:4px;"></i>' +
+                    '<strong>' + counterA.waiting_count + '</strong> waiting &bull; Now Serving: <strong>' + counterA.now_serving + '</strong>';
+            }
+            var elB = document.getElementById('spaceWaitingB');
+            if (elB && counterB) {
+                elB.innerHTML = '<i class="bi bi-people-fill" style="color:#047857;margin-right:4px;"></i>' +
+                    '<strong>' + counterB.waiting_count + '</strong> waiting &bull; Now Serving: <strong>' + counterB.now_serving + '</strong>';
+            }
+            var elC = document.getElementById('spaceWaitingC');
+            if (elC && counterC) {
+                elC.innerHTML = '<i class="bi bi-people-fill" style="color:#c2410c;margin-right:4px;"></i>' +
+                    '<strong>' + counterC.waiting_count + '</strong> waiting &bull; Now Serving: <strong>' + counterC.now_serving + '</strong>';
+            }
         },
 
         loadCounters: function() {
-            fetch('/api/admin/counters')
+            fetch('/api/admin/counters?_t=' + Date.now(), { cache: 'no-store' })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    if (data.success) {
+                    if (data.success && data.counters) {
                         AdminQM.counters = data.counters;
-                        AdminQM.renderCounters();
                         AdminQM.updateStatCards();
+                        AdminQM.renderDashboardOverview();
+                        AdminQM.updateSpaceSelectorCounts();
+                        if (AdminQM.selectedSpace) {
+                            AdminQM.renderStation();
+                        }
                     }
                 })
-                .catch(function() {
-                    document.getElementById('adminLiveDot').style.background = '#ef4444';
+                .catch(function(err) {
+                    console.error('Error loading counters:', err);
                 });
         },
 
         loadRequests: function() {
-            fetch('/api/admin/requests')
+            fetch('/api/admin/requests?_t=' + Date.now(), { cache: 'no-store' })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success) {
-                        AdminQM.requests = data.requests;
-                        AdminQM.renderRequestsTable();
+                        AdminQM.requests = data.requests || [];
                         AdminQM.updateStatCards();
+                        AdminQM.renderDashboardOverview();
+                        if (AdminQM.selectedSpace) {
+                            AdminQM.renderStation();
+                        }
                     }
+                })
+                .catch(function(err) {
+                    console.error('Error loading requests:', err);
                 });
         },
 
         updateStatCards: function() {
-            // Active (Processing) count
-            var active = this.requests.filter(function(r) { return r.status === 'Processing'; }).length;
+            var active = this.requests.filter(function(r) { return r.status === 'Processing' || r.status === 'Ready for pickup'; }).length;
             var el = document.getElementById('statActiveQueue');
             if (el) el.innerHTML = active + ' <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span>';
 
-            // Now Serving (first counter with number > 0)
             var serving = '—';
             for (var i = 0; i < this.counters.length; i++) {
                 if (this.counters[i].now_serving_number > 0) {
@@ -937,81 +1911,502 @@
             var ns = document.getElementById('statNowServing');
             if (ns) ns.textContent = serving;
 
-            // Today's total
             var today = document.getElementById('statToday');
-            if (today) today.textContent = this.requests.length + ' total';
+            if (today) today.textContent = active + ' active';
         },
 
-        renderCounters: function() {
-            var grid = document.getElementById('counterControlGrid');
-            if (!grid) return;
+        // Render Dashboard tab: 3 Read-only counter cards + read-only live table
+        renderDashboardOverview: function() {
+            // 1. Counters Grid (strictly display-only, no buttons)
+            var grid = document.getElementById('dashboardCountersGrid');
+            if (grid && this.counters.length) {
+                var html = '';
+                this.counters.forEach(function(c) {
+                    var codeColor = c.is_active ? '#22c55e' : '#94a3b8';
+                    var cardBorder = c.is_active ? '2px solid #bbf7d0' : '1.5px solid #e2e8f0';
+                    var servingDisplay = c.now_serving_number > 0 ? c.now_serving : '---';
 
-            var html = '';
-            this.counters.forEach(function(c) {
-                var codeColor = c.is_active ? '#22c55e' : '#94a3b8';
-                var cardBorder = c.is_active ? '2px solid #bbf7d0' : '1.5px solid #e2e8f0';
-                var servingDisplay = c.now_serving_number > 0 ? c.now_serving : '---';
+                    html += '<div style="background:white;border:' + cardBorder + ';border-radius:16px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">' +
+                        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">' +
+                            '<div style="font-size:14px;font-weight:800;color:#1e293b;">' + c.counter_name + '</div>' +
+                            '<span style="width:8px;height:8px;border-radius:50%;background:' + codeColor + ';display:inline-block;" title="' + (c.is_active ? 'Online' : 'Offline') + '"></span>' +
+                        '</div>' +
+                        '<div style="text-align:center;padding:10px 0;">' +
+                            '<div style="font-size:10.5px;font-weight:700;color:#94a3b8;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;">Now Serving</div>' +
+                            '<div style="font-size:38px;font-weight:900;color:#a90000;letter-spacing:-1px;line-height:1;">' + servingDisplay + '</div>' +
+                            '<div style="font-size:11.5px;color:#64748b;margin-top:8px;font-weight:500;">' + c.waiting_count + ' waiting</div>' +
+                        '</div>' +
+                    '</div>';
+                });
+                grid.innerHTML = html;
+            }
 
-                html += '<div style="background:white;border:' + cardBorder + ';border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">' +
+            // 2. Read-only live requests table (strictly active items only)
+            var tbody = document.getElementById('dashboardLiveTable');
+            if (tbody) {
+                var activeReqs = this.requests.filter(function(r) { return r.status !== 'Completed'; });
+                if (!activeReqs.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding:28px;text-align:center;color:#94a3b8;font-size:13px;">No active queue requests right now.</td></tr>';
+                    return;
+                }
 
-                    // Header
-                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">' +
-                        '<div style="font-size:14px;font-weight:800;color:#1e293b;">' + c.counter_name + '</div>' +
-                        '<span style="width:8px;height:8px;border-radius:50%;background:' + codeColor + ';display:inline-block;"></span>' +
-                    '</div>' +
+                var statusColors = {
+                    'Processing':      { bg:'#fefce8', color:'#854d0e', border:'#fde68a' },
+                    'Ready for pickup':{ bg:'#f0fdf4', color:'#14532d', border:'#bbf7d0' },
+                    'Completed':       { bg:'#f8fafc', color:'#475569', border:'#e2e8f0' }
+                };
 
-                    // Now Serving Display
-                    '<div style="text-align:center;margin-bottom:14px;">' +
-                        '<div style="font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:2px;">Now Serving</div>' +
-                        '<div id="counterServing_' + c.id + '" style="font-size:36px;font-weight:900;color:#a90000;letter-spacing:-1px;line-height:1;">' + servingDisplay + '</div>' +
-                        '<div style="font-size:11px;color:#64748b;margin-top:4px;">' + c.waiting_count + ' waiting</div>' +
-                    '</div>' +
+                var rowsHtml = '';
+                activeReqs.forEach(function(r) {
+                    var sc = statusColors[r.status] || statusColors['Completed'];
+                    var badge = '<span style="background:' + sc.bg + ';color:' + sc.color + ';border:1px solid ' + sc.border + ';border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">' + r.status + '</span>';
 
-                    // Call Next button
-                    '<button onclick="AdminQM.callNext(' + c.id + ')" ' +
-                        'style="width:100%;padding:10px;background:linear-gradient(135deg,#8c1010,#6e0a0a);color:white;border:none;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;transition:all 0.2s;" ' +
-                        'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 18px rgba(140,16,16,0.3)\';" ' +
-                        'onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\';">' +
-                        '<i class="bi bi-arrow-right-circle-fill" style="margin-right:6px;"></i>Call Next' +
-                    '</button>' +
+                    if (r.queueStep === 'payment') {
+                        badge += ' <span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">Awaiting Payment</span>';
+                    } else if (r.queueStep === 'processing') {
+                        badge += ' <span style="background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">Registrar</span>';
+                    }
 
-                    // Manual set
-                    '<div style="display:flex;gap:6px;">' +
-                        '<input type="number" id="manualInput_' + c.id + '" min="0" max="999" placeholder="Set # manually" ' +
-                            'style="flex:1;padding:7px 10px;border:1px solid #e2e8f0;border-radius:20px;font-size:12px;font-family:Poppins,sans-serif;outline:none;">' +
-                        '<button onclick="AdminQM.manualSet(' + c.id + ')" ' +
-                            'style="padding:7px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;color:#475569;">' +
-                            'Set' +
-                        '</button>' +
-                    '</div>' +
+                    rowsHtml += '<tr style="border-top:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\';" onmouseout="this.style.background=\'\';">' +
+                        '<td style="padding:11px 16px;font-weight:700;color:#1e293b;">' + r.queueNum + '</td>' +
+                        '<td style="padding:11px 16px;color:#334155;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.docName + '</td>' +
+                        '<td style="padding:11px 16px;color:#64748b;">' + (r.counter || '—') + '</td>' +
+                        '<td style="padding:11px 16px;color:#94a3b8;font-size:11.5px;">' + r.dateTime + '</td>' +
+                        '<td style="padding:11px 16px;">' + badge + '</td>' +
+                    '</tr>';
+                });
+                tbody.innerHTML = rowsHtml;
+            }
+        },
 
-                '</div>';
+        // Render dedicated workspace controls and filtered table
+        renderStation: function() {
+            var stationCode = this.currentStation;
+            var counter = this.counters.find(function(c) { return c.counter_code === stationCode; });
+            if (!counter) return;
+
+            var prefix = counter.now_serving_prefix || counter.counter_code || 'A';
+            var codeColor = counter.is_active ? '#22c55e' : '#94a3b8';
+            var servingDisplay = counter.now_serving_number > 0 ? counter.now_serving : '---';
+
+            // 1. Update workspace header bar
+            var titleEl = document.getElementById('spaceActiveTitle');
+            if (titleEl) titleEl.textContent = counter.counter_name + ' Space';
+
+            var subEl = document.getElementById('spaceActiveSubtitle');
+            if (subEl) subEl.innerHTML = 'Station Prefix: <strong>' + prefix + '</strong> &bull; ' + counter.waiting_count + ' waiting at counter window';
+
+            var iconEl = document.getElementById('spaceActiveIcon');
+            if (iconEl) {
+                if (stationCode === 'C') {
+                    iconEl.innerHTML = '<i class="bi bi-wallet2" style="font-size:22px;color:#c2410c;"></i>';
+                } else {
+                    iconEl.innerHTML = '<i class="bi bi-building" style="font-size:22px;color:#a90000;"></i>';
+                }
+            }
+
+            // 2. Filter requests belonging to this station
+            var allStationRequests = [];
+            var headerTitle = '';
+
+            if (stationCode === 'C') {
+                headerTitle = '<i class="bi bi-wallet2" style="color:#a90000;margin-right:6px;"></i>Cashier Queue &bull; Awaiting Payment';
+                allStationRequests = this.requests.filter(function(r) {
+                    return (r.queueStep === 'payment' || (r.counter && r.counter.indexOf('Cashier') !== -1)) && r.status !== 'Completed';
+                });
+            } else {
+                var cName = counter.counter_name; // e.g. "Counter 1 – Registrar"
+                headerTitle = '<i class="bi bi-file-earmark-check" style="color:#a90000;margin-right:6px;"></i>' + cName + ' &bull; Active Document Requests';
+                allStationRequests = this.requests.filter(function(r) {
+                    return (r.counter === cName || (r.queueNum && r.queueNum.indexOf(prefix + '-') === 0)) && r.queueStep !== 'payment' && r.status !== 'Completed';
+                });
+            }
+
+            // Categorize requests for station intelligence
+            var waitingAtCounter = allStationRequests.filter(function(r) {
+                return !r.counterTurnDone && (r.status === 'Processing' || r.status === 'Ready for pickup');
+            });
+            var inProcessing = allStationRequests.filter(function(r) {
+                return r.counterTurnDone && r.status === 'Processing';
+            });
+            var readyForPickup = allStationRequests.filter(function(r) {
+                return r.status === 'Ready for pickup';
             });
 
-            grid.innerHTML = html || '<div style="padding:20px;text-align:center;color:#94a3b8;grid-column:1/-1;">No counters found.</div>';
+            // Find next in line to call
+            var sortedWaiting = waitingAtCounter.slice().sort(function(a, b) {
+                var numA = parseInt((a.queueNum || '').split('-')[1] || '0', 10);
+                var numB = parseInt((b.queueNum || '').split('-')[1] || '0', 10);
+                return numA - numB;
+            });
+            var nextTicket = sortedWaiting[0] || null;
+
+            // 3. Render 2-Column High-Productivity Station Console
+            var cardWrap = document.getElementById('stationControlCardWrap');
+            if (cardWrap) {
+                var isServing = counter.now_serving_number > 0;
+                var servingSubtext = isServing ?
+                    '<span style="color:#059669;font-weight:700;"><i class="bi bi-broadcast" style="margin-right:4px;"></i>Serving Ticket #' + counter.now_serving_number + ' at Window</span>' :
+                    '<span style="color:#94a3b8;font-weight:600;"><i class="bi bi-pause-circle" style="margin-right:4px;"></i>Counter window currently idle</span>';
+
+                var nextPreviewHtml = '';
+                if (nextTicket) {
+                    nextPreviewHtml =
+                        '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+                            '<div style="display:flex;align-items:center;gap:8px;min-width:0;">' +
+                                '<span style="font-size:10px;font-weight:800;background:#d97706;color:white;padding:2px 7px;border-radius:8px;text-transform:uppercase;letter-spacing:0.3px;">Next in Line</span>' +
+                                '<span style="font-size:13px;font-weight:800;color:#92400e;white-space:nowrap;">' + nextTicket.queueNum + '</span>' +
+                                '<span style="font-size:11.5px;color:#78350f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (nextTicket.userName || 'Student') + ' &bull; ' + nextTicket.docName + '</span>' +
+                            '</div>' +
+                            '<span style="font-size:11px;font-weight:700;color:#b45309;white-space:nowrap;">' + (nextTicket.price ? '\u20b1' + nextTicket.price + '.00' : '') + '</span>' +
+                        '</div>';
+                } else {
+                    nextPreviewHtml =
+                        '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:#64748b;">' +
+                            '<i class="bi bi-check-circle-fill" style="color:#10b981;font-size:14px;"></i>' +
+                            '<span>All waiting tickets served. Counter is ready for new arrivals.</span>' +
+                        '</div>';
+                }
+
+                var currentFilter = AdminQM.activeStationFilter || 'all';
+                function renderFilterPill(key, label, count) {
+                    var isActive = currentFilter === key;
+                    var activeStyle = isActive ?
+                        'background:#1e293b;color:white;border-color:#1e293b;box-shadow:0 2px 6px rgba(30,41,59,0.18);' :
+                        'background:#f8fafc;color:#475569;border-color:#e2e8f0;';
+                    return '<button onclick="AdminQM.setStationFilter(\'' + key + '\')" ' +
+                        'style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;' + activeStyle + '">' +
+                        label + ' <span style="background:' + (isActive ? 'rgba(255,255,255,0.25)' : '#e2e8f0') + ';color:' + (isActive ? 'white' : '#334155') + ';padding:1px 6px;border-radius:10px;font-size:10px;">' + count + '</span>' +
+                    '</button>';
+                }
+
+                var filterPillsHtml =
+                    '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">' +
+                        renderFilterPill('all', 'All', allStationRequests.length) +
+                        renderFilterPill('waiting', 'Waiting at Window', waitingAtCounter.length) +
+                        (stationCode !== 'C' ? renderFilterPill('processing', 'In Processing', inProcessing.length) : '') +
+                        renderFilterPill('ready', 'Ready for Pickup', readyForPickup.length) +
+                    '</div>';
+
+                cardWrap.innerHTML =
+                    '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:18px;">' +
+                        // Left Console Card: Live Station Now Serving & Call Next
+                        '<div style="background:white;border:1.5px solid #bbf7d0;border-radius:18px;padding:22px;box-shadow:0 4px 18px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">' +
+                            '<div>' +
+                                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+                                    '<div style="display:flex;align-items:center;gap:8px;">' +
+                                        '<span style="font-size:16px;font-weight:800;color:#1e293b;">' + counter.counter_name + '</span>' +
+                                        '<span style="background:#f1f5f9;color:#475569;font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;border:1px solid #e2e8f0;">Prefix ' + prefix + '</span>' +
+                                    '</div>' +
+                                    '<span style="background:#ecfdf5;color:#059669;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;gap:5px;">' +
+                                        '<span style="width:7px;height:7px;border-radius:50%;background:' + codeColor + ';"></span> Online Station' +
+                                    '</span>' +
+                                '</div>' +
+
+                                '<div style="text-align:center;padding:14px 16px;background:linear-gradient(180deg,#fafafa 0%,#f8fafc 100%);border-radius:14px;border:1px solid #f1f5f9;margin-bottom:14px;">' +
+                                    '<div style="font-size:10.5px;font-weight:700;color:#94a3b8;letter-spacing:0.8px;text-transform:uppercase;">Now Serving at this Station</div>' +
+                                    '<div id="stationServingDisplay" style="font-size:50px;font-weight:900;color:#a90000;letter-spacing:-1px;line-height:1.1;margin:4px 0;">' + servingDisplay + '</div>' +
+                                    '<div style="font-size:11.5px;">' + servingSubtext + '</div>' +
+                                '</div>' +
+                            '</div>' +
+
+                            '<div>' +
+                                '<button onclick="AdminQM.callNextStation(' + counter.id + ')" ' +
+                                    'style="width:100%;padding:12px;background:linear-gradient(135deg,#8c1010,#6e0a0a);color:white;border:none;border-radius:30px;font-size:13.5px;font-weight:700;cursor:pointer;margin-bottom:12px;transition:all 0.2s;box-shadow:0 4px 14px rgba(140,16,16,0.25);display:flex;align-items:center;justify-content:center;gap:8px;" ' +
+                                    'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 20px rgba(140,16,16,0.35)\';" ' +
+                                    'onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 14px rgba(140,16,16,0.25)\';">' +
+                                    '<i class="bi bi-megaphone-fill"></i>Call Next (Lowest Waiting Ticket)' +
+                                '</button>' +
+
+                                '<div style="display:flex;gap:8px;">' +
+                                    '<input type="number" id="stationManualInput" min="0" max="999" placeholder="Set ticket # manually..." ' +
+                                        'onkeydown="if (event.key === \'Enter\') { AdminQM.manualSetStation(' + counter.id + '); return false; }" ' +
+                                        'style="flex:1;padding:7px 12px;border:1px solid #e2e8f0;border-radius:20px;font-size:12px;font-family:Poppins,sans-serif;outline:none;">' +
+                                    '<button onclick="AdminQM.manualSetStation(' + counter.id + ')" ' +
+                                        'style="padding:7px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;color:#475569;">' +
+                                        'Set' +
+                                    '</button>' +
+                                    '<button onclick="AdminQM.clearStationCounter(' + counter.id + ')" ' +
+                                        'title="Clear now-serving ticket display" ' +
+                                        'style="padding:7px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;color:#b91c1c;">' +
+                                        'Clear' +
+                                    '</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+
+                        // Right Card: Station Insights & Queue Flow
+                        '<div style="background:white;border:1px solid #e2e8f0;border-radius:18px;padding:22px;box-shadow:0 4px 18px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">' +
+                            '<div>' +
+                                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+                                    '<span style="font-size:14px;font-weight:800;color:#1e293b;"><i class="bi bi-kanban" style="color:#a90000;margin-right:6px;"></i>Queue Flow &amp; Status</span>' +
+                                    '<span style="font-size:11px;color:#64748b;">Live Overview</span>' +
+                                '</div>' +
+
+                                // 3 Metric Cards
+                                '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">' +
+                                    '<div style="background:#fffbeb;border:1px solid #fef3c7;border-radius:12px;padding:10px 12px;text-align:center;">' +
+                                        '<div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;">Waiting Window</div>' +
+                                        '<div style="font-size:20px;font-weight:900;color:#b45309;margin-top:2px;">' + waitingAtCounter.length + '</div>' +
+                                    '</div>' +
+                                    '<div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:12px;padding:10px 12px;text-align:center;">' +
+                                        '<div style="font-size:10px;font-weight:700;color:#1e40af;text-transform:uppercase;">In Processing</div>' +
+                                        '<div style="font-size:20px;font-weight:900;color:#2563eb;margin-top:2px;">' + inProcessing.length + '</div>' +
+                                    '</div>' +
+                                    '<div style="background:#ecfdf5;border:1px solid #d1fae5;border-radius:12px;padding:10px 12px;text-align:center;">' +
+                                        '<div style="font-size:10px;font-weight:700;color:#065f46;text-transform:uppercase;">Ready Pickup</div>' +
+                                        '<div style="font-size:20px;font-weight:900;color:#059669;margin-top:2px;">' + readyForPickup.length + '</div>' +
+                                    '</div>' +
+                                '</div>' +
+
+                                // Next in line preview
+                                '<div style="margin-bottom:12px;">' + nextPreviewHtml + '</div>' +
+                            '</div>' +
+
+                            '<div>' +
+                                '<div style="font-size:10.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Filter Table View:</div>' +
+                                filterPillsHtml +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+            }
+
+            // 4. Apply Filters & Search to Table Data
+            var displayRequests = allStationRequests.slice();
+
+            if (currentFilter === 'waiting') {
+                displayRequests = displayRequests.filter(function(r) {
+                    return !r.counterTurnDone && (r.status === 'Processing' || r.status === 'Ready for pickup');
+                });
+            } else if (currentFilter === 'processing') {
+                displayRequests = displayRequests.filter(function(r) {
+                    return r.counterTurnDone && r.status === 'Processing';
+                });
+            } else if (currentFilter === 'ready') {
+                displayRequests = displayRequests.filter(function(r) {
+                    return r.status === 'Ready for pickup';
+                });
+            }
+
+            if (AdminQM.stationSearchQuery) {
+                var q = AdminQM.stationSearchQuery;
+                displayRequests = displayRequests.filter(function(r) {
+                    return (r.queueNum && r.queueNum.toLowerCase().indexOf(q) !== -1) ||
+                           (r.transactionId && r.transactionId.toLowerCase().indexOf(q) !== -1) ||
+                           (r.docName && r.docName.toLowerCase().indexOf(q) !== -1) ||
+                           (r.userName && r.userName.toLowerCase().indexOf(q) !== -1);
+                });
+            }
+
+            // Update table headers & count badge
+            var tableHeaderEl = document.getElementById('stationTableHeader');
+            if (tableHeaderEl) tableHeaderEl.innerHTML = headerTitle;
+
+            var badgeEl = document.getElementById('stationTableCountBadge');
+            if (badgeEl) badgeEl.textContent = displayRequests.length + (displayRequests.length === allStationRequests.length ? ' requests' : ' of ' + allStationRequests.length + ' requests');
+
+            var tbody = document.getElementById('stationRequestsTable');
+            if (!tbody) return;
+
+            if (!displayRequests.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center;color:#94a3b8;font-size:13px;"><i class="bi bi-inbox" style="font-size:24px;display:block;margin-bottom:6px;color:#cbd5e1;"></i>No matching requests found for this filter or search.</td></tr>';
+                return;
+            }
+
+            // 5. Render Rows with Transaction Codes and Smart Workflow
+            var html = '';
+            displayRequests.forEach(function(r) {
+                var priceDisplay = (r.price && r.price > 0) ? ('\u20b1' + r.price + '.00') : '—';
+
+                // Status & Stage Badge
+                var statusBadge = '';
+                if (r.queueStep === 'payment') {
+                    statusBadge = '<span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;"><i class="bi bi-wallet2" style="margin-right:3px;"></i>Awaiting Payment</span>';
+                } else if (r.status === 'Completed') {
+                    statusBadge = '<span style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;"><i class="bi bi-check-all" style="margin-right:3px;"></i>Completed</span>';
+                } else if (r.status === 'Ready for pickup') {
+                    statusBadge = '<span style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;"><i class="bi bi-box-seam" style="margin-right:3px;"></i>Ready for Pickup</span>';
+                } else if (r.counterTurnDone) {
+                    statusBadge =
+                        '<div>' +
+                            '<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">In Processing</span>' +
+                            '<div style="font-size:10px;color:#64748b;margin-top:3px;font-weight:600;"><i class="bi bi-check2"></i> Window turn done</div>' +
+                        '</div>';
+                } else if (r.isNowServing) {
+                    statusBadge =
+                        '<div>' +
+                            '<span style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:800;"><i class="bi bi-broadcast" style="margin-right:3px;"></i>Now Serving</span>' +
+                            '<div style="font-size:10px;color:#b91c1c;margin-top:3px;font-weight:700;">At Counter Window</div>' +
+                        '</div>';
+                } else {
+                    statusBadge =
+                        '<div>' +
+                            '<span style="background:#fefce8;color:#854d0e;border:1px solid #fde68a;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">Waiting in Line</span>' +
+                            '<div style="font-size:10px;color:#94a3b8;margin-top:3px;">' + r.waitTime + '</div>' +
+                        '</div>';
+                }
+
+                // Action buttons
+                var actionButtons = '';
+                if (r.queueStep === 'payment') {
+                    // Cashier Action: Confirm Payment or Cancel
+                    actionButtons =
+                        '<button onclick="AdminQM.confirmPayment(' + r.db_id + ')" ' +
+                            'title="Confirm payment received \u2014 transfers request to Registrar queue" ' +
+                            'style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;" ' +
+                            'onmouseover="this.style.background=\'#dcfce7\';" onmouseout="this.style.background=\'#f0fdf4\';">' +
+                            '<i class="bi bi-check-circle"></i>Paid' +
+                        '</button>' +
+                        '<button onclick="AdminQM.cancelRequest(' + r.db_id + ', \'' + r.queueNum + '\')" ' +
+                            'title="Cancel request" ' +
+                            'style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;">' +
+                            '<i class="bi bi-x-circle"></i>Cancel' +
+                        '</button>';
+                } else {
+                    // Registrar Actions: Smart Multi-Stage Workflow
+                    var primaryBtn = '';
+                    if (r.status === 'Completed') {
+                        primaryBtn = '<span style="background:#f1f5f9;color:#059669;border:1px solid #cbd5e1;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><i class="bi bi-check-all"></i>Released</span>';
+                    } else if (r.status === 'Ready for pickup') {
+                        primaryBtn =
+                            '<button onclick="AdminQM.updateStatus(' + r.db_id + ', \'Completed\')" ' +
+                                'title="Release physical document to student and mark completed" ' +
+                                'style="background:#f0fdf4;border:1px solid #86efac;color:#15803d;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;" ' +
+                                'onmouseover="this.style.background=\'#dcfce7\';" onmouseout="this.style.background=\'#f0fdf4\';">' +
+                                '<i class="bi bi-check2-circle"></i>Release Doc' +
+                            '</button>';
+                    } else if (r.counterTurnDone) {
+                        primaryBtn =
+                            '<button onclick="AdminQM.updateStatus(' + r.db_id + ', \'Ready for pickup\')" ' +
+                                'title="Document preparation is finished \u2014 mark ready for student pickup" ' +
+                                'style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;" ' +
+                                'onmouseover="this.style.background=\'#dbeafe\';" onmouseout="this.style.background=\'#eff6ff\';">' +
+                                '<i class="bi bi-box-seam-fill"></i>Ready for Pickup' +
+                            '</button>';
+                    } else {
+                        // Student's turn at counter is in progress or waiting
+                        primaryBtn =
+                            '<button onclick="AdminQM.completeCounterTurn(' + r.db_id + ', \'' + r.queueNum + '\')" ' +
+                                'title="Complete student\'s turn at counter window. The document stays in Processing because it needs days to process." ' +
+                                'style="background:#f0fdf4;border:1px solid #86efac;color:#15803d;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;" ' +
+                                'onmouseover="this.style.background=\'#dcfce7\';" onmouseout="this.style.background=\'#f0fdf4\';">' +
+                                '<i class="bi bi-person-check-fill"></i>Complete Turn' +
+                            '</button>';
+                    }
+
+                    var statusDropdown =
+                        '<select onchange="AdminQM.updateStatus(' + r.db_id + ', this.value)" ' +
+                            'title="Manually override document status" ' +
+                            'style="margin-left:6px;font-size:11px;font-family:Poppins,sans-serif;border:1px solid #e2e8f0;border-radius:20px;padding:4px 8px;color:#475569;background:white;cursor:pointer;">' +
+                            '<option value="Processing"' + (r.status === 'Processing' ? ' selected' : '') + '>Processing</option>' +
+                            '<option value="Ready for pickup"' + (r.status === 'Ready for pickup' ? ' selected' : '') + '>Ready for pickup</option>' +
+                            '<option value="Completed"' + (r.status === 'Completed' ? ' selected' : '') + '>Completed</option>' +
+                        '</select>';
+
+                    var cancelBtn =
+                        '<button onclick="AdminQM.cancelRequest(' + r.db_id + ', \'' + r.queueNum + '\')" ' +
+                            'title="Cancel request" ' +
+                            'style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;">' +
+                            '<i class="bi bi-x-circle"></i>Cancel' +
+                        '</button>';
+
+                    actionButtons = primaryBtn + statusDropdown + cancelBtn;
+                }
+
+                html += '<tr style="border-top:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\';" onmouseout="this.style.background=\'\';">' +
+                    // 1. Queue #
+                    '<td style="padding:12px 18px;white-space:nowrap;">' +
+                        '<span style="font-weight:800;font-size:13px;color:#991b1b;background:#fef2f2;border:1.5px solid #fecaca;padding:4px 10px;border-radius:10px;display:inline-block;letter-spacing:0.4px;">' + r.queueNum + '</span>' +
+                    '</td>' +
+                    // 2. Transaction Code
+                    '<td style="padding:12px 18px;white-space:nowrap;">' +
+                        '<code style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:11px;font-weight:700;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;padding:4px 8px;border-radius:6px;letter-spacing:0.3px;">' + (r.transactionId || '—') + '</code>' +
+                    '</td>' +
+                    // 3. Document / Student
+                    '<td style="padding:12px 18px;">' +
+                        '<div style="font-weight:700;color:#1e293b;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.docName + '</div>' +
+                        '<div style="font-size:11px;color:#64748b;margin-top:2px;display:flex;align-items:center;gap:4px;"><i class="bi bi-person-fill" style="color:#94a3b8;"></i> ' + r.userName + '</div>' +
+                    '</td>' +
+                    // 4. Price
+                    '<td style="padding:12px 18px;color:#047857;font-weight:700;font-size:12.5px;white-space:nowrap;">' + priceDisplay + '</td>' +
+                    // 5. Date & Time
+                    '<td style="padding:12px 18px;color:#64748b;font-size:11.5px;white-space:nowrap;">' + r.dateTime + '</td>' +
+                    // 6. Status & Stage
+                    '<td style="padding:12px 18px;white-space:nowrap;">' + statusBadge + '</td>' +
+                    // 7. Action
+                    '<td style="padding:12px 18px;text-align:center;white-space:nowrap;">' +
+                        '<div style="display:flex;align-items:center;justify-content:center;">' + actionButtons + '</div>' +
+                    '</td>' +
+                '</tr>';
+            });
+
+            tbody.innerHTML = html;
         },
 
-        callNext: function(counterId) {
+        setStationFilter: function(filter) {
+            this.activeStationFilter = filter;
+            this.renderStation();
+        },
+
+        onStationSearch: function(query) {
+            this.stationSearchQuery = (query || '').toLowerCase().trim();
+            this.renderStation();
+        },
+
+        completeCounterTurn: function(reqId, queueNum) {
+            fetch('/api/admin/request/' + reqId + '/complete-turn', { method: 'POST' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        showAdminToast('Window turn finished for ' + queueNum + '. Document remains in Processing.', 'success');
+                        AdminQM.loadCounters();
+                        AdminQM.loadRequests();
+                    } else {
+                        alert(data.error || 'Failed to complete counter turn.');
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Error completing counter turn:', err);
+                });
+        },
+
+        clearStationCounter: function(counterId) {
+            fetch('/api/admin/counter/' + counterId + '/set', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ now_serving_number: 0 })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showAdminToast('Station now-serving display cleared.', 'success');
+                    AdminQM.loadCounters();
+                    AdminQM.loadRequests();
+                }
+            });
+        },
+
+        callNextStation: function(counterId) {
             fetch('/api/admin/counter/' + counterId + '/next', { method: 'POST' })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success) {
-                        // Instant UI update without waiting for next poll
-                        var el = document.getElementById('counterServing_' + counterId);
+                        var el = document.getElementById('stationServingDisplay');
                         if (el) {
                             el.textContent = data.counter.now_serving;
                             el.style.animation = 'none';
                             void el.offsetWidth;
                             el.style.animation = 'counterPop 0.35s cubic-bezier(0.16,1,0.3,1)';
                         }
-                        // Refresh all
+                        showAdminToast('Now calling ' + data.counter.now_serving + ' at ' + data.counter.counter_name, 'success');
                         AdminQM.loadCounters();
+                        AdminQM.loadRequests();
                     }
                 });
         },
 
-        manualSet: function(counterId) {
-            var input = document.getElementById('manualInput_' + counterId);
+        manualSetStation: function(counterId) {
+            var input = document.getElementById('stationManualInput');
             if (!input) return;
             var val = parseInt(input.value, 10);
             if (isNaN(val) || val < 0) { alert('Please enter a valid number (0–999).'); return; }
@@ -1025,49 +2420,10 @@
             .then(function(data) {
                 if (data.success) {
                     input.value = '';
+                    showAdminToast('Station ticket manually updated.', 'success');
                     AdminQM.loadCounters();
                 }
             });
-        },
-
-        renderRequestsTable: function() {
-            var tbody = document.getElementById('queueRequestsTable');
-            if (!tbody) return;
-
-            if (!this.requests.length) {
-                tbody.innerHTML = '<tr><td colspan="6" style="padding:28px;text-align:center;color:#94a3b8;font-size:13px;">No queue requests yet.</td></tr>';
-                return;
-            }
-
-            var statusColors = {
-                'Processing':      { bg:'#fefce8', color:'#854d0e', border:'#fde68a' },
-                'Ready for pickup':{ bg:'#f0fdf4', color:'#14532d', border:'#bbf7d0' },
-                'Completed':       { bg:'#f8fafc', color:'#475569', border:'#e2e8f0' }
-            };
-
-            var html = '';
-            this.requests.forEach(function(r) {
-                var sc = statusColors[r.status] || statusColors['Completed'];
-                var badge = '<span style="background:' + sc.bg + ';color:' + sc.color + ';border:1px solid ' + sc.border + ';border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">' + r.status + '</span>';
-
-                html += '<tr style="border-top:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\';" onmouseout="this.style.background=\'\';">' +
-                    '<td style="padding:11px 16px;font-weight:700;color:#1e293b;">' + r.queueNum + '</td>' +
-                    '<td style="padding:11px 16px;color:#334155;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.docName + '</td>' +
-                    '<td style="padding:11px 16px;color:#64748b;">' + (r.counter || '—') + '</td>' +
-                    '<td style="padding:11px 16px;color:#94a3b8;font-size:11.5px;">' + r.dateTime + '</td>' +
-                    '<td style="padding:11px 16px;">' + badge + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;">' +
-                        '<select onchange="AdminQM.updateStatus(' + r.db_id + ', this.value)" ' +
-                            'style="font-size:11px;font-family:Poppins,sans-serif;border:1px solid #e2e8f0;border-radius:20px;padding:4px 8px;color:#475569;background:white;cursor:pointer;">' +
-                            '<option value="Processing"' + (r.status === 'Processing' ? ' selected' : '') + '>Processing</option>' +
-                            '<option value="Ready for pickup"' + (r.status === 'Ready for pickup' ? ' selected' : '') + '>Ready for pickup</option>' +
-                            '<option value="Completed"' + (r.status === 'Completed' ? ' selected' : '') + '>Completed</option>' +
-                        '</select>' +
-                    '</td>' +
-                '</tr>';
-            });
-
-            tbody.innerHTML = html;
         },
 
         updateStatus: function(reqId, newStatus) {
@@ -1078,20 +2434,788 @@
             })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (data.success) AdminQM.loadRequests();
+                if (data.success) {
+                    AdminQM.loadRequests();
+                    AdminQM.loadCounters();
+                    if (newStatus === 'Completed') {
+                        var qNum = data.request ? data.request.queueNum : '';
+                        showAdminToast('Ticket ' + (qNum ? qNum + ' ' : '') + 'completed and archived to Requests History.', 'success');
+                        if (typeof AdminHistory !== 'undefined' && typeof AdminHistory.load === 'function') {
+                            AdminHistory.load();
+                        }
+                    } else {
+                        showAdminToast('Document status updated to ' + newStatus + '.', 'success');
+                    }
+                } else {
+                    alert(data.error || 'Failed to update status.');
+                }
+            })
+            .catch(function(err) {
+                console.error('Error updating status:', err);
             });
+        },
+
+        confirmPayment: function(reqId) {
+            fetch('/api/admin/request/' + reqId + '/confirm-payment', { method: 'POST' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        showAdminToast('Payment confirmed. Request transferred to Registrar queue.', 'success');
+                        AdminQM.loadRequests();
+                        AdminQM.loadCounters();
+                    } else {
+                        alert(data.error || 'Failed to confirm payment.');
+                    }
+                });
+        },
+
+        cancelRequest: function(reqId, queueNum) {
+            if (!confirm('Cancel request ' + queueNum + '?\n\nThis removes the request from the queue and cannot be undone.')) {
+                return;
+            }
+            fetch('/api/admin/request/' + reqId + '/cancel', { method: 'POST' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        showAdminToast('Request ' + queueNum + ' cancelled.', 'success');
+                        AdminQM.loadRequests();
+                        AdminQM.loadCounters();
+                    } else {
+                        alert(data.error || 'Failed to cancel request.');
+                    }
+                });
+        },
+
+        // Reset the active station queue specifically
+        resetCurrentStationQueue: function() {
+            var stationCode = this.currentStation;
+            var counter = this.counters.find(function(c) { return c.counter_code === stationCode; });
+            if (!counter) return;
+
+            if (!confirm('Are you sure you want to reset the queue for ' + counter.counter_name + '?\n\nThis will reset the now-serving number to 0 and clear active waiting tickets for this station.')) {
+                return;
+            }
+
+            fetch('/api/admin/counter/' + counter.id + '/reset', { method: 'POST' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        AdminQM.loadCounters();
+                        AdminQM.loadRequests();
+                    } else {
+                        alert(data.error || 'Failed to reset station queue.');
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Error resetting station queue:', err);
+                });
+        },
+
+        // Global reset of all counters
+        resetQueue: function() {
+            if (!confirm('Are you sure you want to reset the queue? This will clear all active requests and reset counters to zero.')) {
+                return;
+            }
+            if (!confirm('Confirm DELETE of all active (Processing / Ready for pickup) tickets?')) {
+                return;
+            }
+            fetch('/api/admin/reset', { method: 'POST' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        AdminQM.loadCounters();
+                        AdminQM.loadRequests();
+                    }
+                });
+        }
+    };
+
+
+    // =======================================================
+    // ADMIN HISTORY MODULE (ALL STUDENTS & GUESTS)
+    // =======================================================
+    var AdminHistory = {
+        allRequests: [],
+
+        load: function() {
+            var tbody = document.getElementById('historyRequestsTable');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="8" style="padding:28px;text-align:center;color:#94a3b8;">Loading requests history...</td></tr>';
+            }
+
+            var self = this;
+            fetch('/api/admin/history')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        self.allRequests = data.requests || [];
+                        self.filter();
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Error loading history:', err);
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="8" style="padding:28px;text-align:center;color:#ef4444;">Failed to load history records.</td></tr>';
+                    }
+                });
+        },
+
+        filter: function() {
+            var search = (document.getElementById('historySearchInput') ? document.getElementById('historySearchInput').value : '').toLowerCase().trim();
+            var userType = document.getElementById('historyUserType') ? document.getElementById('historyUserType').value : 'all';
+            var status = document.getElementById('historyStatus') ? document.getElementById('historyStatus').value : 'all';
+            var counter = document.getElementById('historyCounter') ? document.getElementById('historyCounter').value : 'all';
+
+            var filtered = this.allRequests.filter(function(r) {
+                if (userType !== 'all') {
+                    if (userType === 'student' && r.userType !== 'Student') return false;
+                    if (userType === 'guest' && r.userType !== 'Guest') return false;
+                }
+                if (status !== 'all' && r.status !== status) return false;
+                if (counter !== 'all' && (!r.counter || r.counter.indexOf(counter) === -1)) return false;
+
+                if (search) {
+                    var qNum = (r.queueNum || '').toLowerCase();
+                    var dName = (r.docName || '').toLowerCase();
+                    var txId = (r.transactionId || '').toLowerCase();
+                    var uName = (r.userName || '').toLowerCase();
+                    var uIdent = (r.userIdentifier || '').toLowerCase();
+
+                    if (qNum.indexOf(search) === -1 &&
+                        dName.indexOf(search) === -1 &&
+                        txId.indexOf(search) === -1 &&
+                        uName.indexOf(search) === -1 &&
+                        uIdent.indexOf(search) === -1) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            this.render(filtered);
+        },
+
+        render: function(list) {
+            var tbody = document.getElementById('historyRequestsTable');
+            var summaryEl = document.getElementById('historyCountSummary');
+            if (!tbody) return;
+
+            if (summaryEl) {
+                summaryEl.textContent = 'Showing ' + list.length + ' of ' + this.allRequests.length + ' total recorded requests';
+            }
+
+            if (!list.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="padding:34px;text-align:center;color:#94a3b8;font-size:13px;">No requests match the selected filters.</td></tr>';
+                return;
+            }
+
+            var statusColors = {
+                'Processing':      { bg:'#fefce8', color:'#854d0e', border:'#fde68a' },
+                'Ready for pickup':{ bg:'#f0fdf4', color:'#14532d', border:'#bbf7d0' },
+                'Completed':       { bg:'#f8fafc', color:'#475569', border:'#e2e8f0' }
+            };
+
+            var html = '';
+            list.forEach(function(r) {
+                var sc = statusColors[r.status] || statusColors['Completed'];
+                var statusBadge = '<span style="background:' + sc.bg + ';color:' + sc.color + ';border:1px solid ' + sc.border + ';border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">' + r.status + '</span>';
+
+                var userBadge = (r.userType === 'Student')
+                    ? '<span class="badge-user-student"><i class="bi bi-mortarboard-fill"></i> Student</span>'
+                    : '<span class="badge-user-guest"><i class="bi bi-person-fill"></i> Guest</span>';
+
+                var priceDisplay = (r.price && r.price > 0) ? ('\u20b1' + r.price + '.00') : '—';
+
+                html += '<tr style="border-top:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\';" onmouseout="this.style.background=\'\';">' +
+                    '<td style="padding:11px 16px;font-weight:800;color:#1e293b;">' + (r.queueNum || '—') + '</td>' +
+                    '<td style="padding:11px 16px;">' +
+                        '<div style="display:flex;flex-direction:column;gap:3px;">' +
+                            '<div>' + userBadge + ' <strong style="color:#1e293b;margin-left:4px;font-size:12px;">' + (r.userName || 'Unknown') + '</strong></div>' +
+                            '<div style="font-size:11px;color:#94a3b8;">' + (r.userIdentifier || '') + '</div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td style="padding:11px 16px;color:#334155;max-width:220px;font-weight:600;">' + (r.docName || '—') + '</td>' +
+                    '<td style="padding:11px 16px;color:#64748b;">' + (r.counter || '—') + '</td>' +
+                    '<td style="padding:11px 16px;color:#047857;font-weight:700;">' + priceDisplay + '</td>' +
+                    '<td style="padding:11px 16px;color:#94a3b8;font-size:11px;">' + (r.dateTime || '—') + '</td>' +
+                    '<td style="padding:11px 16px;">' + statusBadge + '</td>' +
+                    '<td style="padding:11px 16px;font-family:monospace;font-size:11px;color:#64748b;">' + (r.transactionId || '—') + '</td>' +
+                '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        }
+    };
+
+
+    // =======================================================
+    // ADMIN STUDENTS DIRECTORY MODULE
+    // =======================================================
+    var AdminStudents = {
+        allStudents: [],
+
+        load: function() {
+            var tbody = document.getElementById('studentsTableBody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="8" style="padding:32px;text-align:center;color:#94a3b8;"><i class="bi bi-arrow-repeat spin" style="font-size:20px;display:inline-block;margin-bottom:8px;"></i><div>Loading registered students...</div></td></tr>';
+            }
+
+            var self = this;
+            fetch('/api/admin/students?_t=' + Date.now(), { cache: 'no-store' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        self.allStudents = data.students || [];
+                        self.updateKpis();
+                        self.filter();
+                    } else {
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="8" style="padding:32px;text-align:center;color:#ef4444;">Failed to load students: ' + (data.error || 'Unknown error') + '</td></tr>';
+                        }
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Error loading students:', err);
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="8" style="padding:32px;text-align:center;color:#ef4444;">Unable to connect to server.</td></tr>';
+                    }
+                });
+        },
+
+        updateKpis: function() {
+            var total = this.allStudents.length;
+            var active = this.allStudents.reduce(function(acc, s) { return acc + (s.active_requests || 0); }, 0);
+            var totalReqs = this.allStudents.reduce(function(acc, s) { return acc + (s.total_requests || 0); }, 0);
+
+            var elTotal = document.getElementById('kpiTotalStudents');
+            if (elTotal) elTotal.textContent = total;
+
+            var elActive = document.getElementById('kpiActiveQueueStudents');
+            if (elActive) elActive.textContent = active;
+
+            var elReqs = document.getElementById('kpiTotalStudentRequests');
+            if (elReqs) elReqs.textContent = totalReqs;
+        },
+
+        filter: function() {
+            var search = (document.getElementById('studentSearchInput') ? document.getElementById('studentSearchInput').value : '').toLowerCase().trim();
+            var course = document.getElementById('studentCourseFilter') ? document.getElementById('studentCourseFilter').value : 'all';
+            var year = document.getElementById('studentYearFilter') ? document.getElementById('studentYearFilter').value : 'all';
+
+            var filtered = this.allStudents.filter(function(s) {
+                if (course !== 'all' && s.course !== course) return false;
+                if (year !== 'all' && s.year_level !== year) return false;
+
+                if (search) {
+                    var sNum = (s.student_number || '').toLowerCase();
+                    var name = (s.full_name || '').toLowerCase();
+                    var email = (s.email || '').toLowerCase();
+                    var sCourse = (s.course || '').toLowerCase();
+                    var sec = (s.section || '').toLowerCase();
+
+                    if (sNum.indexOf(search) === -1 &&
+                        name.indexOf(search) === -1 &&
+                        email.indexOf(search) === -1 &&
+                        sCourse.indexOf(search) === -1 &&
+                        sec.indexOf(search) === -1) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            this.render(filtered);
+        },
+
+        render: function(list) {
+            var tbody = document.getElementById('studentsTableBody');
+            var summaryEl = document.getElementById('studentsCountSummary');
+            if (!tbody) return;
+
+            if (summaryEl) {
+                summaryEl.textContent = 'Showing ' + list.length + ' of ' + this.allStudents.length + ' registered students';
+            }
+
+            if (!list.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="padding:34px;text-align:center;color:#94a3b8;font-size:13px;">No registered students match the selected filters.</td></tr>';
+                return;
+            }
+
+            var html = '';
+            list.forEach(function(s) {
+                var avatarHtml = '';
+                if (s.profile_pic) {
+                    avatarHtml = '<img src="/static/profile_pics/' + s.profile_pic + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #e2e8f0;" onerror="this.onerror=null;this.parentNode.innerHTML=\'<div class=\\\'student-initial-avatar\\\'>' + (s.full_name ? s.full_name.charAt(0).toUpperCase() : 'S') + '</div>\';">';
+                } else {
+                    var initial = s.full_name ? s.full_name.charAt(0).toUpperCase() : 'S';
+                    avatarHtml = '<div class="student-initial-avatar">' + initial + '</div>';
+                }
+
+                var activeBadge = '';
+                if (s.active_requests > 0) {
+                    activeBadge = '<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:12px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:4px;">' + s.active_requests + ' in queue</span>';
+                }
+
+                html += '<tr style="border-top:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\';" onmouseout="this.style.background=\'\';">' +
+                    '<td style="padding:12px 16px;">' +
+                        '<div style="display:flex;align-items:center;gap:12px;">' +
+                            avatarHtml +
+                            '<div>' +
+                                '<div style="font-weight:700;color:#1e293b;font-size:13px;">' + (s.full_name || 'BulSU Student') + '</div>' +
+                                '<div style="font-size:11px;color:#64748b;"><i class="bi bi-envelope-at" style="margin-right:3px;"></i>' + s.email + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td style="padding:12px 16px;font-family:monospace;font-weight:700;color:#8a0d0d;font-size:12.5px;">' + s.student_number + '</td>' +
+                    '<td style="padding:12px 16px;">' +
+                        '<div style="font-weight:600;color:#1e293b;font-size:12px;">' + (s.course || '—') + '</div>' +
+                        '<div style="font-size:11px;color:#94a3b8;">' + (s.section || '—') + '</div>' +
+                    '</td>' +
+                    '<td style="padding:12px 16px;color:#475569;font-size:12px;">' + (s.year_level || '—') + '</td>' +
+                    '<td style="padding:12px 16px;color:#64748b;font-size:12px;">' + (s.age || '—') + '</td>' +
+                    '<td style="padding:12px 16px;">' +
+                        '<span style="background:#f1f5f9;color:#334155;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:700;">' +
+                            s.total_requests + ' filed' +
+                        '</span>' +
+                        activeBadge +
+                    '</td>' +
+                    '<td style="padding:12px 16px;color:#94a3b8;font-size:11px;">' + (s.date_joined || '—') + '</td>' +
+                    '<td style="padding:12px 16px;text-align:center;">' +
+                        '<button onclick="AdminStudents.viewDetails(' + s.id + ')" class="station-btn" style="padding:5px 12px;border-radius:20px;font-size:11px;white-space:nowrap;">' +
+                            '<i class="bi bi-eye-fill"></i> View Details' +
+                        '</button>' +
+                    '</td>' +
+                '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        },
+
+        viewDetails: function(studentId) {
+            var modal = document.getElementById('studentDetailsModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+
+            var content = document.getElementById('studentDetailsModalBody');
+            if (content) {
+                content.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;"><i class="bi bi-arrow-repeat spin" style="font-size:24px;display:inline-block;margin-bottom:10px;"></i><div>Loading student profile & request history...</div></div>';
+            }
+
+            fetch('/api/admin/student/' + studentId + '/requests?_t=' + Date.now(), { cache: 'no-store' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        AdminStudents.renderModalContent(data.student, data.requests);
+                    } else {
+                        if (content) content.innerHTML = '<div style="padding:30px;text-align:center;color:#ef4444;">Failed to load student details.</div>';
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Error loading student details:', err);
+                    if (content) content.innerHTML = '<div style="padding:30px;text-align:center;color:#ef4444;">Connection error.</div>';
+                });
+        },
+
+        closeModal: function() {
+            var modal = document.getElementById('studentDetailsModal');
+            if (modal) modal.style.display = 'none';
+        },
+
+        renderModalContent: function(student, requests) {
+            var content = document.getElementById('studentDetailsModalBody');
+            if (!content) return;
+
+            var avatarHtml = '';
+            if (student.profile_pic) {
+                avatarHtml = '<img src="/static/profile_pics/' + student.profile_pic + '" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);" onerror="this.onerror=null;this.parentNode.innerHTML=\'<div class=\\\'student-initial-avatar-lg\\\'>' + (student.full_name ? student.full_name.charAt(0).toUpperCase() : 'S') + '</div>\';">';
+            } else {
+                var initial = student.full_name ? student.full_name.charAt(0).toUpperCase() : 'S';
+                avatarHtml = '<div class="student-initial-avatar-lg">' + initial + '</div>';
+            }
+
+            var reqRows = '';
+            if (requests && requests.length > 0) {
+                var statusColors = {
+                    'Processing':      { bg:'#fefce8', color:'#854d0e', border:'#fde68a' },
+                    'Ready for pickup':{ bg:'#f0fdf4', color:'#14532d', border:'#bbf7d0' },
+                    'Completed':       { bg:'#f8fafc', color:'#475569', border:'#e2e8f0' }
+                };
+
+                requests.forEach(function(r) {
+                    var sc = statusColors[r.status] || statusColors['Completed'];
+                    var statusBadge = '<span style="background:' + sc.bg + ';color:' + sc.color + ';border:1px solid ' + sc.border + ';border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;">' + r.status + '</span>';
+                    var priceDisplay = (r.price && r.price > 0) ? ('\u20b1' + r.price + '.00') : '—';
+
+                    reqRows += '<tr style="border-top:1px solid #f1f5f9;">' +
+                        '<td style="padding:9px 12px;font-weight:700;color:#1e293b;">' + (r.queueNum || '—') + '</td>' +
+                        '<td style="padding:9px 12px;color:#334155;font-weight:600;">' + (r.docName || '—') + '</td>' +
+                        '<td style="padding:9px 12px;color:#64748b;">' + (r.counter || '—') + '</td>' +
+                        '<td style="padding:9px 12px;color:#047857;font-weight:700;">' + priceDisplay + '</td>' +
+                        '<td style="padding:9px 12px;color:#94a3b8;font-size:11px;">' + (r.dateTime || '—') + '</td>' +
+                        '<td style="padding:9px 12px;">' + statusBadge + '</td>' +
+                        '<td style="padding:9px 12px;font-family:monospace;font-size:10.5px;color:#64748b;">' + (r.transactionId || '—') + '</td>' +
+                    '</tr>';
+                });
+            } else {
+                reqRows = '<tr><td colspan="7" style="padding:24px;text-align:center;color:#94a3b8;font-size:12px;">No document requests filed by this student yet.</td></tr>';
+            }
+
+            var html = '' +
+                '<div style="background:linear-gradient(135deg, #8a0d0d 0%, #c01e1e 100%);padding:20px 24px;border-radius:14px;color:white;display:flex;align-items:center;gap:18px;margin-bottom:18px;">' +
+                    avatarHtml +
+                    '<div style="flex:1;">' +
+                        '<div style="font-size:18px;font-weight:800;letter-spacing:-0.2px;">' + (student.full_name || 'BulSU Student') + '</div>' +
+                        '<div style="font-size:12px;opacity:0.9;margin-top:2px;"><i class="bi bi-envelope-at" style="margin-right:5px;"></i>' + student.email + '</div>' +
+                        '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
+                            '<span style="background:rgba(255,255,255,0.22);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:0.4px;">' +
+                                '<i class="bi bi-person-badge" style="margin-right:4px;"></i>' + student.student_number +
+                            '</span>' +
+                            '<span style="background:rgba(255,255,255,0.22);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;">' +
+                                '<i class="bi bi-calendar-check" style="margin-right:4px;"></i>Joined ' + student.date_joined +
+                            '</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-bottom:18px;">' +
+                    '<div style="background:#f8fafc;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;">' +
+                        '<div style="font-size:10.5px;color:#64748b;font-weight:600;text-transform:uppercase;">Course</div>' +
+                        '<div style="font-size:12.5px;font-weight:700;color:#1e293b;margin-top:2px;">' + (student.course || '—') + '</div>' +
+                    '</div>' +
+                    '<div style="background:#f8fafc;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;">' +
+                        '<div style="font-size:10.5px;color:#64748b;font-weight:600;text-transform:uppercase;">Year Level</div>' +
+                        '<div style="font-size:12.5px;font-weight:700;color:#1e293b;margin-top:2px;">' + (student.year_level || '—') + '</div>' +
+                    '</div>' +
+                    '<div style="background:#f8fafc;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;">' +
+                        '<div style="font-size:10.5px;color:#64748b;font-weight:600;text-transform:uppercase;">Section</div>' +
+                        '<div style="font-size:12.5px;font-weight:700;color:#1e293b;margin-top:2px;">' + (student.section || '—') + '</div>' +
+                    '</div>' +
+                    '<div style="background:#f8fafc;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;">' +
+                        '<div style="font-size:10.5px;color:#64748b;font-weight:600;text-transform:uppercase;">Age</div>' +
+                        '<div style="font-size:12.5px;font-weight:700;color:#1e293b;margin-top:2px;">' + (student.age || '—') + '</div>' +
+                    '</div>' +
+                    '<div style="background:#f8fafc;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;">' +
+                        '<div style="font-size:10.5px;color:#64748b;font-weight:600;text-transform:uppercase;">Total Requests</div>' +
+                        '<div style="font-size:12.5px;font-weight:700;color:#8a0d0d;margin-top:2px;">' + (student.total_requests || 0) + '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<div style="font-size:13.5px;font-weight:800;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">' +
+                    '<span><i class="bi bi-clock-history" style="color:#8a0d0d;margin-right:6px;"></i>Request History (' + (requests ? requests.length : 0) + ')</span>' +
+                '</div>' +
+
+                '<div style="background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;max-height:260px;overflow-y:auto;">' +
+                    '<table style="width:100%;border-collapse:collapse;font-size:11.5px;">' +
+                        '<thead>' +
+                            '<tr style="background:#f8fafc;color:#64748b;font-size:10.5px;font-weight:700;text-transform:uppercase;">' +
+                                '<th style="padding:9px 12px;text-align:left;">Queue #</th>' +
+                                '<th style="padding:9px 12px;text-align:left;">Document</th>' +
+                                '<th style="padding:9px 12px;text-align:left;">Counter</th>' +
+                                '<th style="padding:9px 12px;text-align:left;">Price</th>' +
+                                '<th style="padding:9px 12px;text-align:left;">Date</th>' +
+                                '<th style="padding:9px 12px;text-align:left;">Status</th>' +
+                                '<th style="padding:9px 12px;text-align:left;">Tx ID</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody>' + reqRows + '</tbody>' +
+                    '</table>' +
+                '</div>';
+
+            content.innerHTML = html;
         }
     };
 
     // Counter number pop animation
     var style = document.createElement('style');
-    style.textContent = '@keyframes counterPop { from { transform: scale(1.25); color: #22c55e; } to { transform: scale(1); color: #a90000; } }' +
-        '@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.4)} }';
+    style.textContent = '@keyframes counterPop { from { transform: scale(1.25); color: #22c55e; } to { transform: scale(1); color: #a90000; } }';
     document.head.appendChild(style);
 
     document.addEventListener('DOMContentLoaded', function() {
         AdminQM.init();
     });
+</script>
+
+<!-- =====================================================
+     ADMIN REPORTS & ANALYTICS MODULE
+===================================================== -->
+<script>
+    var AdminReports = (function() {
+
+        // Chart instance registry — destroy before re-rendering
+        var _charts = {};
+
+        function _destroyChart(id) {
+            if (_charts[id]) {
+                _charts[id].destroy();
+                delete _charts[id];
+            }
+        }
+
+        // ── Colour palettes ──────────────────────────────────────
+        var RED_PALETTE = [
+            '#a90000','#c0392b','#d32f2f','#e53935','#ef5350',
+            '#f44336','#e57373','#ef9a9a','#ffcdd2','#ffebee'
+        ];
+        var WARM_PALETTE = ['#065f46','#0ea5e9','#d97706','#7c3aed','#be123c','#0369a1','#15803d','#b45309','#6d28d9','#9f1239'];
+
+        function _makeGradient(ctx, colorTop, colorBottom) {
+            var g = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+            g.addColorStop(0, colorTop);
+            g.addColorStop(1, colorBottom);
+            return g;
+        }
+
+        // ── Shared Chart.js defaults ─────────────────────────────
+        var _defaultFont = { family: "'Poppins', sans-serif", size: 11 };
+
+        // ── Render KPI cards ─────────────────────────────────────
+        function _renderKpis(s) {
+            var grid = document.getElementById('reportKpiGrid');
+            if (!grid) return;
+            var kpis = [
+                { icon: 'bi-stack', label: 'Total Requests', value: s.total_requests, bg: '#fef2f2', border: '#fecaca', color: '#a90000' },
+                { icon: 'bi-check-circle-fill', label: 'Completed', value: s.completed, bg: '#f0fdf4', border: '#bbf7d0', color: '#065f46' },
+                { icon: 'bi-activity', label: 'Active Now', value: s.active, bg: '#eff6ff', border: '#dbeafe', color: '#1d4ed8' },
+                { icon: 'bi-graph-up-arrow', label: 'Avg / Day', value: s.avg_per_day, bg: '#fffbeb', border: '#fde68a', color: '#b45309' },
+                { icon: 'bi-mortarboard-fill', label: 'Student Req.', value: s.student_requests, bg: '#faf5ff', border: '#e9d5ff', color: '#7c3aed' },
+                { icon: 'bi-person-fill', label: 'Guest Req.', value: s.guest_requests, bg: '#fff1f2', border: '#ffe4e6', color: '#be123c' },
+            ];
+            grid.innerHTML = kpis.map(function(k) {
+                return '<div style="background:' + k.bg + ';border:1px solid ' + k.border + ';border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;">' +
+                    '<div style="width:40px;height:40px;border-radius:12px;background:white;border:1px solid ' + k.border + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+                        '<i class="bi ' + k.icon + '" style="font-size:18px;color:' + k.color + ';"></i>' +
+                    '</div>' +
+                    '<div>' +
+                        '<div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;">' + k.label + '</div>' +
+                        '<div style="font-size:22px;font-weight:900;color:' + k.color + ';line-height:1.2;">' + k.value + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ── Chart 1: Requests Per Day (Line) ─────────────────────
+        function _renderRequestsPerDay(data) {
+            _destroyChart('requestsPerDay');
+            var canvas = document.getElementById('chartRequestsPerDay');
+            if (!canvas || !data.labels.length) return;
+            var ctx = canvas.getContext('2d');
+            var grad = _makeGradient(ctx, 'rgba(169,0,0,0.18)', 'rgba(169,0,0,0.01)');
+            _charts['requestsPerDay'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels.map(function(d) {
+                        var p = d.split('-');
+                        return (p[1] || '') + '/' + (p[2] || '');
+                    }),
+                    datasets: [{
+                        label: 'Requests',
+                        data: data.values,
+                        borderColor: '#a90000',
+                        backgroundColor: grad,
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#a90000',
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { title: function(items) { return data.labels[items[0].dataIndex]; } } } },
+                    scales: {
+                        x: { ticks: { font: _defaultFont, maxTicksLimit: 10 }, grid: { display: false } },
+                        y: { ticks: { font: _defaultFont, stepSize: 1 }, beginAtZero: true, grid: { color: '#f1f5f9' } }
+                    }
+                }
+            });
+        }
+
+        // ── Chart 2: Most Requested Documents (Horizontal Bar) ──
+        function _renderMostRequested(data) {
+            _destroyChart('mostRequested');
+            var canvas = document.getElementById('chartMostRequested');
+            if (!canvas || !data.labels.length) return;
+            var ctx = canvas.getContext('2d');
+            // Truncate long names
+            var labels = data.labels.map(function(l) {
+                return l.length > 30 ? l.substring(0, 28) + '…' : l;
+            });
+            _charts['mostRequested'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Requests',
+                        data: data.values,
+                        backgroundColor: RED_PALETTE.slice(0, data.values.length),
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { title: function(items) { return data.labels[items[0].dataIndex]; } } }
+                    },
+                    scales: {
+                        x: { ticks: { font: _defaultFont, stepSize: 1 }, beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        y: { ticks: { font: { family: "'Poppins', sans-serif", size: 10 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // ── Chart 3: Peak Queue Hours (Bar) ─────────────────────
+        function _renderPeakHours(data) {
+            _destroyChart('peakHours');
+            var canvas = document.getElementById('chartPeakHours');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            // Highlight office hours (8-17)
+            var colors = data.values.map(function(_, i) {
+                return (i >= 8 && i <= 17) ? '#a90000' : '#fecaca';
+            });
+            _charts['peakHours'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Requests',
+                        data: data.values,
+                        backgroundColor: colors,
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { title: function(items) { return data.labels[items[0].dataIndex]; } } } },
+                    scales: {
+                        x: { ticks: { font: { family: "'Poppins', sans-serif", size: 9 }, maxRotation: 0 }, grid: { display: false } },
+                        y: { ticks: { font: _defaultFont, stepSize: 1 }, beginAtZero: true, grid: { color: '#f1f5f9' } }
+                    }
+                }
+            });
+        }
+
+        // ── Chart 4: Status Breakdown (Doughnut) ─────────────────
+        function _renderStatusBreakdown(data) {
+            _destroyChart('statusBreakdown');
+            var canvas = document.getElementById('chartStatusBreakdown');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var labels = ['Completed', 'Processing', 'Ready for Pickup'];
+            var values = [data.completed, data.processing, data.ready];
+            var colors = ['#065f46', '#d97706', '#0ea5e9'];
+            _charts['statusBreakdown'] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: _defaultFont, boxWidth: 12, padding: 10 } }
+                    }
+                }
+            });
+        }
+
+        // ── Chart 5: User Type Breakdown (Doughnut) ──────────────
+        function _renderUserType(summary) {
+            _destroyChart('userType');
+            var canvas = document.getElementById('chartUserType');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            _charts['userType'] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Students', 'Guests'],
+                    datasets: [{ data: [summary.student_requests, summary.guest_requests], backgroundColor: ['#a90000', '#0ea5e9'], borderWidth: 2, borderColor: '#fff', hoverOffset: 8 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: _defaultFont, boxWidth: 12, padding: 10 } }
+                    }
+                }
+            });
+        }
+
+        // ── Document Ranking Table ───────────────────────────────
+        function _renderDocTable(data) {
+            var tbody = document.getElementById('reportDocRankingTable');
+            if (!tbody) return;
+            if (!data.labels.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding:28px;text-align:center;color:#94a3b8;">No document requests recorded yet.</td></tr>';
+                return;
+            }
+            var total = data.values.reduce(function(a, b) { return a + b; }, 0) || 1;
+            var rankIcons = ['🥇', '🥈', '🥉'];
+            var html = '';
+            data.labels.forEach(function(name, idx) {
+                var count = data.values[idx];
+                var pct = ((count / total) * 100).toFixed(1);
+                var barWidth = Math.round((count / data.values[0]) * 100);
+                var rankDisplay = idx < 3 ? rankIcons[idx] : '<span style="font-weight:700;color:#94a3b8;">' + (idx + 1) + '</span>';
+                html += '<tr style="border-top:1px solid #f1f5f9;" onmouseover="this.style.background=\'#f8fafc\';" onmouseout="this.style.background=\'\';">' +
+                    '<td style="padding:12px 18px;text-align:center;font-size:16px;">' + rankDisplay + '</td>' +
+                    '<td style="padding:12px 18px;">' +
+                        '<div style="font-weight:700;color:#1e293b;font-size:13px;">' + name + '</div>' +
+                        '<div style="background:#f1f5f9;border-radius:20px;height:5px;margin-top:5px;max-width:280px;">' +
+                            '<div style="background:#a90000;border-radius:20px;height:5px;width:' + barWidth + '%;transition:width 0.5s;"></div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td style="padding:12px 18px;text-align:right;font-weight:800;color:#1e293b;font-size:14px;">' + count + '</td>' +
+                    '<td style="padding:12px 18px;text-align:right;color:#64748b;font-size:12px;font-weight:600;">' + pct + '%</td>' +
+                '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ── Public API ───────────────────────────────────────────
+        return {
+            load: function() {
+                // Show loading state
+                var kpiGrid = document.getElementById('reportKpiGrid');
+                if (kpiGrid) kpiGrid.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;grid-column:1/-1;"><i class="bi bi-arrow-repeat" style="font-size:20px;animation:spin 1s linear infinite;display:inline-block;"></i><div style="margin-top:8px;">Loading analytics data...</div></div>';
+
+                fetch('/api/admin/analytics?_t=' + Date.now(), { cache: 'no-store' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data.success) {
+                            console.error('Analytics load failed:', data.error);
+                            return;
+                        }
+                        _renderKpis(data.summary);
+                        _renderRequestsPerDay(data.requests_per_day);
+                        _renderMostRequested(data.most_requested);
+                        _renderPeakHours(data.peak_hours);
+                        _renderStatusBreakdown(data.completed_vs_cancelled);
+                        _renderUserType(data.summary);
+                        _renderDocTable(data.most_requested);
+                    })
+                    .catch(function(err) {
+                        console.error('Error loading analytics:', err);
+                        if (kpiGrid) kpiGrid.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444;grid-column:1/-1;">Failed to load analytics. Please try again.</div>';
+                    });
+            }
+        };
+    })();
+
+    // Spin animation for loading spinner
+    (function() {
+        var s = document.createElement('style');
+        s.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+        document.head.appendChild(s);
+    })();
+
 </script>
 
 <!-- Transitions & Delays JS -->
