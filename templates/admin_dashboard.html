@@ -90,6 +90,60 @@
             display: flex;
             flex-direction: column;
             z-index: 10;
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Sidebar Collapsed State (Desktop) */
+        .sidebar.collapsed {
+            width: 72px !important;
+        }
+
+        .sidebar.collapsed .university-name,
+        .sidebar.collapsed .campus-name,
+        .sidebar.collapsed .sidebar-link span,
+        .sidebar.collapsed #sidebarQueueBadge {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            height: 100px !important;
+            padding: 10px 0 !important;
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            width: 42px !important;
+            height: 42px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .sidebar.collapsed .sidebar-link {
+            justify-content: center !important;
+            padding: 14px 0 !important;
+            margin: 4px 8px !important;
+        }
+
+        .sidebar.collapsed .sidebar-link i {
+            width: auto !important;
+            font-size: 20px !important;
+            margin: 0 !important;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            width: calc(100% - 72px) !important;
+        }
+
+        /* Sidebar Overlay for Mobile Drawer */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            display: none;
+            backdrop-filter: blur(2px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
         }
 
 
@@ -845,16 +899,39 @@
         @media (max-width: 768px) {
 
             .sidebar {
-                width: 190px;
+                position: fixed !important;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: 250px !important;
+                z-index: 9999 !important;
+                transform: translateX(-100%);
+                transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                box-shadow: 4px 0 24px rgba(0,0,0,0.25) !important;
             }
 
-            .main-content {
-                width: calc(100% - 190px);
+            .sidebar.mobile-open {
+                transform: translateX(0) !important;
+            }
+
+            .sidebar-uni-name, .sidebar-campus,
+            .sidebar-link span {
+                display: inline !important;
             }
 
             .sidebar-link {
-                font-size: 11px;
-                padding: 10px 12px;
+                justify-content: flex-start !important;
+                padding: 12px 16px !important;
+            }
+
+            .sidebar-link i {
+                width: 20px !important;
+                font-size: 16px !important;
+                margin-right: 12px !important;
+            }
+
+            .main-content {
+                width: 100% !important;
             }
 
             .topbar {
@@ -872,38 +949,6 @@
 
 
         @media (max-width: 576px) {
-
-            .sidebar {
-                width: 70px;
-            }
-
-            .main-content {
-                width: calc(100% - 70px);
-            }
-
-            .sidebar-header {
-                height: 110px;
-            }
-
-            .sidebar-logo {
-                width: 45px;
-                height: 45px;
-            }
-
-            .university-name,
-            .campus-name,
-            .sidebar-link span {
-                display: none;
-            }
-
-            .sidebar-link {
-                justify-content: center;
-                padding: 14px 0;
-            }
-
-            .sidebar-link i {
-                width: auto;
-            }
 
             .topbar {
                 padding: 0 12px;
@@ -950,7 +995,7 @@
          SIDEBAR
     ====================================================== -->
 
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
 
         <div class="sidebar-header">
 
@@ -974,30 +1019,30 @@
         <nav class="sidebar-menu">
 
             <!-- Dashboard -->
-            <a href="#" class="sidebar-link active" data-tab="tab-dashboard" onclick="AdminTabs.switchTab('tab-dashboard'); return false;">
+            <a href="#" class="sidebar-link active" data-tab="tab-dashboard" title="Dashboard" onclick="AdminTabs.switchTab('tab-dashboard'); return false;">
                 <i class="bi bi-house-door"></i>
                 <span>Dashboard</span>
             </a>
 
             <!-- Queue Monitor -->
-            <a href="#" class="sidebar-link" data-tab="tab-queue-monitor" onclick="AdminTabs.switchTab('tab-queue-monitor'); return false;">
+            <a href="#" class="sidebar-link" data-tab="tab-queue-monitor" title="Queue Monitor" onclick="AdminTabs.switchTab('tab-queue-monitor'); return false;">
                 <i class="bi bi-display"></i>
                 <span>Queue Monitor</span>
                 <span id="sidebarQueueBadge" style="margin-left:auto;background:#a90000;color:white;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;display:none;">0</span>
             </a>
 
             <!-- Requests History -->
-            <a href="#" class="sidebar-link" data-tab="tab-requests-history" onclick="AdminTabs.switchTab('tab-requests-history'); return false;">
+            <a href="#" class="sidebar-link" data-tab="tab-requests-history" title="Requests History" onclick="AdminTabs.switchTab('tab-requests-history'); return false;">
                 <i class="bi bi-clock-history"></i>
                 <span>Requests History</span>
             </a>
 
             <!-- Students Directory -->
-            <a href="#" class="sidebar-link" data-tab="tab-manage-users" onclick="AdminTabs.switchTab('tab-manage-users'); return false;">
+            <a href="#" class="sidebar-link" data-tab="tab-manage-users" title="Students" onclick="AdminTabs.switchTab('tab-manage-users'); return false;">
                 <i class="bi bi-mortarboard-fill"></i>
                 <span>Students</span>
             </a>
-            <a href="#" class="sidebar-link" data-tab="tab-reports" onclick="AdminTabs.switchTab('tab-reports'); return false;">
+            <a href="#" class="sidebar-link" data-tab="tab-reports" title="Reports" onclick="AdminTabs.switchTab('tab-reports'); return false;">
                 <i class="bi bi-bar-chart-line"></i>
                 <span>Reports</span>
             </a>
@@ -1005,7 +1050,8 @@
             <!-- Logout -->
             <a
                 href="{{ url_for('auth.admin_logout') }}"
-                class="sidebar-link logout">
+                class="sidebar-link logout"
+                title="Logout">
 
                 <i class="bi bi-box-arrow-left"></i>
 
@@ -1016,6 +1062,8 @@
         </nav>
 
     </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 
 
@@ -1029,7 +1077,7 @@
         <!-- TOPBAR -->
         <header class="topbar">
 
-            <button class="menu-button">
+            <button class="menu-button" id="menuBtn" type="button" title="Toggle Sidebar">
                 <i class="bi bi-list"></i>
             </button>
 
@@ -1041,12 +1089,6 @@
                 <i class="bi bi-clock"></i>
                 <span id="liveClockDisplay">--:--:--</span>
             </div>
-
-            <!-- Quick Export Excel Button -->
-            <a href="/api/admin/export/excel?type=all" title="Download Complete Excel Report (.xlsx)" style="margin-left:auto;margin-right:14px;background:#059669;color:white;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(5,150,105,0.25);transition:transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='none';">
-                <i class="bi bi-file-earmark-excel-fill"></i>
-                <span>Export Excel</span>
-            </a>
 
             <!-- Right Side -->
             <div class="topbar-right">
@@ -1419,10 +1461,6 @@
                     <button onclick="AdminHistory.load()" class="station-btn" style="padding:7px 16px;border-radius:20px;font-size:12px;">
                         <i class="bi bi-arrow-clockwise"></i> Refresh
                     </button>
-
-                    <button onclick="AdminHistory.exportExcel()" class="station-btn" style="padding:7px 16px;border-radius:20px;font-size:12px;background:#059669;color:white;border-color:#059669;box-shadow:0 2px 8px rgba(5,150,105,0.25);" onmouseover="this.style.background='#047857';" onmouseout="this.style.background='#059669';">
-                        <i class="bi bi-file-earmark-excel-fill"></i> Export Excel (.xlsx)
-                    </button>
                 </div>
 
                 <!-- History Records Table -->
@@ -1604,8 +1642,8 @@
                         </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                        <a href="/api/admin/export/excel?type=all" style="background:#059669;color:white;text-decoration:none;border:none;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(5,150,105,0.25);transition:transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='none';">
-                            <i class="bi bi-file-earmark-excel-fill"></i> Export Full Report (.xlsx)
+                        <a href="/api/admin/export/excel?type=all" title="Download Complete Excel Report (.xlsx)" style="background:#059669;color:white;text-decoration:none;border:none;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(5,150,105,0.25);transition:transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='none';">
+                            <i class="bi bi-file-earmark-excel-fill"></i> Export Data (.xlsx)
                         </a>
                         <button onclick="AdminReports.load()" style="background:linear-gradient(135deg,#a90000,#7f1d1d);color:white;border:none;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(169,0,0,0.25);">
                             <i class="bi bi-arrow-clockwise"></i> Refresh Data
@@ -1742,11 +1780,62 @@
 <script>
     // ----- Live Clock -----
     function updateClock() {
-        const el = document.getElementById('liveClockDisplay');
+        var el = document.getElementById('liveClockDisplay');
         if (!el) return;
-        const now = new Date();
-        el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        var now = new Date();
+        el.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
     }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ----- Sidebar Toggle (Desktop Collapse & Mobile Drawer) -----
+    (function initSidebarToggle() {
+        var menuBtn = document.getElementById('menuBtn') || document.querySelector('.menu-button');
+        var sidebar = document.getElementById('sidebar') || document.querySelector('.sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        var isCollapsed = false;
+
+        if (!menuBtn || !sidebar) return;
+
+        function openMobileSidebar() {
+            sidebar.classList.add('mobile-open');
+            if (overlay) overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileSidebar() {
+            sidebar.classList.remove('mobile-open');
+            if (overlay) overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        menuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (window.innerWidth <= 768) {
+                if (sidebar.classList.contains('mobile-open')) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+            } else {
+                isCollapsed = !isCollapsed;
+                sidebar.classList.toggle('collapsed', isCollapsed);
+            }
+        });
+
+        if (overlay) {
+            overlay.addEventListener('click', closeMobileSidebar);
+        }
+
+        // Auto-close on mobile when clicking a sidebar link
+        document.querySelectorAll('.sidebar-link').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    closeMobileSidebar();
+                }
+            });
+        });
+    })();
     // ----- Admin Notification Toast -----
     function showAdminToast(message, type) {
         var toastId = 'admin-live-toast';
