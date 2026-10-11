@@ -157,7 +157,7 @@
 
         .topbar-avatar {
             width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, #e8750a, #f59e0b);
+            background: #f1f5f9;
             display: flex; align-items: center; justify-content: center;
             color: white; font-size: 16px; font-weight: 700;
             flex-shrink: 0; border: 2px solid #fff;
@@ -214,11 +214,20 @@
 
         .guest-avatar-circle {
             width: 80px; height: 80px; border-radius: 50%;
-            background: linear-gradient(135deg, #e8750a, #f59e0b);
+            background: #f1f5f9;
             display: flex; align-items: center; justify-content: center;
             color: white; font-size: 36px; flex-shrink: 0;
             border: 3px solid #fff;
             box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+
+        /* Default guest photo fills and crops to the avatar circle. */
+        .guest-default-avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         .avatar-info h3 { font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 2px; }
@@ -392,7 +401,9 @@
 
                 <div class="topbar-profile">
                     <div class="topbar-avatar">
-                        <i class="bi bi-person-fill"></i>
+                        <img class="guest-default-avatar"
+                             src="{{ url_for('static', filename='images/Guest_profile.png') }}"
+                             alt="Guest profile">
                     </div>
                     <div class="topbar-user-info">
                         <div class="topbar-user-name">{{ guest_name }}</div>
@@ -436,7 +447,9 @@
                 <!-- CURRENT SNAPSHOT -->
                 <div class="avatar-section">
                     <div class="guest-avatar-circle">
-                        <i class="bi bi-person-fill"></i>
+                        <img class="guest-default-avatar"
+                             src="{{ url_for('static', filename='images/Guest_profile.png') }}"
+                             alt="Guest profile">
                     </div>
                     <div class="avatar-info">
                         <h3>{{ guest_name }}</h3>

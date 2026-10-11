@@ -35,6 +35,29 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # -------------------------------------------------------
+    # PUBLIC BASE URL
+    # -------------------------------------------------------
+    #
+    # The address that gets encoded into the QR code on the queue
+    # card. It MUST be reachable from a phone on the same network
+    # (or on the public internet) -- "localhost" / "127.0.0.1" will
+    # NOT work, because the phone would look up its own machine.
+    #
+    # Local testing over Wi-Fi:
+    #   set PUBLIC_BASE_URL=http://<your-LAN-IP>:5000
+    #
+    # Production:
+    #   set PUBLIC_BASE_URL=https://qreserve.example.com
+    #
+    # Leave empty to fall back to the host the page was served from.
+    # -------------------------------------------------------
+
+    PUBLIC_BASE_URL = os.environ.get(
+        "PUBLIC_BASE_URL",
+        ""
+    ).rstrip("/")
+
+    # -------------------------------------------------------
     # EMAIL / SMTP
     # -------------------------------------------------------
     #

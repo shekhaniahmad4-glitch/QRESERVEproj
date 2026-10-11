@@ -23,6 +23,7 @@
 
     <!-- Transitions & Animation Delay CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/transitions.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
 
     <style>
 
@@ -279,6 +280,7 @@
             animation: bellRing 0.5s ease;
         }
 
+
         .topbar-profile {
             display: flex;
             align-items: center;
@@ -298,7 +300,7 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #e8750a, #f59e0b);
+            background: #f1f5f9;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -309,6 +311,14 @@
             border: 2px solid #fff;
             box-shadow: 0 2px 6px rgba(0,0,0,0.14);
             overflow: hidden;
+        }
+
+        /* Default guest photo fills and crops to the avatar circle. */
+        .guest-default-avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         .topbar-user-info {
@@ -1582,11 +1592,28 @@
 
             <div class="topbar-right">
 
-                <i class="bi bi-bell topbar-bell" title="Notifications"></i>
+                <div class="notification-bell-wrapper">
+                    <i class="bi bi-bell topbar-bell" id="notificationBell" title="Notifications"></i>
+                    <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-dropdown-header">
+                            <span>Notifications</span>
+                            <div class="notification-header-actions">
+                                <button class="notification-mark-all" id="markAllRead">Mark all read</button>
+                                <button class="notification-clear-all" id="clearAllNotifications">Clear all</button>
+                            </div>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-empty">No notifications yet</div>
+                        </div>
+                    </div>
+                </div>
 
                 <a href="{{ url_for('auth.guest_profile') }}" class="topbar-profile" title="View Profile">
                     <div class="topbar-avatar">
-                        <i class="bi bi-person-fill"></i>
+                        <img class="guest-default-avatar"
+                             src="{{ url_for('static', filename='images/Guest_profile.png') }}"
+                             alt="Guest profile">
                     </div>
                     <div class="topbar-user-info">
                         <div class="topbar-user-name">{{ guest_name }}</div>
@@ -1604,7 +1631,7 @@
         <div class="content">
 
             <!-- GLOBAL FLOATING CALL ALERT (VISIBLE ACROSS ALL TABS) -->
-            <div id="globalLiveCallBanner" style="display:none;position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:99999;max-width:92%;width:560px;background:linear-gradient(135deg,#047857,#059669);color:#fff;border-radius:18px;padding:14px 20px;box-shadow:0 14px 38px rgba(4,120,87,0.45);cursor:pointer;border:2px solid rgba(255,255,255,0.4);animation:boxPop 0.35s ease;" onclick="if (typeof QReserve !== 'undefined' && QReserve.switchTab) QReserve.switchTab('my-queue');"></div>
+            <div id="globalLiveCallBanner" style="opacity:0;transform:translateX(-50%) translateY(-12px);pointer-events:none;transition:opacity 0.35s ease,transform 0.35s ease;position:fixed;top:18px;left:50%;z-index:99999;max-width:92%;width:560px;background:linear-gradient(135deg,#047857,#059669);color:#fff;border-radius:18px;padding:14px 20px;box-shadow:0 14px 38px rgba(4,120,87,0.45);cursor:pointer;border:2px solid rgba(255,255,255,0.4);" onclick="if (typeof QReserve !== 'undefined' && QReserve.switchTab) QReserve.switchTab('my-queue');"></div>
 
             <!-- FLASH MESSAGES -->
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -1902,7 +1929,18 @@
 <script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
 
 <!-- QR Code JS (qrcode.js) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
+<script>
+if (typeof QRCode === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>');
+}
+</script>
+
+<!-- Queue Card PNG Renderer -->
+<script src="{{ url_for('static', filename='js/ticket-card.js') }}"></script>
+
+<!-- Address encoded into the queue-card QR code (see PUBLIC_BASE_URL) -->
+<script>window.QRESERVE_BASE_URL = {{ public_base_url | tojson }};</script>
 
 <!-- Sidebar Toggle -->
 <script>
@@ -1992,31 +2030,42 @@
                 });
         },
 
-        getActiveRequest: function() {
-            var active = this.cachedRequests.filter(function(r) {
-                return r.status === 'Processing' || r.status === 'Ready for pickup';
+        // Returns the active counter ticket (user actively waiting at Cashier or Registrar window)
+        getActiveCounterTicket: function() {
+            var live = this.cachedRequests.filter(function(r) {
+                return (r.status === 'Processing') && !r.counterTurnDone && (r.queueStep !== 'document_processing');
             });
-            if (!active.length) return null;
-
-            // Prioritize a ticket that is currently being served at the counter
-            for (var i = 0; i < active.length; i++) {
-                if (active[i].isNowServing) {
-                    return active[i];
-                }
+            if (!live.length) return null;
+            for (var i = 0; i < live.length; i++) {
+                if (live[i].isNowServing) return live[i];
             }
-
-            // The "current" ticket is the one with the LOWEST queue number
-            // (front of the line). A lower-numbered ticket stays visible until
-            // it is finished, even if the live queue monitor has moved past it
-            // or the user has a newer active request.
-            active.sort(function(a, b) {
+            live.sort(function(a, b) {
                 var pa = String(a.queueNum || '').split('-');
                 var pb = String(b.queueNum || '').split('-');
                 var la = pa[0] || '', lb = pb[0] || '';
                 if (la !== lb) return la < lb ? -1 : 1;
                 return (parseInt(pa[1], 10) || 0) - (parseInt(pb[1], 10) || 0);
             });
-            return active[0];
+            return live[0];
+        },
+
+        // Returns all document requests whose counter turn is complete (in processing or ready for pickup)
+        getProcessingDocuments: function() {
+            return this.cachedRequests.filter(function(r) {
+                return (r.status === 'Processing' && (Boolean(r.counterTurnDone) || r.queueStep === 'document_processing')) ||
+                       (r.status === 'Ready for pickup');
+            });
+        },
+
+        // Primary active request: prioritizes currently serving, then live counter ticket, then first processing document
+        getActiveRequest: function() {
+            for (var i = 0; i < this.cachedRequests.length; i++) {
+                if (this.cachedRequests[i].isNowServing) return this.cachedRequests[i];
+            }
+            var live = this.getActiveCounterTicket();
+            if (live) return live;
+            var proc = this.getProcessingDocuments();
+            return proc.length ? proc[0] : null;
         },
 
         getDisplayDocName: function(r) {
@@ -2097,9 +2146,9 @@
         },
 
         submitRequest: function() {
-            var active = this.getActiveRequest();
-            if (active) {
-                alert('You currently have an active request (' + active.queueNum + '). Please complete or cancel it before requesting another.');
+            var activeCounter = this.getActiveCounterTicket();
+            if (activeCounter) {
+                alert('You currently have an active queue ticket at ' + activeCounter.counter + ' (' + activeCounter.queueNum + '). Please finish your current counter turn before requesting another.');
                 return;
             }
 
@@ -2165,7 +2214,8 @@
         },
 
         updateDashboardQueueCard: function() {
-            var active = this.getActiveRequest();
+            var live = this.getActiveCounterTicket();
+            var active = live || (this.getProcessingDocuments()[0] || null);
             var card = document.getElementById('dashboardCurrentQueueCard');
             var noticeEl = document.getElementById('dashboardQueueNotice');
             var numDisplay = document.querySelector('#tab-dashboard .queue-number-display');
@@ -2177,7 +2227,7 @@
             if (active) {
                 if (numDisplay) numDisplay.innerHTML = '<span style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:1px;">' + active.queueNum + '</span>';
                 if (counterVal) counterVal.textContent = active.counter;
-                if (waitVal) waitVal.textContent = (active.aheadCount === 0 && !active.isNowServing) ? 'Next in line' : active.waitTime;
+                if (waitVal) waitVal.textContent = (live && live.aheadCount === 0 && !live.isNowServing) ? 'Next in line' : active.waitTime;
                 if (serviceVal) serviceVal.textContent = this.getDisplayService(active);
                 if (reqDocVal) reqDocVal.textContent = this.getDisplayDocName(active);
 
@@ -2218,6 +2268,12 @@
                             '<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:12px;color:#92400e;font-weight:700;">' +
                                 '<i class="bi bi-wallet2" style="font-size:15px;"></i> Cashier Payment Pending (₱' + active.price + '.00)' +
                             '</div>';
+                    } else if (Boolean(active.counterTurnDone) || active.queueStep === 'document_processing') {
+                        if (card) { card.style.border = ''; card.style.boxShadow = ''; }
+                        noticeEl.innerHTML = 
+                            '<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:12px;color:#065f46;font-weight:700;">' +
+                                '<i class="bi bi-clock-history" style="font-size:15px;color:#059669;"></i> Document Processing (Est. 3–5 working days)' +
+                            '</div>';
                     } else {
                         if (card) { card.style.border = ''; card.style.boxShadow = ''; }
                         noticeEl.innerHTML = '';
@@ -2238,99 +2294,255 @@
             var container = document.getElementById('myQueueViewContainer');
             if (!container) return;
 
-            var active = this.getActiveRequest();
-            if (!active) {
+            var liveTicket = this.getActiveCounterTicket();
+            var processingDocs = this.getProcessingDocuments();
+
+            if (!liveTicket && processingDocs.length === 0) {
                 container.innerHTML = 
                     '<div class="queue-empty-state">' +
                         '<i class="bi bi-inbox"></i>' +
                         '<div class="queue-empty-title">No ongoing request right now</div>' +
-                        '<p class="queue-empty-copy">Your live queue ticket will show here once you have a processing or ready-for-pickup request.</p>' +
+                        '<p class="queue-empty-copy">Your live queue ticket will show here once you have an active counter ticket or processing request.</p>' +
                         '<button class="btn-request-now mt-3" type="button" onclick="QReserve.switchTab(\'my-requests\')">' +
                             '<i class="bi bi-plus-circle"></i> Request a document' +
                         '</button>' +
                     '</div>';
-            } else {
-                var qrBoxId = this.userType + 'ActiveQrBox';
-                var dbId = active.db_id || '';
+                return;
+            }
 
-                container.innerHTML = 
-                    '<div class="my-queue-card fade-in-stagger delay-1">' +
-                        '<div class="d-flex justify-content-between align-items-center mb-3">' +
-                            '<div class="my-queue-card-title mb-0">Your Current Queue</div>' +
-                            '<span class="badge ' + (active.isNowServing ? 'bg-success text-white' : (active.status === 'Ready for pickup' ? 'bg-info text-white' : 'bg-warning text-dark')) + ' px-3 py-2 rounded-pill" style="font-size:12px;font-weight:700;">' + 
-                                (active.isNowServing ? 'Now Serving' : active.status) + 
-                            '</span>' +
-                        '</div>' +
-                        (active.isNowServing
-                            ? '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;box-shadow:0 4px 14px rgba(4,120,87,0.25);">' +
-                                '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
-                                    '<i class="bi bi-megaphone-fill" style="font-size:22px;color:#fff;"></i>' +
-                                '</div>' +
-                                '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">Now Calling Your Number!</div>' +
-                                '<div style="font-size:13px;color:rgba(255,255,255,0.95);margin-top:4px;font-weight:600;">' +
-                                    (active.queueStep === 'payment'
-                                        ? 'Please proceed to ' + active.counter + ' to pay ₱' + active.price + '.00'
-                                        : (active.status === 'Ready for pickup'
-                                            ? 'Your document is ready! Please proceed to ' + active.counter + ' to claim it.'
-                                            : 'Please proceed to ' + active.counter + ' and have your documents ready.')) +
-                                '</div>' +
-                              '</div>'
-                            : active.status === 'Ready for pickup'
-                                ? '<div style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;">' +
-                                    '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
-                                        '<i class="bi bi-file-earmark-check-fill" style="font-size:22px;color:#fff;"></i>' +
-                                    '</div>' +
-                                    '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">Document Ready for Pickup</div>' +
-                                    '<div style="font-size:13px;color:rgba(255,255,255,0.9);margin-top:4px;font-weight:500;">Your document is ready. Please proceed to ' + active.counter + ' to claim it.</div>' +
-                                  '</div>'
-                                : '<div style="margin-bottom:16px;">' +
-                                    (active.queueStep === 'payment'
-                                        ? '<div style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 10px;border-radius:20px;margin-bottom:8px;"><i class="bi bi-wallet2"></i> Cashier Payment Pending (₱' + active.price + '.00)</div>'
-                                        : '') +
-                                    '<div class="queue-field-label">Queue Status</div>' +
-                                    '<div id="queueWaitTime" class="wait-time-value" style="font-size:20px;font-weight:800;color:#1e293b;">' +
-                                        (active.aheadCount === 0 ? 'Next in line' : active.waitTime) +
-                                    '</div>' +
-                                    '<div id="queueAheadLabel" style="font-size:12px;color:#64748b;font-weight:500;margin-top:2px;">' +
-                                        (active.aheadCount === 0
-                                            ? '<i class="bi bi-clock-history text-primary"></i> You are next in line. Please wait for your ticket to be called at <strong>' + active.counter + '</strong>.'
-                                            : '<i class="bi bi-hourglass-split"></i> ' + active.aheadCount + (active.aheadCount === 1 ? ' person' : ' people') + ' ahead of you in the queue') +
-                                    '</div>' +
-                                  '</div>'
-                        ) +
-                        '<div class="my-queue-split">' +
-                            '<div class="my-queue-info">' +
-                                '<div class="queue-field-label">Queue Number</div>' +
-                                '<div class="queue-number-display" style="font-size:26px;font-weight:900;color:#1e293b;letter-spacing:1px;margin-bottom:10px;">' + active.queueNum + '</div>' +
-                                '<div class="queue-field-label">Counter</div>' +
-                                '<div class="queue-field-value" style="font-weight:700;">' + active.counter + '</div>' +
-                                '<div class="queue-field-label">Price</div>' +
-                                '<div class="queue-field-value" style="font-weight:700;' + (active.price > 0 ? 'color:#047857;' : 'color:#64748b;') + '">' +
-                                    (active.price > 0 ? '₱' + active.price + '.00' + (active.queueStep === 'processing' ? ' – paid' : '') : '—') +
-                                '</div>' +
-                                '<div class="queue-field-label">Service</div>' +
-                                '<div class="queue-field-value">' + this.getDisplayService(active) + '</div>' +
-                                '<div class="queue-field-label">Requests</div>' +
-                                '<div class="queue-field-value" style="font-weight:700;color:#8c1010;">' + this.getDisplayDocName(active) + '</div>' +
+            var html = '<div class="fade-in-stagger delay-1">';
+
+            // 1. LIVE COUNTER TICKET (waiting in line at Cashier or Registrar)
+            if (liveTicket) {
+                var dbId = liveTicket.db_id || '';
+                var badgeClass = liveTicket.isNowServing 
+                    ? 'bg-success text-white' 
+                    : (liveTicket.queueStep === 'payment' ? 'bg-warning text-dark' : 'bg-primary text-white');
+
+                var badgeText = liveTicket.isNowServing 
+                    ? 'Now Serving' 
+                    : (liveTicket.queueStep === 'payment' ? 'Awaiting Payment' : 'Waiting for Counter');
+
+                var bannerHtml = '';
+                if (liveTicket.isNowServing) {
+                    bannerHtml = 
+                        '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;box-shadow:0 4px 14px rgba(4,120,87,0.25);">' +
+                            '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
+                                '<i class="bi bi-megaphone-fill" style="font-size:22px;color:#fff;"></i>' +
                             '</div>' +
-                            '<div class="my-queue-qr-box" id="' + qrBoxId + '"></div>' +
+                            '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">Now Calling Your Number!</div>' +
+                            '<div style="font-size:13px;color:rgba(255,255,255,0.95);margin-top:4px;font-weight:600;">' +
+                                (liveTicket.queueStep === 'payment'
+                                    ? 'Please proceed to ' + liveTicket.counter + ' to pay ₱' + liveTicket.price + '.00'
+                                    : 'Please proceed to ' + liveTicket.counter + ' and have your documents ready.') +
+                            '</div>' +
+                        '</div>';
+                } else {
+                    bannerHtml = 
+                        '<div style="margin-bottom:16px;">' +
+                            (liveTicket.queueStep === 'payment'
+                                ? '<div style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 10px;border-radius:20px;margin-bottom:8px;"><i class="bi bi-wallet2"></i> Cashier Payment Pending (₱' + liveTicket.price + '.00)</div>'
+                                : '<div style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#1e40af;background:#dbeafe;padding:3px 10px;border-radius:20px;margin-bottom:8px;"><i class="bi bi-clock-history"></i> Waiting for Counter Turn</div>') +
+                            '<div class="queue-field-label">Queue Status</div>' +
+                            '<div id="queueWaitTime" class="wait-time-value" style="font-size:20px;font-weight:800;color:#1e293b;">' +
+                                (liveTicket.aheadCount === 0 ? 'Next in line' : liveTicket.waitTime) +
+                            '</div>' +
+                            '<div id="queueAheadLabel" style="font-size:12px;color:#64748b;font-weight:500;margin-top:2px;">' +
+                                (liveTicket.aheadCount < 0
+                                    ? ''
+                                    : liveTicket.aheadCount === 0
+                                        ? '<i class="bi bi-clock-history text-primary"></i> You are next in line. Please wait for your ticket to be called at <strong>' + liveTicket.counter + '</strong>.'
+                                        : '<i class="bi bi-hourglass-split"></i> ' + liveTicket.aheadCount + (liveTicket.aheadCount === 1 ? ' person' : ' people') + ' ahead of you in the queue') +
+                            '</div>' +
+                        '</div>';
+                }
+
+                var stageNotice = '';
+                if (liveTicket.queueStep === 'payment') {
+                    stageNotice = 
+                        '<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:12px 16px;margin-top:14px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#92400e;line-height:1.45;">' +
+                            '<i class="bi bi-info-circle-fill" style="font-size:18px;color:#d97706;flex-shrink:0;"></i>' +
+                            '<div>Please wait for your ticket to be called at <strong>' + liveTicket.counter + '</strong> to settle payment. <em>Your scannable QR receipt will be issued once your window turn is completed.</em></div>' +
+                        '</div>';
+                } else {
+                    stageNotice = 
+                        '<div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:12px 16px;margin-top:14px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#1e40af;line-height:1.45;">' +
+                            '<i class="bi bi-info-circle-fill" style="font-size:18px;color:#2563eb;flex-shrink:0;"></i>' +
+                            '<div>Payment confirmed! Please proceed to <strong>' + liveTicket.counter + '</strong> when called. <em>Your scannable QR receipt will appear once the counter officer completes your turn.</em></div>' +
+                        '</div>';
+                }
+
+                html += 
+                    '<div class="my-queue-card mb-4">' +
+                        '<div class="d-flex justify-content-between align-items-center mb-3">' +
+                            '<div class="my-queue-card-title mb-0">Active Counter Ticket</div>' +
+                            '<span class="badge ' + badgeClass + ' px-3 py-2 rounded-pill" style="font-size:12px;font-weight:700;">' + badgeText + '</span>' +
                         '</div>' +
-                        '<div class="my-queue-actions">' +
-                            '<button class="btn-download-qr" onclick="QReserveApp.downloadActiveQR(\'' + qrBoxId + '\')">' +
-                                '<i class="bi bi-qr-code-scan"></i> Download QR' +
-                            '</button>' +
-                            '<button class="btn btn-outline-danger rounded-pill fw-bold" onclick="QReserveApp.cancelActive(\'' + dbId + '\')">' +
-                                '<i class="bi bi-x-circle"></i> Cancel' +
+                        bannerHtml +
+                        '<div class="my-queue-info">' +
+                            '<div class="row g-3">' +
+                                '<div class="col-6">' +
+                                    '<div class="queue-field-label">Queue Number</div>' +
+                                    '<div class="queue-number-display" style="font-size:28px;font-weight:900;color:#1e293b;letter-spacing:1px;margin-bottom:8px;">' + liveTicket.queueNum + '</div>' +
+                                '</div>' +
+                                '<div class="col-6">' +
+                                    '<div class="queue-field-label">Counter</div>' +
+                                    '<div class="queue-field-value" style="font-weight:700;font-size:16px;">' + liveTicket.counter + '</div>' +
+                                '</div>' +
+                                '<div class="col-6">' +
+                                    '<div class="queue-field-label">Price</div>' +
+                                    '<div class="queue-field-value" style="font-weight:700;' + (liveTicket.price > 0 ? (liveTicket.queueStep === 'payment' ? 'color:#b45309;' : 'color:#047857;') : 'color:#64748b;') + '">' +
+                                        (liveTicket.price > 0 ? '₱' + liveTicket.price + '.00' + (liveTicket.queueStep === 'payment' ? ' (pending)' : ' – paid') : '—') +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class="col-6">' +
+                                    '<div class="queue-field-label">Service</div>' +
+                                    '<div class="queue-field-value">' + this.getDisplayService(liveTicket) + '</div>' +
+                                '</div>' +
+                                '<div class="col-12">' +
+                                    '<div class="queue-field-label">Requests</div>' +
+                                    '<div class="queue-field-value" style="font-weight:700;color:#8c1010;">' + this.getDisplayDocName(liveTicket) + '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            stageNotice +
+                        '</div>' +
+                        '<div class="my-queue-actions d-flex justify-content-end mt-3">' +
+                            '<button class="btn btn-outline-danger rounded-pill fw-bold d-inline-flex align-items-center gap-2 px-3 py-2" onclick="QReserveApp.cancelActive(\'' + dbId + '\')" style="font-size:13px;">' +
+                                '<i class="bi bi-x-circle"></i> Cancel Queue Ticket' +
                             '</button>' +
                         '</div>' +
                     '</div>';
+            }
 
-                setTimeout(function() {
-                    var box = document.getElementById(qrBoxId);
-                    if (box && typeof QRCode !== 'undefined') {
+            // 2. PROCESSING DOCUMENTS & SCANNABLE QR RECEIPTS
+            if (processingDocs.length > 0) {
+                if (!liveTicket) {
+                    html += 
+                        '<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 p-3 rounded-4" style="background:#f8fafc;border:1px solid #e2e8f0;">' +
+                            '<div>' +
+                                '<div style="font-weight:700;font-size:14px;color:#1e293b;"><i class="bi bi-plus-circle text-primary me-2"></i>Need another document or payment?</div>' +
+                                '<div style="font-size:12px;color:#64748b;">You can queue for another request while your document is processing.</div>' +
+                            '</div>' +
+                            '<button class="btn btn-primary rounded-pill fw-bold px-3 py-2" type="button" onclick="QReserve.switchTab(\'my-requests\')" style="font-size:13px;">' +
+                                '<i class="bi bi-plus-lg me-1"></i> Request Now' +
+                            '</button>' +
+                        '</div>';
+                } else {
+                    html += 
+                        '<div class="d-flex align-items-center justify-content-between mt-4 mb-3">' +
+                            '<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2" style="font-size:15px;">' +
+                                '<i class="bi bi-files text-primary"></i> Processing Documents &amp; QR Receipts (' + processingDocs.length + ')' +
+                            '</h6>' +
+                        '</div>';
+                }
+
+                for (var i = 0; i < processingDocs.length; i++) {
+                    var doc = processingDocs[i];
+                    var qrBoxId = 'procQrBox_' + (doc.db_id || doc.id);
+                    var isPickup = (doc.status === 'Ready for pickup');
+                    var isCompleted = (doc.status === 'Completed');
+
+                    var badgeClass = isPickup ? 'bg-info text-white' : (isCompleted ? 'bg-success text-white' : 'bg-success text-white');
+                    var badgeText = isPickup ? 'Ready for Pickup' : (isCompleted ? 'Completed' : 'Document Processing');
+
+                    var docBanner = '';
+                    if (isPickup) {
+                        docBanner = 
+                            '<div style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);border-radius:14px;padding:16px 20px;margin-bottom:16px;text-align:center;">' +
+                                '<div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:6px;">' +
+                                    '<i class="bi bi-file-earmark-check-fill" style="font-size:20px;color:#fff;"></i>' +
+                                '</div>' +
+                                '<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Document Ready for Pickup</div>' +
+                                '<div style="font-size:12.5px;color:rgba(255,255,255,0.9);margin-top:3px;font-weight:500;">Your document is ready. Please proceed to ' + doc.counter + ' to claim it.</div>' +
+                            '</div>';
+                    } else if (isCompleted) {
+                        docBanner = 
+                            '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:14px;padding:16px 20px;margin-bottom:16px;text-align:center;">' +
+                                '<div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:6px;">' +
+                                    '<i class="bi bi-check-circle-fill" style="font-size:20px;color:#fff;"></i>' +
+                                '</div>' +
+                                '<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Transaction Completed</div>' +
+                                '<div style="font-size:12.5px;color:rgba(255,255,255,0.95);margin-top:3px;font-weight:600;">Your document request has been completed. Thank you for using QRESERVE!</div>' +
+                            '</div>';
+                    } else {
+                        docBanner = 
+                            '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:14px;padding:16px 20px;margin-bottom:16px;text-align:center;box-shadow:0 4px 14px rgba(4,120,87,0.25);">' +
+                                '<div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:6px;">' +
+                                    '<i class="bi bi-check2-circle" style="font-size:22px;color:#fff;"></i>' +
+                                '</div>' +
+                                '<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Counter Turn Completed!</div>' +
+                                '<div style="font-size:12.5px;color:rgba(255,255,255,0.95);margin-top:3px;font-weight:600;">Your document request is now processing (Est. 3–5 working days). Keep your QR receipt below to claim your document.</div>' +
+                            '</div>';
+                    }
+
+                    html += 
+                        '<div class="my-queue-card mb-4">' +
+                            '<div class="d-flex justify-content-between align-items-center mb-3">' +
+                                '<div class="my-queue-card-title mb-0">' + (isPickup ? 'Document Ready for Pickup' : 'Processing Document') + '</div>' +
+                                '<span class="badge ' + badgeClass + ' px-3 py-2 rounded-pill" style="font-size:12px;font-weight:700;">' + badgeText + '</span>' +
+                            '</div>' +
+                            docBanner +
+                            '<div class="my-queue-split">' +
+                                '<div class="my-queue-info">' +
+                                    '<div class="queue-field-label">Queue Number</div>' +
+                                    '<div class="queue-number-display" style="font-size:26px;font-weight:900;color:#1e293b;letter-spacing:1px;margin-bottom:10px;">' + doc.queueNum + '</div>' +
+                                    '<div class="queue-field-label">Counter</div>' +
+                                    '<div class="queue-field-value" style="font-weight:700;">' + doc.counter + '</div>' +
+                                    '<div class="queue-field-label">Price</div>' +
+                                    '<div class="queue-field-value" style="font-weight:700;' + (doc.price > 0 ? 'color:#047857;' : 'color:#64748b;') + '">' +
+                                        (doc.price > 0 ? '₱' + doc.price + '.00' + (doc.isPaid ? ' – paid' : '') : '—') +
+                                    '</div>' +
+                                    '<div class="queue-field-label">Service</div>' +
+                                    '<div class="queue-field-value">' + this.getDisplayService(doc) + '</div>' +
+                                    '<div class="queue-field-label">Requests</div>' +
+                                    '<div class="queue-field-value" style="font-weight:700;color:#8c1010;">' + this.getDisplayDocName(doc) + '</div>' +
+                                '</div>' +
+                                '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+                                    '<div class="my-queue-qr-box" id="' + qrBoxId + '" style="cursor:pointer;" onclick="window.open(\'/ticket/\' + encodeURIComponent(\'' + doc.transactionId + '\'), \'_blank\')" title="Click to view digital receipt &amp; ticket details">' +
+                                    '</div>' +
+                                    '<div style="font-size:11px;font-weight:700;color:#64748b;text-align:center;margin-top:2px;"><i class="bi bi-qr-code me-1"></i>Official QR Receipt</div>' +
+                                    '<div style="font-size:10px;color:#94a3b8;text-align:center;max-width:140px;">Scannable by phone camera (works offline)</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="my-queue-actions d-flex flex-wrap gap-2 mt-3">' +
+                                '<button class="btn btn-success rounded-pill fw-bold d-inline-flex align-items-center gap-2 px-3 py-2" onclick="QReserveApp.downloadReceiptPNG(\'' + (doc.db_id || doc.id) + '\')" style="font-size:13px;">' +
+                                    '<i class="bi bi-file-earmark-arrow-down-fill"></i> Download Receipt (PNG)' +
+                                '</button>' +
+                                '<button class="btn btn-outline-dark rounded-pill fw-bold d-inline-flex align-items-center gap-2 px-3 py-2" onclick="QReserveApp.downloadActiveQR(\'' + qrBoxId + '\', \'' + (doc.db_id || doc.id) + '\')" style="font-size:13px;">' +
+                                    '<i class="bi bi-qr-code-scan"></i> Download QR' +
+                                '</button>' +
+                                '<a href="/ticket/' + encodeURIComponent(doc.transactionId) + '" target="_blank" class="btn btn-outline-secondary rounded-pill fw-bold d-inline-flex align-items-center gap-2 px-3 py-2" style="font-size:13px;text-decoration:none;">' +
+                                    '<i class="bi bi-receipt"></i> View Online' +
+                                '</a>' +
+                            '</div>' +
+                        '</div>';
+                }
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+
+            // Render QR codes for each processing document
+            processingDocs.forEach(function(docItem) {
+                var boxId = 'procQrBox_' + (docItem.db_id || docItem.id);
+                var renderQrCode = function(attempts) {
+                    var box = document.getElementById(boxId);
+                    if (!box) return;
+                    if (typeof QRCode === 'undefined') {
+                        if ((attempts || 0) < 25) {
+                            setTimeout(function() { renderQrCode((attempts || 0) + 1); }, 80);
+                        }
+                        return;
+                    }
+                    var payload = (window.QReserveTicketCard && window.QReserveTicketCard.buildReceiptText)
+                        ? window.QReserveTicketCard.buildReceiptText(docItem)
+                        : (window.QReserveTicketCard ? window.QReserveTicketCard.ticketUrl(docItem.transactionId) : '');
+                    if (window.QReserveTicketCard && window.QReserveTicketCard.buildQRCanvas) {
+                        window.QReserveTicketCard.buildQRCanvas(box, payload, 140);
+                    } else {
                         box.innerHTML = '';
                         new QRCode(box, {
-                            text: window.location.origin + '/ticket/' + active.transactionId,
+                            text: payload,
                             width: 140,
                             height: 140,
                             colorDark: '#1e293b',
@@ -2338,117 +2550,84 @@
                             correctLevel: QRCode.CorrectLevel.M
                         });
                     }
-                }, 50);
+                };
+                setTimeout(function() { renderQrCode(0); }, 30);
+            });
+        },
+
+        downloadReceiptPNG: function(targetId) {
+            var req = null;
+            if (targetId) {
+                req = this.cachedRequests.find(function(r) {
+                    return String(r.db_id) === String(targetId) || String(r.id) === String(targetId);
+                });
+            }
+            if (!req) req = this.getActiveRequest();
+            if (!req) return;
+
+            var boxId = 'procQrBox_' + (req.db_id || req.id);
+            var box = document.getElementById(boxId) || document.getElementById(this.userType + 'ActiveQrBox');
+            var qrEl = box ? (box.querySelector('canvas') || box.querySelector('img')) : null;
+
+            if (window.QReserveTicketCard) {
+                window.QReserveTicketCard.download({
+                    qrImage: qrEl,
+                    qrPayload: window.QReserveTicketCard.buildReceiptText(req),
+                    queueNum: req.queueNum,
+                    docName: this.getDisplayDocName(req),
+                    counter: req.counter,
+                    txId: req.transactionId,
+                    transactionId: req.transactionId,
+                    date: req.dateTime,
+                    dateTime: req.dateTime,
+                    userName: req.userName,
+                    userType: req.userType,
+                    price: req.price,
+                    isPaid: req.isPaid,
+                    status: req.status
+                });
+            } else {
+                alert('Receipt generator is still loading. Please try again.');
             }
         },
 
-        downloadActiveQR: function(qrBoxId) {
-            var box = document.getElementById(qrBoxId);
-            if (!box) return;
-            var qrCanvas = box.querySelector('canvas');
-            if (!qrCanvas) { alert('QR code not ready yet.'); return; }
+        downloadActiveQR: function(qrBoxId, targetId) {
+            var req = null;
+            if (targetId) {
+                req = this.cachedRequests.find(function(r) {
+                    return String(r.db_id) === String(targetId) || String(r.id) === String(targetId);
+                });
+            }
+            if (!req) req = this.getActiveRequest();
+            if (!req) return;
 
-            var active = this.getActiveRequest();
-            if (!active) return;
-            var queueNum = active.queueNum || '---';
-            var docName = this.getDisplayDocName(active) || 'Document Request';
-            var txId = active.transactionId || '';
-            var counter = active.counter || '';
-            var dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            var box = qrBoxId ? document.getElementById(qrBoxId) : null;
+            if (!box) {
+                box = document.getElementById('procQrBox_' + (req.db_id || req.id)) || document.getElementById(this.userType + 'ActiveQrBox');
+            }
+            var qrEl = box ? (box.querySelector('canvas') || box.querySelector('img')) : null;
 
-            var W = 640;
-            var H = 820;
-            var padding = 40;
-
-            var card = document.createElement('canvas');
-            card.width = W;
-            card.height = H;
-            var ctx = card.getContext('2d');
-
-            // Card background
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, W, H);
-
-            // Top accent bar
-            ctx.fillStyle = '#8c1010';
-            ctx.fillRect(0, 0, W, 14);
-
-            // Branding
-            ctx.fillStyle = '#8c1010';
-            ctx.font = '900 34px Poppins, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('QRESERVE', W / 2, 92);
-
-            ctx.fillStyle = '#64748b';
-            ctx.font = '600 14px Poppins, sans-serif';
-            ctx.fillText('Queue Reservation Ticket', W / 2, 118);
-
-            // Divider
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(padding, 138);
-            ctx.lineTo(W - padding, 138);
-            ctx.stroke();
-
-            // Card label box around QR
-            var qrSize = 320;
-            var qrX = (W - qrSize) / 2;
-            var qrY = 165;
-
-            // Soft card behind QR (like login card)
-            var cardPad = 18;
-            ctx.fillStyle = '#f8fafc';
-            this._roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad * 2, qrSize + cardPad * 2, 20);
-            ctx.fill();
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1.5;
-            this._roundRect(ctx, qrX - cardPad, qrY - cardPad, qrSize + cardPad * 2, qrSize + cardPad * 2, 20);
-            ctx.stroke();
-
-            // Draw the QR code into the card
-            ctx.imageSmoothingEnabled = true;
-            ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
-
-            // Queue number
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '800 26px Poppins, sans-serif';
-            ctx.fillText(queueNum, W / 2, qrY + qrSize + 62);
-
-            // Detail rows
-            ctx.fillStyle = '#64748b';
-            ctx.font = '600 15px Poppins, sans-serif';
-            ctx.fillText(docName, W / 2, qrY + qrSize + 92);
-            ctx.fillText((counter || '') + '   |   ' + dateStr, W / 2, qrY + qrSize + 116);
-
-            // Transaction ID at bottom
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(padding, H - 90);
-            ctx.lineTo(W - padding, H - 90);
-            ctx.stroke();
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '600 13px Poppins, sans-serif';
-            ctx.fillText('Transaction ID', W / 2, H - 62);
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '700 15px Poppins, sans-serif';
-            ctx.fillText(txId, W / 2, H - 38);
-
-            var link = document.createElement('a');
-            link.download = 'QRESERVE-Ticket-' + queueNum + '.png';
-            link.href = card.toDataURL('image/png');
-            link.click();
-        },
-
-        _roundRect: function(ctx, x, y, w, h, r) {
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.arcTo(x + w, y, x + w, y + h, r);
-            ctx.arcTo(x + w, y + h, x, y + h, r);
-            ctx.arcTo(x, y + h, x, y, r);
-            ctx.arcTo(x, y, x + w, y, r);
-            ctx.closePath();
+            if (window.QReserveTicketCard) {
+                window.QReserveTicketCard.downloadQR({
+                    qrImage: qrEl,
+                    qrPayload: window.QReserveTicketCard.buildReceiptText(req),
+                    qrUrl: window.QReserveTicketCard.ticketUrl(req.transactionId),
+                    queueNum: req.queueNum,
+                    docName: this.getDisplayDocName(req),
+                    counter: req.counter,
+                    txId: req.transactionId,
+                    transactionId: req.transactionId,
+                    date: req.dateTime,
+                    dateTime: req.dateTime,
+                    userName: req.userName,
+                    userType: req.userType,
+                    price: req.price,
+                    isPaid: req.isPaid,
+                    status: req.status
+                });
+            } else {
+                alert('QR generator is still loading. Please try again.');
+            }
         },
 
         renderMyRequests: function() {
@@ -2461,7 +2640,8 @@
 
             var html = '<div class="fade-in-stagger delay-1">';
 
-            if (!this.getActiveRequest()) {
+            var liveTicket = this.getActiveCounterTicket();
+            if (!liveTicket) {
                 var registrarCards =
                     '<div class="doc-card' + (this.isSelected('Transcript of Records') ? ' selected' : '') + '" onclick="QReserveApp.selectCard(this, \'Registrar\', \'Transcript of Records\')">' +
                         '<div class="doc-card-name">Transcript of Records</div>' +
@@ -2537,11 +2717,19 @@
                             '<i class="bi bi-check-circle"></i> Request now' +
                         '</button>' +
                     '</div>';
+            } else {
+                html += 
+                    '<div class="alert alert-info rounded-4 d-flex align-items-center gap-3 p-3 mb-4" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;">' +
+                        '<i class="bi bi-info-circle-fill fs-3 text-primary"></i>' +
+                        '<div>' +
+                            '<div class="fw-bold" style="font-size:15px;">Active Queue Ticket in Progress (' + liveTicket.queueNum + ')</div>' +
+                            '<div style="font-size:13px;color:#3b82f6;">You are currently queued at ' + liveTicket.counter + '. You can request another document once this counter turn is completed.</div>' +
+                        '</div>' +
+                    '</div>';
             }
 
-
             if (list.length === 0) {
-                if (this.getActiveRequest()) {
+                if (this.getActiveCounterTicket()) {
                     html +=
                         '<div class="queue-empty-state" style="margin-top:28px;">' +
                             '<i class="bi bi-file-earmark-text"></i>' +
@@ -2657,6 +2845,11 @@
                             '<div class="history-item-value">' + item.waitTime + '</div>' +
                             '<div class="history-item-label">Transaction ID</div>' +
                             '<div class="history-item-value">' + item.transactionId + '</div>' +
+                        '</div>' +
+                        '<div class="d-flex justify-content-end mt-2 pt-2 border-top">' +
+                            '<a href="/ticket/' + encodeURIComponent(item.transactionId) + '" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill fw-bold d-inline-flex align-items-center gap-1 px-3 py-1" style="font-size:12px;text-decoration:none;">' +
+                                '<i class="bi bi-receipt"></i> View Receipt' +
+                            '</a>' +
                         '</div>' +
                     '</div>';
             });
@@ -2786,9 +2979,14 @@
         var alertEl = document.getElementById('globalLiveCallBanner');
         if (!alertEl) return;
         if (active && active.isNowServing) {
+            var pane = document.getElementById('tab-my-queue');
+            if (pane && pane.classList.contains('active')) {
+                alertEl.style.opacity = '0';
+                alertEl.style.transform = 'translateX(-50%) translateY(-12px)';
+                return;
+            }
             playCallChime(active.queueNum);
-            alertEl.style.display = 'flex';
-            alertEl.innerHTML = 
+            alertEl.innerHTML =
                 '<div style="display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">' +
                     '<div style="display:flex;align-items:center;gap:10px;">' +
                         '<span style="font-size:24px;color:#fde047;animation:toolWobble 1.2s infinite;"><i class="bi bi-bell-fill"></i></span>' +
@@ -2803,25 +3001,58 @@
                             '</div>' +
                         '</div>' +
                     '</div>' +
-                    '<button type="button" class="btn btn-sm btn-light rounded-pill fw-bold text-success px-3 shadow-sm" onclick="event.stopPropagation(); if (typeof QReserve !== \'undefined\' && QReserve.switchTab) QReserve.switchTab(\'my-queue\');">' +
+                    '<button type="button" class="btn btn-sm btn-light rounded-pill fw-bold text-success px-3 shadow-sm" onclick="event.stopPropagation(); QReserve.switchTab(\'my-queue\');">' +
                         'View Ticket <i class="bi bi-arrow-right"></i>' +
                     '</button>' +
                 '</div>';
+            alertEl.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            alertEl.style.opacity = '1';
+            alertEl.style.transform = 'translateX(-50%) translateY(0)';
+            alertEl.style.pointerEvents = 'auto';
+            alertEl.offsetHeight;
         } else {
-            alertEl.style.display = 'none';
+            alertEl.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+            alertEl.style.opacity = '0';
+            alertEl.style.transform = 'translateX(-50%) translateY(-12px)';
+            alertEl.style.pointerEvents = 'none';
         }
+    }
+
+    function hideBannerInstantly() {
+        var alertEl = document.getElementById('globalLiveCallBanner');
+        if (!alertEl) return;
+        alertEl.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        alertEl.style.opacity = '0';
+        alertEl.style.transform = 'translateX(-50%) translateY(-12px)';
+        alertEl.style.pointerEvents = 'none';
     }
 
     function pollQueueTicket() {
         QReserveApp.fetchRequests(function() {
+            var live = QReserveApp.getActiveCounterTicket();
+            var procList = QReserveApp.getProcessingDocuments();
             var active = QReserveApp.getActiveRequest();
-            var queueKey = active ? (active.queueNum + '|' + active.status + '|' + (active.isNowServing ? 'serving' : 'waiting') + '|' + active.aheadCount + '|' + active.counter) : 'empty';
-            var waitTime = active ? active.waitTime : '';
+
+            var servingRequest = null;
+            if (QReserveApp.cachedRequests) {
+                for (var i = 0; i < QReserveApp.cachedRequests.length; i++) {
+                    if (QReserveApp.cachedRequests[i].isNowServing) {
+                        servingRequest = QReserveApp.cachedRequests[i];
+                        break;
+                    }
+                }
+            }
+            updateGlobalAlert(servingRequest || active);
+
+            var procKey = procList.map(function(p) {
+                return p.id + ':' + p.status + ':' + (p.isNowServing ? '1' : '0');
+            }).join(';');
+            var liveKey = live ? (live.queueNum + '|' + live.status + '|' + (live.isNowServing ? 'serving' : 'waiting') + '|' + live.aheadCount + '|' + live.counter + '|' + live.queueStep) : 'none';
+            var queueKey = liveKey + '||' + procKey;
+            var waitTime = live ? live.waitTime : (procList.length ? procList[0].waitTime : '');
             var activeCount = QReserveApp.cachedRequests.filter(function(r) {
                 return r.status === 'Processing' || r.status === 'Ready for pickup';
             }).length;
-
-            updateGlobalAlert(active);
 
             if (queueKey !== _lastQueueKey || activeCount !== _lastActiveCount) {
                 _lastQueueKey = queueKey;
@@ -2834,12 +3065,14 @@
                 _lastWaitTime = waitTime;
                 var waitEl = document.getElementById('queueWaitTime');
                 var aheadEl = document.getElementById('queueAheadLabel');
-                if (waitEl) waitEl.textContent = (active && active.aheadCount === 0) ? 'Next in line' : waitTime;
-                if (aheadEl && active) {
-                    if (active.aheadCount === 0) {
-                        aheadEl.innerHTML = '<i class="bi bi-clock-history text-primary"></i> You are next in line. Please wait for your ticket to be called at <strong>' + active.counter + '</strong>.';
+                if (waitEl) waitEl.textContent = (live && live.aheadCount === 0) ? 'Next in line' : waitTime;
+                if (aheadEl && live) {
+                    if (!(live.aheadCount >= 0)) {
+                        aheadEl.innerHTML = '';
+                    } else if (live.aheadCount === 0) {
+                        aheadEl.innerHTML = '<i class="bi bi-clock-history text-primary"></i> You are next in line. Please wait for your ticket to be called at <strong>' + live.counter + '</strong>.';
                     } else {
-                        aheadEl.innerHTML = '<i class="bi bi-hourglass-split"></i> ' + active.aheadCount + (active.aheadCount === 1 ? ' person' : ' people') + ' ahead of you in the queue';
+                        aheadEl.innerHTML = '<i class="bi bi-hourglass-split"></i> ' + live.aheadCount + (live.aheadCount === 1 ? ' person' : ' people') + ' ahead of you in the queue';
                     }
                 }
                 QReserveApp.updateDashboardQueueCard();
@@ -2853,5 +3086,10 @@
 })();
 </script>
 
+<!-- Notifications: bell, dropdown, toast, delete -->
+    <script src="{{ url_for('static', filename='js/qreserve-notifications.js') }}"></script>
+    <script>
+        QReserveNotifications.init({ pollMs: 2000 });
+    </script>
 </body>
 </html>

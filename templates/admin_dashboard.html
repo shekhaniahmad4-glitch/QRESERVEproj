@@ -935,6 +935,9 @@
 
     <!-- Transitions & Animation Delay CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/transitions.css') }}">
+
+    <!-- Shared notification bell / dropdown styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
 </head>
 
 
@@ -980,6 +983,7 @@
             <a href="#" class="sidebar-link" data-tab="tab-queue-monitor" onclick="AdminTabs.switchTab('tab-queue-monitor'); return false;">
                 <i class="bi bi-display"></i>
                 <span>Queue Monitor</span>
+                <span id="sidebarQueueBadge" style="margin-left:auto;background:#a90000;color:white;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;display:none;">0</span>
             </a>
 
             <!-- Requests History -->
@@ -1038,10 +1042,32 @@
                 <span id="liveClockDisplay">--:--:--</span>
             </div>
 
+            <!-- Quick Export Excel Button -->
+            <a href="/api/admin/export/excel?type=all" title="Download Complete Excel Report (.xlsx)" style="margin-left:auto;margin-right:14px;background:#059669;color:white;text-decoration:none;padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(5,150,105,0.25);transition:transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='none';">
+                <i class="bi bi-file-earmark-excel-fill"></i>
+                <span>Export Excel</span>
+            </a>
+
             <!-- Right Side -->
             <div class="topbar-right">
 
-                <i class="bi bi-bell notification" title="Notifications"></i>
+                <div class="notification-bell-wrapper">
+                    <i class="bi bi-bell notification" id="notificationBell" title="Notifications"></i>
+                    <span id="notificationBadge" class="notification-badge" style="display:none;">0</span>
+
+                    <div id="notificationDropdown" class="notification-dropdown">
+                        <div class="notification-dropdown-header">
+                            <span>Notifications</span>
+                            <div class="notification-header-actions">
+                                <button class="notification-mark-all" id="markAllRead" type="button">Mark all read</button>
+                                <button class="notification-clear-all" id="clearAllNotifications" type="button">Clear all</button>
+                            </div>
+                        </div>
+                        <div id="notificationList" class="notification-list">
+                            <div class="notification-empty">No notifications yet</div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Profile -->
                 <div class="profile">
@@ -1140,14 +1166,16 @@
                                 <thead>
                                     <tr style="background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">
                                         <th style="padding:10px 16px;text-align:left;">Queue #</th>
-                                        <th style="padding:10px 16px;text-align:left;">Document</th>
+                                        <th style="padding:10px 16px;text-align:left;">Student / User</th>
+                                        <th style="padding:10px 16px;text-align:left;">Document / Request</th>
                                         <th style="padding:10px 16px;text-align:left;">Counter</th>
-                                        <th style="padding:10px 16px;text-align:left;">Date & Time</th>
-                                        <th style="padding:10px 16px;text-align:left;">Status</th>
+                                        <th style="padding:10px 16px;text-align:left;">Date &amp; Time</th>
+                                        <th style="padding:10px 16px;text-align:left;">Status &amp; Stage</th>
+                                        <th style="padding:10px 16px;text-align:center;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dashboardLiveTable">
-                                    <tr><td colspan="5" style="padding:20px;text-align:center;color:#94a3b8;">Loading requests...</td></tr>
+                                    <tr><td colspan="7" style="padding:20px;text-align:center;color:#94a3b8;">Loading requests...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1226,8 +1254,23 @@
                             <div style="margin-bottom:18px;font-size:12px;color:#475569;" id="spaceWaitingC">
                                 <i class="bi bi-people-fill" style="color:#ea580c;margin-right:4px;"></i> Loading queue status...
                             </div>
-                            <button type="button" class="space-btn-enter" style="background:linear-gradient(135deg,#c2410c 0%,#ea580c 100%);">
-                                Enter Cashier Space <i class="bi bi-arrow-right" style="margin-left:4px;"></i>
+                        </div>
+
+                        <!-- Central Registrar Console (All Counter 1 & 2 Documents) -->
+                        <div class="space-card" onclick="AdminQM.enterSpace('ALL')" style="border:1.5px solid #bfdbfe;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);">
+                            <div class="space-icon-circle" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;">
+                                <i class="bi bi-collection-fill"></i>
+                            </div>
+                            <div style="font-size:18px;font-weight:800;color:#1e293b;">Registrar Central Console</div>
+                            <div style="font-size:12px;font-weight:600;color:#2563eb;margin-top:2px;">All Counters &bull; Prefixes <strong>A &amp; B</strong></div>
+                            <p style="font-size:12px;color:#64748b;margin:14px 0 16px;line-height:1.55;">
+                                Consolidated workspace for all Registrar document requests across Counter 1 &amp; Counter 2. Track, process, and release ready documents.
+                            </p>
+                            <div style="margin-bottom:18px;font-size:12px;color:#475569;" id="spaceWaitingALL">
+                                <i class="bi bi-people-fill" style="color:#2563eb;margin-right:4px;"></i> Loading queue status...
+                            </div>
+                            <button type="button" class="space-btn-enter" style="background:linear-gradient(135deg,#1d4ed8 0%,#2563eb 100%);">
+                                Enter Central Console <i class="bi bi-arrow-right" style="margin-left:4px;"></i>
                             </button>
                         </div>
 
@@ -1375,6 +1418,10 @@
 
                     <button onclick="AdminHistory.load()" class="station-btn" style="padding:7px 16px;border-radius:20px;font-size:12px;">
                         <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+
+                    <button onclick="AdminHistory.exportExcel()" class="station-btn" style="padding:7px 16px;border-radius:20px;font-size:12px;background:#059669;color:white;border-color:#059669;box-shadow:0 2px 8px rgba(5,150,105,0.25);" onmouseover="this.style.background='#047857';" onmouseout="this.style.background='#059669';">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Export Excel (.xlsx)
                     </button>
                 </div>
 
@@ -1556,9 +1603,14 @@
                             Real-time queue performance metrics, document demand, and service insights.
                         </div>
                     </div>
-                    <button onclick="AdminReports.load()" style="background:linear-gradient(135deg,#a90000,#7f1d1d);color:white;border:none;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(169,0,0,0.25);">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh Data
-                    </button>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <a href="/api/admin/export/excel?type=all" style="background:#059669;color:white;text-decoration:none;border:none;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(5,150,105,0.25);transition:transform 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)';" onmouseout="this.style.transform='none';">
+                            <i class="bi bi-file-earmark-excel-fill"></i> Export Full Report (.xlsx)
+                        </a>
+                        <button onclick="AdminReports.load()" style="background:linear-gradient(135deg,#a90000,#7f1d1d);color:white;border:none;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 14px rgba(169,0,0,0.25);">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Data
+                        </button>
+                    </div>
                 </div>
 
                 <!-- KPI Summary Cards -->
@@ -1642,7 +1694,7 @@
                 </div>
 
                 <!-- Document Ranking Table -->
-                <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);margin-bottom:18px;">
                     <div style="padding:16px 22px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
                         <div style="font-size:14px;font-weight:800;color:#1e293b;">
                             <i class="bi bi-trophy-fill" style="color:#d97706;margin-right:6px;"></i>Document Request Rankings
@@ -1663,6 +1715,19 @@
                                 <tr><td colspan="4" style="padding:28px;text-align:center;color:#94a3b8;">Loading...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Station Workload Distribution (Week 14) -->
+                <div style="background:white;border-radius:18px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+                    <div style="padding:16px 22px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+                        <div style="font-size:14px;font-weight:800;color:#1e293b;">
+                            <i class="bi bi-display" style="color:#a90000;margin-right:6px;"></i>Station Workload Distribution
+                        </div>
+                        <span style="font-size:11px;color:#64748b;font-weight:600;">Counter Capacity &amp; Volume</span>
+                    </div>
+                    <div id="reportCounterWorkloadGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding:20px;">
+                        <div style="text-align:center;color:#94a3b8;font-size:12px;grid-column:1/-1;">Loading stations workload...</div>
                     </div>
                 </div>
 
@@ -1749,7 +1814,7 @@
                     'tab-queue-monitor': 'QRESERVE ADMIN \u2022 QUEUE CONTROL CENTER',
                     'tab-requests-history': 'QRESERVE ADMIN \u2022 REQUESTS HISTORY',
                     'tab-manage-users': 'QRESERVE ADMIN \u2022 REGISTERED STUDENTS',
-                    'tab-reports': 'QRESERVE ADMIN \u2022 REPORTS'
+                    'tab-reports': 'QRESERVE ADMIN \u2022 REPORTS & ANALYTICS'
                 };
                 titleEl.textContent = titles[tabId] || 'QRESERVE ADMIN';
             }
@@ -1828,8 +1893,13 @@
             if (selector) selector.style.display = 'none';
             if (workspace) workspace.style.display = 'block';
 
-            var counter = this.counters.find(function(c) { return c.counter_code === stationCode; });
-            var cName = counter ? counter.counter_name : 'Counter Workspace';
+            var cName = 'Counter Workspace';
+            if (stationCode === 'ALL') {
+                cName = 'Registrar Central Console';
+            } else {
+                var counter = this.counters.find(function(c) { return c.counter_code === stationCode; });
+                if (counter) cName = counter.counter_name;
+            }
 
             var titleEl = document.getElementById('pageTitleDisplay');
             if (titleEl) titleEl.textContent = 'QRESERVE ADMIN \u2022 ' + cName.toUpperCase();
@@ -1844,18 +1914,30 @@
 
             var elA = document.getElementById('spaceWaitingA');
             if (elA && counterA) {
+                var procA = (counterA.processing_count > 0) ? ' &bull; <span style="color:#2563eb;font-weight:700;">' + counterA.processing_count + ' in processing</span>' : '';
+                var readyA = (counterA.ready_count > 0) ? ' &bull; <span style="color:#059669;font-weight:700;">' + counterA.ready_count + ' ready</span>' : '';
                 elA.innerHTML = '<i class="bi bi-people-fill" style="color:#1e3a8a;margin-right:4px;"></i>' +
-                    '<strong>' + counterA.waiting_count + '</strong> waiting &bull; Now Serving: <strong>' + counterA.now_serving + '</strong>';
+                    '<strong>' + counterA.waiting_count + '</strong> at window' + procA + readyA + ' &bull; Now Serving: <strong>' + counterA.now_serving + '</strong>';
             }
             var elB = document.getElementById('spaceWaitingB');
             if (elB && counterB) {
+                var procB = (counterB.processing_count > 0) ? ' &bull; <span style="color:#2563eb;font-weight:700;">' + counterB.processing_count + ' in processing</span>' : '';
+                var readyB = (counterB.ready_count > 0) ? ' &bull; <span style="color:#059669;font-weight:700;">' + counterB.ready_count + ' ready</span>' : '';
                 elB.innerHTML = '<i class="bi bi-people-fill" style="color:#047857;margin-right:4px;"></i>' +
-                    '<strong>' + counterB.waiting_count + '</strong> waiting &bull; Now Serving: <strong>' + counterB.now_serving + '</strong>';
+                    '<strong>' + counterB.waiting_count + '</strong> at window' + procB + readyB + ' &bull; Now Serving: <strong>' + counterB.now_serving + '</strong>';
             }
             var elC = document.getElementById('spaceWaitingC');
             if (elC && counterC) {
                 elC.innerHTML = '<i class="bi bi-people-fill" style="color:#c2410c;margin-right:4px;"></i>' +
-                    '<strong>' + counterC.waiting_count + '</strong> waiting &bull; Now Serving: <strong>' + counterC.now_serving + '</strong>';
+                    '<strong>' + counterC.waiting_count + '</strong> awaiting payment &bull; Now Serving: <strong>' + counterC.now_serving + '</strong>';
+            }
+            var elALL = document.getElementById('spaceWaitingALL');
+            if (elALL) {
+                var totalWait = (counterA ? counterA.waiting_count : 0) + (counterB ? counterB.waiting_count : 0);
+                var totalProc = (counterA ? (counterA.processing_count || 0) : 0) + (counterB ? (counterB.processing_count || 0) : 0);
+                var totalReady = (counterA ? (counterA.ready_count || 0) : 0) + (counterB ? (counterB.ready_count || 0) : 0);
+                elALL.innerHTML = '<i class="bi bi-collection-fill" style="color:#2563eb;margin-right:4px;"></i>' +
+                    '<strong>' + totalWait + '</strong> at window &bull; <strong style="color:#2563eb;">' + totalProc + '</strong> in processing &bull; <strong style="color:#059669;">' + totalReady + '</strong> ready for pickup';
             }
         },
 
@@ -1901,6 +1983,16 @@
             var el = document.getElementById('statActiveQueue');
             if (el) el.innerHTML = active + ' <span class="stat-pill"><i class="bi bi-arrow-up-short"></i>Live</span>';
 
+            var elBadge = document.getElementById('sidebarQueueBadge');
+            if (elBadge) {
+                if (active > 0) {
+                    elBadge.textContent = active;
+                    elBadge.style.display = 'inline-block';
+                } else {
+                    elBadge.style.display = 'none';
+                }
+            }
+
             var serving = '—';
             for (var i = 0; i < this.counters.length; i++) {
                 if (this.counters[i].now_serving_number > 0) {
@@ -1915,9 +2007,22 @@
             if (today) today.textContent = active + ' active';
         },
 
-        // Render Dashboard tab: 3 Read-only counter cards + read-only live table
+        openStationFromOverview: function(prefix) {
+            AdminTabs.switchTab('tab-queue-monitor');
+            if (prefix === 'C') {
+                this.enterSpace('C');
+            } else if (prefix === 'B') {
+                this.enterSpace('B');
+            } else if (prefix === 'A') {
+                this.enterSpace('A');
+            } else {
+                this.enterSpace('ALL');
+            }
+        },
+
+        // Render Dashboard tab: 3 Live counter cards + actionable live table
         renderDashboardOverview: function() {
-            // 1. Counters Grid (strictly display-only, no buttons)
+            // 1. Counters Grid
             var grid = document.getElementById('dashboardCountersGrid');
             if (grid && this.counters.length) {
                 var html = '';
@@ -1925,6 +2030,21 @@
                     var codeColor = c.is_active ? '#22c55e' : '#94a3b8';
                     var cardBorder = c.is_active ? '2px solid #bbf7d0' : '1.5px solid #e2e8f0';
                     var servingDisplay = c.now_serving_number > 0 ? c.now_serving : '---';
+
+                    var countDetails = '';
+                    if (c.counter_code === 'C') {
+                        countDetails = '<div style="font-size:11.5px;color:#c2410c;margin-top:8px;font-weight:600;"><i class="bi bi-wallet2" style="margin-right:4px;"></i>' + c.waiting_count + ' awaiting payment</div>';
+                    } else {
+                        var parts = [];
+                        parts.push('<strong>' + c.waiting_count + '</strong> at window');
+                        if (c.processing_count > 0) {
+                            parts.push('<span style="color:#2563eb;font-weight:700;">' + c.processing_count + ' in processing</span>');
+                        }
+                        if (c.ready_count > 0) {
+                            parts.push('<span style="color:#059669;font-weight:700;">' + c.ready_count + ' ready</span>');
+                        }
+                        countDetails = '<div style="font-size:11.5px;color:#64748b;margin-top:8px;font-weight:500;">' + parts.join(' &bull; ') + '</div>';
+                    }
 
                     html += '<div style="background:white;border:' + cardBorder + ';border-radius:16px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">' +
                         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">' +
@@ -1934,45 +2054,55 @@
                         '<div style="text-align:center;padding:10px 0;">' +
                             '<div style="font-size:10.5px;font-weight:700;color:#94a3b8;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;">Now Serving</div>' +
                             '<div style="font-size:38px;font-weight:900;color:#a90000;letter-spacing:-1px;line-height:1;">' + servingDisplay + '</div>' +
-                            '<div style="font-size:11.5px;color:#64748b;margin-top:8px;font-weight:500;">' + c.waiting_count + ' waiting</div>' +
+                            countDetails +
                         '</div>' +
                     '</div>';
                 });
                 grid.innerHTML = html;
             }
 
-            // 2. Read-only live requests table (strictly active items only)
+            // 2. Actionable live requests table (active items)
             var tbody = document.getElementById('dashboardLiveTable');
             if (tbody) {
                 var activeReqs = this.requests.filter(function(r) { return r.status !== 'Completed'; });
                 if (!activeReqs.length) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="padding:28px;text-align:center;color:#94a3b8;font-size:13px;">No active queue requests right now.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="padding:28px;text-align:center;color:#94a3b8;font-size:13px;"><i class="bi bi-inbox" style="font-size:24px;display:block;margin-bottom:6px;color:#cbd5e1;"></i>No active queue requests right now.</td></tr>';
                     return;
                 }
 
-                var statusColors = {
-                    'Processing':      { bg:'#fefce8', color:'#854d0e', border:'#fde68a' },
-                    'Ready for pickup':{ bg:'#f0fdf4', color:'#14532d', border:'#bbf7d0' },
-                    'Completed':       { bg:'#f8fafc', color:'#475569', border:'#e2e8f0' }
-                };
-
                 var rowsHtml = '';
                 activeReqs.forEach(function(r) {
-                    var sc = statusColors[r.status] || statusColors['Completed'];
-                    var badge = '<span style="background:' + sc.bg + ';color:' + sc.color + ';border:1px solid ' + sc.border + ';border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">' + r.status + '</span>';
+                    var statusBadge = '';
+                    var actionBtn = '';
 
                     if (r.queueStep === 'payment') {
-                        badge += ' <span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">Awaiting Payment</span>';
-                    } else if (r.queueStep === 'processing') {
-                        badge += ' <span style="background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;">Registrar</span>';
+                        statusBadge = '<span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;"><i class="bi bi-wallet2" style="margin-right:3px;"></i>Awaiting Payment</span>';
+                        actionBtn = '<button onclick="AdminQM.confirmPayment(' + r.db_id + ')" title="Confirm cashier payment received" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><i class="bi bi-check-circle"></i>Paid</button>';
+                    } else if (r.status === 'Ready for pickup') {
+                        statusBadge = '<span style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;"><i class="bi bi-box-seam" style="margin-right:3px;"></i>Ready for Pickup</span>';
+                        actionBtn = '<button onclick="AdminQM.updateStatus(' + r.db_id + ', \'Completed\')" title="Release document to student" style="background:#f0fdf4;border:1px solid #86efac;color:#15803d;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><i class="bi bi-check2-circle"></i>Release Doc</button>';
+                    } else if (r.counterTurnDone) {
+                        statusBadge = '<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;"><i class="bi bi-gear-wide-connected" style="margin-right:3px;"></i>In Processing (3–5 days)</span>';
+                        actionBtn = '<button onclick="AdminQM.updateStatus(' + r.db_id + ', \'Ready for pickup\')" title="Mark document ready for student pickup" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><i class="bi bi-box-seam-fill"></i>Ready for Pickup</button>';
+                    } else {
+                        statusBadge = '<span style="background:#fefce8;color:#854d0e;border:1px solid #fde68a;border-radius:20px;padding:3px 10px;font-size:10.5px;font-weight:700;"><i class="bi bi-person-walking" style="margin-right:3px;"></i>Waiting at Window</span>';
+                        var pfx = (r.queueNum || '').charAt(0);
+                        actionBtn = '<button onclick="AdminQM.openStationFromOverview(\'' + pfx + '\')" title="Open station console" style="background:#f8fafc;border:1px solid #e2e8f0;color:#475569;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><i class="bi bi-display"></i>Manage</button>';
                     }
 
                     rowsHtml += '<tr style="border-top:1px solid #f1f5f9;transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\';" onmouseout="this.style.background=\'\';">' +
-                        '<td style="padding:11px 16px;font-weight:700;color:#1e293b;">' + r.queueNum + '</td>' +
-                        '<td style="padding:11px 16px;color:#334155;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.docName + '</td>' +
-                        '<td style="padding:11px 16px;color:#64748b;">' + (r.counter || '—') + '</td>' +
-                        '<td style="padding:11px 16px;color:#94a3b8;font-size:11.5px;">' + r.dateTime + '</td>' +
-                        '<td style="padding:11px 16px;">' + badge + '</td>' +
+                        '<td style="padding:11px 16px;font-weight:800;color:#991b1b;white-space:nowrap;">' +
+                            '<span style="background:#fef2f2;border:1px solid #fecaca;padding:3px 8px;border-radius:8px;">' + r.queueNum + '</span>' +
+                        '</td>' +
+                        '<td style="padding:11px 16px;">' +
+                            '<div style="font-weight:700;color:#1e293b;font-size:12.5px;">' + (r.userName || 'Student') + '</div>' +
+                            '<div style="font-size:11px;color:#94a3b8;">' + (r.userIdentifier || '') + '</div>' +
+                        '</td>' +
+                        '<td style="padding:11px 16px;color:#334155;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;">' + r.docName + '</td>' +
+                        '<td style="padding:11px 16px;color:#64748b;white-space:nowrap;">' + (r.counter || '—') + '</td>' +
+                        '<td style="padding:11px 16px;color:#94a3b8;font-size:11.5px;white-space:nowrap;">' + r.dateTime + '</td>' +
+                        '<td style="padding:11px 16px;white-space:nowrap;">' + statusBadge + '</td>' +
+                        '<td style="padding:11px 16px;text-align:center;white-space:nowrap;">' + actionBtn + '</td>' +
                     '</tr>';
                 });
                 tbody.innerHTML = rowsHtml;
@@ -1982,24 +2112,55 @@
         // Render dedicated workspace controls and filtered table
         renderStation: function() {
             var stationCode = this.currentStation;
-            var counter = this.counters.find(function(c) { return c.counter_code === stationCode; });
+            var isAllReg = (stationCode === 'ALL');
+            var counter = null;
+            if (isAllReg) {
+                var counterA = this.counters.find(function(c) { return c.counter_code === 'A'; });
+                var counterB = this.counters.find(function(c) { return c.counter_code === 'B'; });
+                var totalWaiting = (counterA ? counterA.waiting_count : 0) + (counterB ? counterB.waiting_count : 0);
+                var totalProcessing = (counterA ? (counterA.processing_count || 0) : 0) + (counterB ? (counterB.processing_count || 0) : 0);
+                var totalReady = (counterA ? (counterA.ready_count || 0) : 0) + (counterB ? (counterB.ready_count || 0) : 0);
+                counter = {
+                    id: 0,
+                    counter_code: 'ALL',
+                    counter_name: 'Registrar Central Console',
+                    now_serving_prefix: 'A & B',
+                    now_serving: (counterA && counterA.now_serving_number > 0 ? counterA.now_serving : '---') + ' / ' + (counterB && counterB.now_serving_number > 0 ? counterB.now_serving : '---'),
+                    now_serving_number: ((counterA && counterA.now_serving_number > 0) || (counterB && counterB.now_serving_number > 0)) ? 1 : 0,
+                    waiting_count: totalWaiting,
+                    processing_count: totalProcessing,
+                    ready_count: totalReady,
+                    is_active: true
+                };
+            } else {
+                counter = this.counters.find(function(c) { return c.counter_code === stationCode; });
+            }
             if (!counter) return;
 
             var prefix = counter.now_serving_prefix || counter.counter_code || 'A';
-            var codeColor = counter.is_active ? '#22c55e' : '#94a3b8';
+            var codeColor = isAllReg ? '#2563eb' : (counter.is_active ? '#22c55e' : '#94a3b8');
             var servingDisplay = counter.now_serving_number > 0 ? counter.now_serving : '---';
 
             // 1. Update workspace header bar
             var titleEl = document.getElementById('spaceActiveTitle');
-            if (titleEl) titleEl.textContent = counter.counter_name + ' Space';
+            if (titleEl) titleEl.textContent = counter.counter_name + (isAllReg ? '' : ' Space');
 
             var subEl = document.getElementById('spaceActiveSubtitle');
-            if (subEl) subEl.innerHTML = 'Station Prefix: <strong>' + prefix + '</strong> &bull; ' + counter.waiting_count + ' waiting at counter window';
+            if (subEl) {
+                if (isAllReg) {
+                    subEl.innerHTML = 'Station Prefix: <strong>A &amp; B</strong> &bull; ' + counter.waiting_count + ' at window &bull; <strong style="color:#2563eb;">' + counter.processing_count + ' in processing</strong>';
+                } else {
+                    var procNote = (counter.processing_count > 0) ? ' &bull; <strong style="color:#2563eb;">' + counter.processing_count + ' in processing</strong>' : '';
+                    subEl.innerHTML = 'Station Prefix: <strong>' + prefix + '</strong> &bull; ' + counter.waiting_count + ' waiting at counter window' + procNote;
+                }
+            }
 
             var iconEl = document.getElementById('spaceActiveIcon');
             if (iconEl) {
                 if (stationCode === 'C') {
                     iconEl.innerHTML = '<i class="bi bi-wallet2" style="font-size:22px;color:#c2410c;"></i>';
+                } else if (isAllReg) {
+                    iconEl.innerHTML = '<i class="bi bi-collection-fill" style="font-size:22px;color:#1d4ed8;"></i>';
                 } else {
                     iconEl.innerHTML = '<i class="bi bi-building" style="font-size:22px;color:#a90000;"></i>';
                 }
@@ -2012,13 +2173,20 @@
             if (stationCode === 'C') {
                 headerTitle = '<i class="bi bi-wallet2" style="color:#a90000;margin-right:6px;"></i>Cashier Queue &bull; Awaiting Payment';
                 allStationRequests = this.requests.filter(function(r) {
-                    return (r.queueStep === 'payment' || (r.counter && r.counter.indexOf('Cashier') !== -1)) && r.status !== 'Completed';
+                    return (r.queueStep === 'payment' || (r.counter && r.counter.indexOf('Cashier') !== -1) || (r.queueNum && r.queueNum.indexOf('C-') === 0)) && r.status !== 'Completed';
+                });
+            } else if (isAllReg) {
+                headerTitle = '<i class="bi bi-collection-fill" style="color:#a90000;margin-right:6px;"></i>Registrar Central &bull; All Active Document Requests';
+                allStationRequests = this.requests.filter(function(r) {
+                    return r.queueStep !== 'payment' && (!r.counter || r.counter.indexOf('Cashier') === -1) && (!r.queueNum || r.queueNum.indexOf('C-') !== 0) && r.status !== 'Completed';
                 });
             } else {
                 var cName = counter.counter_name; // e.g. "Counter 1 – Registrar"
                 headerTitle = '<i class="bi bi-file-earmark-check" style="color:#a90000;margin-right:6px;"></i>' + cName + ' &bull; Active Document Requests';
                 allStationRequests = this.requests.filter(function(r) {
-                    return (r.counter === cName || (r.queueNum && r.queueNum.indexOf(prefix + '-') === 0)) && r.queueStep !== 'payment' && r.status !== 'Completed';
+                    var matchPrefix = (r.queueNum && r.queueNum.indexOf(prefix + '-') === 0);
+                    var matchCounter = (r.counter && (r.counter === cName || r.counter.indexOf(counter.counter_code) !== -1 || r.counter.replace(/[\u2013-]/g, '').indexOf(cName.replace(/[\u2013-]/g, '')) !== -1));
+                    return (matchCounter || matchPrefix) && r.queueStep !== 'payment' && r.status !== 'Completed';
                 });
             }
 
@@ -2046,7 +2214,7 @@
             if (cardWrap) {
                 var isServing = counter.now_serving_number > 0;
                 var servingSubtext = isServing ?
-                    '<span style="color:#059669;font-weight:700;"><i class="bi bi-broadcast" style="margin-right:4px;"></i>Serving Ticket #' + counter.now_serving_number + ' at Window</span>' :
+                    '<span style="color:#059669;font-weight:700;"><i class="bi bi-broadcast" style="margin-right:4px;"></i>Serving at Window</span>' :
                     '<span style="color:#94a3b8;font-weight:600;"><i class="bi bi-pause-circle" style="margin-right:4px;"></i>Counter window currently idle</span>';
 
                 var nextPreviewHtml = '';
@@ -2060,6 +2228,18 @@
                             '</div>' +
                             '<span style="font-size:11px;font-weight:700;color:#b45309;white-space:nowrap;">' + (nextTicket.price ? '\u20b1' + nextTicket.price + '.00' : '') + '</span>' +
                         '</div>';
+                } else if (inProcessing.length > 0) {
+                    nextPreviewHtml =
+                        '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:#1e40af;">' +
+                            '<i class="bi bi-gear-wide-connected" style="color:#2563eb;font-size:16px;flex-shrink:0;"></i>' +
+                            '<span><strong>' + inProcessing.length + ' document(s) in processing.</strong> Window turn completed &bull; Prepare &amp; mark ready for pickup below.</span>' +
+                        '</div>';
+                } else if (readyForPickup.length > 0) {
+                    nextPreviewHtml =
+                        '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:#065f46;">' +
+                            '<i class="bi bi-box-seam" style="color:#10b981;font-size:16px;flex-shrink:0;"></i>' +
+                            '<span><strong>' + readyForPickup.length + ' document(s) ready for pickup.</strong> Awaiting claiming by student.</span>' +
+                        '</div>';
                 } else {
                     nextPreviewHtml =
                         '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:#64748b;">' +
@@ -2068,7 +2248,14 @@
                         '</div>';
                 }
 
+                // If filter is 'waiting' but there are no window tickets and there are in-processing tickets,
+                // auto-adjust to 'all' so documents aren't accidentally hidden
                 var currentFilter = AdminQM.activeStationFilter || 'all';
+                if (currentFilter === 'waiting' && waitingAtCounter.length === 0 && inProcessing.length > 0) {
+                    currentFilter = 'all';
+                    AdminQM.activeStationFilter = 'all';
+                }
+
                 function renderFilterPill(key, label, count) {
                     var isActive = currentFilter === key;
                     var activeStyle = isActive ?
@@ -2087,6 +2274,45 @@
                         (stationCode !== 'C' ? renderFilterPill('processing', 'In Processing', inProcessing.length) : '') +
                         renderFilterPill('ready', 'Ready for Pickup', readyForPickup.length) +
                     '</div>';
+
+                var leftButtonsHtml = '';
+                if (isAllReg) {
+                    var cA = this.counters.find(function(c){ return c.counter_code === 'A'; });
+                    var cB = this.counters.find(function(c){ return c.counter_code === 'B'; });
+                    leftButtonsHtml =
+                        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+                            '<button onclick="AdminQM.callNextStation(' + (cA ? cA.id : 1) + ')" ' +
+                                'style="padding:10px;background:linear-gradient(135deg,#8c1010,#6e0a0a);color:white;border:none;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(140,16,16,0.2);display:flex;align-items:center;justify-content:center;gap:6px;">' +
+                                '<i class="bi bi-megaphone-fill"></i>Call Counter 1 (A)' +
+                            '</button>' +
+                            '<button onclick="AdminQM.callNextStation(' + (cB ? cB.id : 2) + ')" ' +
+                                'style="padding:10px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:white;border:none;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(29,78,216,0.2);display:flex;align-items:center;justify-content:center;gap:6px;">' +
+                                '<i class="bi bi-megaphone-fill"></i>Call Counter 2 (B)' +
+                            '</button>' +
+                        '</div>';
+                } else {
+                    leftButtonsHtml =
+                        '<button onclick="AdminQM.callNextStation(' + counter.id + ')" ' +
+                            'style="width:100%;padding:12px;background:linear-gradient(135deg,#8c1010,#6e0a0a);color:white;border:none;border-radius:30px;font-size:13.5px;font-weight:700;cursor:pointer;margin-bottom:12px;transition:all 0.2s;box-shadow:0 4px 14px rgba(140,16,16,0.25);display:flex;align-items:center;justify-content:center;gap:8px;" ' +
+                            'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 20px rgba(140,16,16,0.35)\';" ' +
+                            'onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 14px rgba(140,16,16,0.25)\';">' +
+                            '<i class="bi bi-megaphone-fill"></i>Call Next (Lowest Waiting Ticket)' +
+                        '</button>' +
+                        '<div style="display:flex;gap:8px;">' +
+                            '<input type="number" id="stationManualInput" min="0" max="999" placeholder="Set ticket # manually..." ' +
+                                'onkeydown="if (event.key === \'Enter\') { AdminQM.manualSetStation(' + counter.id + '); return false; }" ' +
+                                'style="flex:1;padding:7px 12px;border:1px solid #e2e8f0;border-radius:20px;font-size:12px;font-family:Poppins,sans-serif;outline:none;">' +
+                            '<button onclick="AdminQM.manualSetStation(' + counter.id + ')" ' +
+                                'style="padding:7px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;color:#475569;">' +
+                                'Set' +
+                            '</button>' +
+                            '<button onclick="AdminQM.clearStationCounter(' + counter.id + ')" ' +
+                                'title="Clear now-serving ticket display" ' +
+                                'style="padding:7px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;color:#b91c1c;">' +
+                                'Clear' +
+                            '</button>' +
+                        '</div>';
+                }
 
                 cardWrap.innerHTML =
                     '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:18px;">' +
@@ -2110,29 +2336,7 @@
                                 '</div>' +
                             '</div>' +
 
-                            '<div>' +
-                                '<button onclick="AdminQM.callNextStation(' + counter.id + ')" ' +
-                                    'style="width:100%;padding:12px;background:linear-gradient(135deg,#8c1010,#6e0a0a);color:white;border:none;border-radius:30px;font-size:13.5px;font-weight:700;cursor:pointer;margin-bottom:12px;transition:all 0.2s;box-shadow:0 4px 14px rgba(140,16,16,0.25);display:flex;align-items:center;justify-content:center;gap:8px;" ' +
-                                    'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 20px rgba(140,16,16,0.35)\';" ' +
-                                    'onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 4px 14px rgba(140,16,16,0.25)\';">' +
-                                    '<i class="bi bi-megaphone-fill"></i>Call Next (Lowest Waiting Ticket)' +
-                                '</button>' +
-
-                                '<div style="display:flex;gap:8px;">' +
-                                    '<input type="number" id="stationManualInput" min="0" max="999" placeholder="Set ticket # manually..." ' +
-                                        'onkeydown="if (event.key === \'Enter\') { AdminQM.manualSetStation(' + counter.id + '); return false; }" ' +
-                                        'style="flex:1;padding:7px 12px;border:1px solid #e2e8f0;border-radius:20px;font-size:12px;font-family:Poppins,sans-serif;outline:none;">' +
-                                    '<button onclick="AdminQM.manualSetStation(' + counter.id + ')" ' +
-                                        'style="padding:7px 14px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;color:#475569;">' +
-                                        'Set' +
-                                    '</button>' +
-                                    '<button onclick="AdminQM.clearStationCounter(' + counter.id + ')" ' +
-                                        'title="Clear now-serving ticket display" ' +
-                                        'style="padding:7px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;color:#b91c1c;">' +
-                                        'Clear' +
-                                    '</button>' +
-                                '</div>' +
-                            '</div>' +
+                            '<div>' + leftButtonsHtml + '</div>' +
                         '</div>' +
 
                         // Right Card: Station Insights & Queue Flow
@@ -2644,6 +2848,18 @@
             });
 
             tbody.innerHTML = html;
+        },
+
+        exportExcel: function() {
+            var status = document.getElementById('historyStatus') ? document.getElementById('historyStatus').value : 'all';
+            var userType = document.getElementById('historyUserType') ? document.getElementById('historyUserType').value : 'all';
+            var counter = document.getElementById('historyCounter') ? document.getElementById('historyCounter').value : 'all';
+            var url = '/api/admin/export/excel?type=requests' +
+                '&status=' + encodeURIComponent(status) +
+                '&user_type=' + encodeURIComponent(userType) +
+                '&counter=' + encodeURIComponent(counter);
+            window.location.href = url;
+            showAdminToast('Exporting queue requests to Excel...', 'success');
         }
     };
 
@@ -2972,11 +3188,14 @@
         function _renderKpis(s) {
             var grid = document.getElementById('reportKpiGrid');
             if (!grid) return;
+            var revFormatted = '₱' + Number(s.total_revenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
             var kpis = [
                 { icon: 'bi-stack', label: 'Total Requests', value: s.total_requests, bg: '#fef2f2', border: '#fecaca', color: '#a90000' },
                 { icon: 'bi-check-circle-fill', label: 'Completed', value: s.completed, bg: '#f0fdf4', border: '#bbf7d0', color: '#065f46' },
                 { icon: 'bi-activity', label: 'Active Now', value: s.active, bg: '#eff6ff', border: '#dbeafe', color: '#1d4ed8' },
+                { icon: 'bi-cash-coin', label: 'Total Revenue', value: revFormatted, bg: '#ecfdf5', border: '#a7f3d0', color: '#047857' },
                 { icon: 'bi-graph-up-arrow', label: 'Avg / Day', value: s.avg_per_day, bg: '#fffbeb', border: '#fde68a', color: '#b45309' },
+                { icon: 'bi-shield-check', label: 'Audit Events', value: s.total_audit_events || 0, bg: '#f8fafc', border: '#e2e8f0', color: '#334155' },
                 { icon: 'bi-mortarboard-fill', label: 'Student Req.', value: s.student_requests, bg: '#faf5ff', border: '#e9d5ff', color: '#7c3aed' },
                 { icon: 'bi-person-fill', label: 'Guest Req.', value: s.guest_requests, bg: '#fff1f2', border: '#ffe4e6', color: '#be123c' },
             ];
@@ -2987,7 +3206,39 @@
                     '</div>' +
                     '<div>' +
                         '<div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;">' + k.label + '</div>' +
-                        '<div style="font-size:22px;font-weight:900;color:' + k.color + ';line-height:1.2;">' + k.value + '</div>' +
+                        '<div style="font-size:20px;font-weight:900;color:' + k.color + ';line-height:1.2;">' + k.value + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ── Render Station Workload (Week 14) ────────────────────
+        function _renderCounterWorkload(workload) {
+            var grid = document.getElementById('reportCounterWorkloadGrid');
+            if (!grid) return;
+            if (!workload || !workload.length) {
+                grid.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;grid-column:1/-1;">No counter stations found.</div>';
+                return;
+            }
+            grid.innerHTML = workload.map(function(c) {
+                return '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">' +
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+                        '<div style="font-weight:800;color:#1e293b;font-size:13.5px;">' + c.name + '</div>' +
+                        '<span style="background:#8a0d0d;color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">' + c.code + '</span>' +
+                    '</div>' +
+                    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;">' +
+                        '<div style="background:white;padding:8px;border-radius:8px;border:1px solid #f1f5f9;">' +
+                            '<div style="color:#64748b;font-size:10px;font-weight:600;text-transform:uppercase;">At Window</div>' +
+                            '<div style="font-size:15px;font-weight:800;color:#1e293b;margin-top:2px;">' + c.waiting + '</div>' +
+                        '</div>' +
+                        '<div style="background:white;padding:8px;border-radius:8px;border:1px solid #f1f5f9;">' +
+                            '<div style="color:#64748b;font-size:10px;font-weight:600;text-transform:uppercase;">In Processing</div>' +
+                            '<div style="font-size:15px;font-weight:800;color:#d97706;margin-top:2px;">' + c.processing + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="margin-top:10px;font-size:11px;color:#64748b;display:flex;justify-content:space-between;">' +
+                        '<span>Total Volume: <strong>' + c.total_assigned + '</strong></span>' +
+                        '<span>Now: <strong>' + (c.now_serving ? '#' + c.now_serving : 'Idle') + '</strong></span>' +
                     '</div>' +
                 '</div>';
             }).join('');
@@ -3200,14 +3451,22 @@
                         _renderStatusBreakdown(data.completed_vs_cancelled);
                         _renderUserType(data.summary);
                         _renderDocTable(data.most_requested);
+                        _renderCounterWorkload(data.counter_workload);
                     })
                     .catch(function(err) {
                         console.error('Error loading analytics:', err);
                         if (kpiGrid) kpiGrid.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444;grid-column:1/-1;">Failed to load analytics. Please try again.</div>';
                     });
+            },
+
+            exportExcel: function() {
+                window.location.href = '/api/admin/export/excel?type=analytics';
+                showAdminToast('Downloading queue analytics report (.xlsx)...', 'success');
             }
         };
     })();
+
+
 
     // Spin animation for loading spinner
     (function() {
@@ -3220,6 +3479,23 @@
 
 <!-- Transitions & Delays JS -->
 <script src="{{ url_for('static', filename='js/transitions.js') }}"></script>
+
+<!-- Shared notification module, pointed at the staff endpoints -->
+<script src="{{ url_for('static', filename='js/qreserve-notifications.js') }}"></script>
+<script>
+    QReserveNotifications.init({
+        pollMs: 2000,
+        urls: {
+            list: '/api/admin/notifications',
+            read: '/api/admin/notifications/read',
+            readAll: '/api/admin/notifications/read-all',
+            clear: '/api/admin/notifications/clear',
+            remove: function (id) { return '/api/admin/notifications/' + id; }
+        },
+        // Staff want to be interrupted when someone walks out on a queue.
+        toastTypes: ['cancelled']
+    });
+</script>
 </body>
 
 </html>

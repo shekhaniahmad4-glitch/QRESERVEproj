@@ -7,7 +7,8 @@ from flask import (
     flash,
     session,
     current_app,
-    jsonify
+    jsonify,
+    send_file
 )
 
 import os
@@ -26,7 +27,8 @@ from werkzeug.security import (
 )
 from werkzeug.utils import secure_filename
 
-from database import db, Student, StudentProfile, QueueRequest, QueueCounter, ph_now
+from database import db, Student, StudentProfile, QueueRequest, QueueCounter, Notification, AdminNotification, AuditLog, record_audit, ph_now
+from excel_exporter import generate_qreserve_excel
 
 from extensions import limiter
 
@@ -317,6 +319,7 @@ def login():
 
         session["student_id"] = student.id
         session["student_email"] = student.email
+        session["user_type"] = "student"
 
         flash(
             "Login successful!",
@@ -1552,6 +1555,14 @@ def admin_login():
             session["admin_station"] = None
             session["admin_role_name"] = "Administrator"
 
+            record_audit(
+                "ADMIN_LOGIN",
+                target="Admin Console",
+                details=f"Administrator ({email}) signed in successfully",
+                actor_type="Admin",
+                actor_name=email
+            )
+
             flash(
                 "Administrator login successful. Select your counter from the Queue Monitor tab.",
                 "success"
@@ -1610,7 +1621,14 @@ def admin_dashboard():
     "/admin/logout"
 )
 def admin_logout():
-
+    admin_user = session.get("admin_email") or "Admin"
+    record_audit(
+        "ADMIN_LOGOUT",
+        target="Admin Console",
+        details="Administrator signed out from console",
+        actor_type="Admin",
+        actor_name=admin_user
+    )
     session.clear()
 
     flash(
@@ -1647,6 +1665,151 @@ def _resolve_guest_key(explicit=None):
         session["guest_session_key"] = str(explicit)
         return str(explicit)
     return _get_guest_session_key()
+
+
+# =======================================================
+# NOTIFICATION HELPERS
+# =======================================================
+# Every user-visible state change funnels through these so the
+# wording stays consistent and no event gets missed.
+#
+# Types (must match the label map in static/js/qreserve-notifications.js):
+#   now_serving, next_in_line, queue_joined, payment_confirmed,
+#   ready_for_pickup, processing, completed, cancelled, queue_reset
+
+def _notify(
+    student_id,
+    guest_session_key,
+    notif_type,
+    title,
+    message,
+    queue_number=None
+):
+    """Queue a notification for a student or a guest session.
+
+    Does not commit -- the caller decides, so the notification lands in the
+    same transaction as the change it describes.
+    """
+    notif = Notification(
+        student_id=student_id,
+        guest_session_key=guest_session_key,
+        type=notif_type,
+        title=title,
+        message=message,
+        queue_number=queue_number
+    )
+    db.session.add(notif)
+    return notif
+
+
+def _notify_request(req_obj, notif_type, title, message, queue_number=None):
+    """Notify the owner of a queue request.
+
+    Call this BEFORE deleting the request when the row is about to be
+    removed, since the owner fields only exist on the row itself.
+    """
+    if not req_obj:
+        return None
+
+    return _notify(
+        req_obj.student_id,
+        req_obj.guest_session_key,
+        notif_type,
+        title,
+        message,
+        queue_number or req_obj.queue_number
+    )
+
+
+def _notify_admins(notif_type, title, message, queue_number=None):
+    """Queue a notice for the staff side.
+
+    Admin rows are addressed to one administrator email each so that one
+    admin marking a notice read does not clear it for everybody else. An
+    email that is not a known admin account is ignored rather than stored
+    forever with nobody able to read it.
+
+    Does not commit -- the caller decides.
+    """
+    admin_email = current_app.config.get("ADMIN_EMAIL")
+    if not admin_email:
+        return None
+
+    notif = AdminNotification(
+        admin_email=admin_email,
+        type=notif_type,
+        title=title,
+        message=message,
+        queue_number=queue_number
+    )
+    db.session.add(notif)
+    return notif
+
+
+def _canceller_label(req_obj):
+    """A short human description of who owns this request, for staff notices.
+
+    Students resolve to their profile name, guests to "a guest" since the
+    request row only carries an anonymous session key.
+    """
+    if not req_obj:
+        return "Someone"
+
+    if req_obj.student_id:
+        profile = StudentProfile.query.filter_by(
+            student_id=req_obj.student_id
+        ).first()
+        if profile and profile.full_name:
+            return profile.full_name
+
+        student = db.session.get(Student, req_obj.student_id)
+        if student and student.email:
+            return student.email
+
+        return "A student"
+
+    if req_obj.guest_session_key:
+        if req_obj.guest_name:
+            return f"Guest {req_obj.guest_name}"
+        return "A guest"
+
+    return "Someone"
+
+
+def _request_at(counter, number):
+    """Find the request a counter is currently serving."""
+    if not number:
+        return None
+
+    prefix = counter.now_serving_prefix or counter.counter_code
+
+    return QueueRequest.query.filter_by(
+        queue_number=f"{prefix}-{int(number):03d}"
+    ).first()
+
+
+def _queue_position(req_obj):
+    """How many people are ahead of this request at the same counter."""
+    m = re.match(r"^([A-Z])-(\d+)", req_obj.queue_number or "")
+    if not m:
+        return 0
+
+    prefix = m.group(1)
+    num = int(m.group(2))
+
+    waiting = QueueRequest.query.filter(
+        QueueRequest.queue_number.like(f"{prefix}-%"),
+        QueueRequest.counter_turn_done.is_(False),
+        QueueRequest.status.in_(["Processing", "Ready for pickup"])
+    ).all()
+
+    ahead = 0
+    for r in waiting:
+        other = re.match(r"^([A-Z])-(\d+)", r.queue_number or "")
+        if other and other.group(1) == prefix and int(other.group(2)) < num:
+            ahead += 1
+
+    return ahead
 
 
 @auth.route("/api/requests", methods=["GET"])
@@ -1740,14 +1903,39 @@ def create_queue_request():
     tx_id = f"QRS-2026-{now.strftime('%m%d')}-{queue_number}"
 
     user_type = data.get("user_type") or session.get("user_type")
-    if user_type == "guest" or not session.get("student_id"):
-        student_id = None
-        guest_key = _resolve_guest_key(data.get("guest_key"))
-        guest_name = data.get("guest_name") or session.get("guest_name") or "Guest User"
-    else:
+    if user_type == "student":
+        student_id = session.get("student_id")
+        if not student_id:
+            return jsonify({"success": False, "error": "Your student session has expired. Please log in again."}), 401
+        guest_key = None
+        guest_name = None
+    elif session.get("student_id") and user_type != "guest":
         student_id = session.get("student_id")
         guest_key = None
         guest_name = None
+    else:
+        student_id = None
+        guest_key = _resolve_guest_key(data.get("guest_key"))
+        guest_name = data.get("guest_name") or session.get("guest_name") or "Guest User"
+
+    # Only block if user has an unfinished LIVE counter ticket (actively in line at a window)
+    live_filter = QueueRequest.query.filter(
+        QueueRequest.status == "Processing",
+        QueueRequest.counter_turn_done.is_(False),
+        (QueueRequest.queue_step != "document_processing") | (QueueRequest.queue_step.is_(None))
+    )
+    if student_id:
+        existing_live = live_filter.filter(QueueRequest.student_id == student_id).first()
+    elif guest_key:
+        existing_live = live_filter.filter(QueueRequest.guest_session_key == guest_key).first()
+    else:
+        existing_live = None
+
+    if existing_live:
+        return jsonify({
+            "success": False,
+            "error": f"You currently have an active queue ticket at {existing_live.counter} ({existing_live.queue_number}). Please finish your counter turn before queueing again."
+        }), 400
 
     summary = ", ".join(it["name"] for it in items)
     total = sum(it["price"] for it in items)
@@ -1775,6 +1963,38 @@ def create_queue_request():
     db.session.add(new_req)
     db.session.commit()
 
+    # Confirm the queue entry so the user has a permanent record of it.
+    ahead = _queue_position(new_req)
+    if ahead > 0:
+        position_msg = (
+            f"You are number {ahead + 1} in line at {counter.counter_name}. "
+            "Estimated wait: 3-5 minutes."
+        )
+    else:
+        position_msg = (
+            f"You are next at {counter.counter_name}. "
+            "Estimated wait: 3-5 minutes."
+        )
+
+    _notify_request(
+        new_req,
+        "queue_joined",
+        f"You're in queue! Your number is {queue_number}.",
+        position_msg
+    )
+
+    db.session.commit()
+
+    actor_t = "Student" if student_id else "Guest"
+    actor_n = (new_req.student.email if new_req.student else (guest_name or "Guest User"))
+    record_audit(
+        "TICKET_CREATED",
+        target=queue_number,
+        details=f"New queue request created for {summary} (Fee: PHP {total:,.2f}) at {counter.counter_name}",
+        actor_type=actor_t,
+        actor_name=actor_n
+    )
+
     return jsonify({"success": True, "request": new_req.to_dict()})
 
 
@@ -1783,6 +2003,17 @@ def complete_queue_request(req_id):
     req_obj = QueueRequest.query.get(req_id)
     if req_obj:
         req_obj.status = "Completed"
+        req_obj.queue_step = None
+        req_obj.completed_at = ph_now()
+
+        _notify_request(
+            req_obj,
+            "completed",
+            "Your request is complete",
+            f"Queue {req_obj.queue_number} has been marked as completed. "
+            "Please claim your documents at the release counter."
+        )
+
         db.session.commit()
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Not found"}), 404
@@ -1792,6 +2023,24 @@ def complete_queue_request(req_id):
 def cancel_queue_request(req_id):
     req_obj = QueueRequest.query.get(req_id)
     if req_obj:
+        # Notify BEFORE deleting: the owner fields only exist on this row.
+        _notify_request(
+            req_obj,
+            "cancelled",
+            "Queue request cancelled",
+            f"Your queue request {req_obj.queue_number} has been cancelled."
+        )
+
+        # Staff also need to know, because a cancellation shortens the queue
+        # they are working through.
+        _notify_admins(
+            "cancelled",
+            "Request cancelled by user",
+            f"{_canceller_label(req_obj)} cancelled queue request "
+            f"{req_obj.queue_number} ({req_obj.counter}).",
+            req_obj.queue_number
+        )
+
         db.session.delete(req_obj)
         db.session.commit()
         return jsonify({"success": True})
@@ -1810,7 +2059,20 @@ def ticket_status(transaction_id):
     req_obj = QueueRequest.query.filter_by(transaction_id=transaction_id).first()
     if not req_obj:
         return render_template("ticket_status.html", req=None, found=False), 404
-    return render_template("ticket_status.html", req=req_obj, found=True)
+
+    info = req_obj.to_dict()
+    # This page is public (anyone holding the QR can open it), so never
+    # print the full student email -- keep the first 2 and last 2 characters.
+    email = req_obj.student.email if req_obj.student else ""
+    if email and "@" in email:
+        local, domain = email.split("@", 1)
+        if len(local) > 4:
+            local = local[:2] + "*" * (len(local) - 4) + local[-2:]
+        info["maskedEmail"] = f"{local}@{domain}"
+    else:
+        info["maskedEmail"] = None
+
+    return render_template("ticket_status.html", req=req_obj, info=info, found=True)
 
 
 @auth.route("/api/ticket/<transaction_id>", methods=["GET"])
@@ -1923,6 +2185,38 @@ def admin_counter_next(counter_id):
     counter.updated_at = ph_now()
     db.session.commit()
 
+    if candidates and counter.now_serving_number > 0:
+        called_req = next_req
+
+        record_audit(
+            "CALL_NEXT",
+            target=f"{counter.counter_name} -> {called_req.queue_number}",
+            details=f"Called ticket {called_req.queue_number} ({called_req.item_names}) at {counter.counter_name}",
+            actor_type="Admin"
+        )
+
+        _notify_request(
+            called_req,
+            "now_serving",
+            "Your number is being called!",
+            f"Queue {called_req.queue_number} is now being served at "
+            f"{counter.counter_name}. Please proceed to the counter now."
+        )
+
+        remaining = [r for r in candidates if r.id != called_req.id]
+        if remaining:
+            next_in_line = min(remaining, key=_num_of)
+            _notify_request(
+                next_in_line,
+                "next_in_line",
+                "You're next in line!",
+                f"Queue {next_in_line.queue_number} is next at "
+                f"{counter.counter_name}. Please be ready and wait for your "
+                "number to be called."
+            )
+
+        db.session.commit()
+
     return jsonify({"success": True, "counter": counter.to_dict()})
 
 
@@ -1945,15 +2239,49 @@ def admin_counter_set(counter_id):
 
     if new_number is not None:
         try:
-            counter.now_serving_number = int(new_number)
+            new_number = int(new_number)
         except (ValueError, TypeError):
             return jsonify({"success": False, "error": "Invalid number"}), 400
+
+        # Whoever was being served before this manual override loses their turn.
+        if counter.now_serving_number and counter.now_serving_number != new_number:
+            previous = _request_at(counter, counter.now_serving_number)
+            if previous:
+                _notify_request(
+                    previous,
+                    "turn_ended",
+                    "Your turn has ended",
+                    f"Queue {previous.queue_number} is no longer being served at "
+                    f"{counter.counter_name}. Please ask the counter staff for "
+                    "your next step."
+                )
+
+        counter.now_serving_number = new_number
+
+        # Whoever is being served now needs to know, even if staff set it by hand.
+        if new_number > 0:
+            called = _request_at(counter, new_number)
+            if called:
+                _notify_request(
+                    called,
+                    "now_serving",
+                    "Your number is being called!",
+                    f"Queue {called.queue_number} is now being served at "
+                    f"{counter.counter_name}. Please proceed to the counter now."
+                )
 
     if is_active is not None:
         counter.is_active = bool(is_active)
 
     counter.updated_at = ph_now()
     db.session.commit()
+
+    record_audit(
+        "COUNTER_SET",
+        target=counter.counter_name,
+        details=f"Manually set serving number to {counter.now_serving_number} (Active: {counter.is_active})",
+        actor_type="Admin"
+    )
 
     return jsonify({"success": True, "counter": counter.to_dict()})
 
@@ -1971,29 +2299,61 @@ def admin_counter_reset(counter_id):
         return jsonify({"success": False, "error": "Counter not found"}), 404
 
     prefix = counter.now_serving_prefix or counter.counter_code
+
+    # Whoever was being served loses their turn when the counter is reset.
+    if counter.now_serving_number > 0:
+        previous = _request_at(counter, counter.now_serving_number)
+        if previous:
+            _notify_request(
+                previous,
+                "turn_ended",
+                "Your turn has ended",
+                f"Queue {previous.queue_number} is no longer being served at "
+                f"{counter.counter_name}. Please ask the counter staff for "
+                "your next step."
+            )
+
     counter.now_serving_number = 0
     counter.last_number = 0
     counter.updated_at = ph_now()
 
-    # Clear active requests specific to this station
+    # Notify everyone being cleared BEFORE the rows disappear.
     if counter.counter_code == "C":
-        QueueRequest.query.filter(
+        doomed = QueueRequest.query.filter(
             db.or_(
                 QueueRequest.queue_step == "payment",
                 QueueRequest.queue_number.like(f"{prefix}-%")
             ),
             QueueRequest.status.in_(["Processing", "Ready for pickup"])
-        ).delete(synchronize_session=False)
+        ).all()
     else:
-        QueueRequest.query.filter(
+        doomed = QueueRequest.query.filter(
             db.or_(
                 QueueRequest.counter == counter.counter_name,
                 QueueRequest.queue_number.like(f"{prefix}-%")
             ),
             QueueRequest.status.in_(["Processing", "Ready for pickup"])
-        ).delete(synchronize_session=False)
+        ).all()
+
+    for req_obj in doomed:
+        _notify_request(
+            req_obj,
+            "queue_reset",
+            "The queue was reset",
+            f"Queue {req_obj.queue_number} was cleared when "
+            f"{counter.counter_name} was reset. Please request again."
+        )
+        db.session.delete(req_obj)
 
     db.session.commit()
+
+    record_audit(
+        "COUNTER_RESET",
+        target=counter.counter_name,
+        details=f"Reset counter {counter.counter_name} serving number and cleared {len(doomed)} active tickets",
+        actor_type="Admin"
+    )
+
     return jsonify({"success": True, "counter": counter.to_dict()})
 
 
@@ -2013,11 +2373,29 @@ def admin_reset():
         counter.last_number = 0
         counter.updated_at = ph_now()
 
-    QueueRequest.query.filter(
+    # Notify everyone whose active request is about to be wiped.
+    clearing = QueueRequest.query.filter(
         QueueRequest.status.in_(["Processing", "Ready for pickup"])
-    ).delete(synchronize_session=False)
+    ).all()
+
+    for req_obj in clearing:
+        _notify_request(
+            req_obj,
+            "queue_reset",
+            "The queue was reset",
+            f"Queue {req_obj.queue_number} was cleared when the whole queue "
+            "was reset. Please request again."
+        )
+        db.session.delete(req_obj)
 
     db.session.commit()
+
+    record_audit(
+        "QUEUE_RESET",
+        target="All Active Queues",
+        details=f"Master reset executed: cleared {len(clearing)} active queue tickets across all counters",
+        actor_type="Admin"
+    )
 
     return jsonify({"success": True})
 
@@ -2047,8 +2425,28 @@ def admin_update_request_status(req_id):
     if new_status in ("Ready for pickup", "Completed"):
         req_obj.counter_turn_done = True
 
+    # Tell the user when their document is ready -- the single most
+    # important thing they can be told.
+    if new_status == "Ready for pickup":
+        _notify_request(
+            req_obj,
+            "ready_for_pickup",
+            "Your document is ready!",
+            f"{req_obj.doc_name} is ready for pickup at {req_obj.counter}. "
+            "Please proceed to claim your documents."
+        )
+    elif new_status == "Completed":
+        _notify_request(
+            req_obj,
+            "completed",
+            "Your request is complete",
+            f"Queue {req_obj.queue_number} has been completed. Thank you for "
+            "using QRESERVE."
+        )
+
     if new_status == "Completed":
         req_obj.queue_step = None
+        req_obj.completed_at = ph_now()
 
         # If the counter was serving this ticket, clear its now_serving display
         m = re.match(r"^([A-Z])-(\d+)", req_obj.queue_number or "")
@@ -2067,6 +2465,13 @@ def admin_update_request_status(req_id):
                 db.session.add(counter)
 
     db.session.commit()
+
+    record_audit(
+        "STATUS_CHANGE",
+        target=req_obj.queue_number,
+        details=f"Status updated to '{new_status}' for {req_obj.item_names} ({req_obj.counter})",
+        actor_type="Admin"
+    )
 
     return jsonify({"success": True, "request": req_obj.to_dict()})
 
@@ -2094,6 +2499,14 @@ def admin_complete_counter_turn(req_id):
     if req_obj.status != "Ready for pickup":
         req_obj.status = "Processing"
 
+    _notify_request(
+        req_obj,
+        "processing",
+        "Your counter turn is done",
+        f"Thanks for visiting {req_obj.counter}. Your documents are now being "
+        "processed and you will be notified when they are ready for pickup."
+    )
+
     # If the counter was serving this ticket, clear its now_serving display
     m = re.match(r"^([A-Z])-(\d+)", req_obj.queue_number or "")
     if m:
@@ -2111,6 +2524,14 @@ def admin_complete_counter_turn(req_id):
             db.session.add(counter)
 
     db.session.commit()
+
+    record_audit(
+        "COMPLETE_WINDOW_TURN",
+        target=req_obj.queue_number,
+        details=f"Counter window turn finished for {req_obj.item_names}. Moved to Document Processing (Est. 3-5 days).",
+        actor_type="Admin"
+    )
+
     return jsonify({"success": True, "request": req_obj.to_dict()})
 
 
@@ -2151,11 +2572,31 @@ def admin_confirm_payment(req_id):
             db.session.add(cashier_counter)
 
     # Payment-only request → nothing to route to Registrar, mark completed.
+    req_obj.paid_at = ph_now()
+
     if not req_obj.has_academic_items:
         req_obj.status = "Completed"
+        req_obj.completed_at = req_obj.paid_at
         req_obj.queue_step = None
         req_obj.service = f"Cashier – {req_obj.item_names}"
+
+        _notify_request(
+            req_obj,
+            "completed",
+            "Payment received",
+            f"Your payment of PHP {req_obj.price:,.2f} has been received and "
+            f"Queue {old_qnum} is now complete. Thank you!"
+        )
+
         db.session.commit()
+
+        record_audit(
+            "PAYMENT_CONFIRMED",
+            target=old_qnum,
+            details=f"Payment received: PHP {req_obj.price:,.2f} for {req_obj.item_names}. Transaction completed.",
+            actor_type="Admin"
+        )
+
         return jsonify({"success": True, "request": req_obj.to_dict()})
 
     # Has academic items → payment done, route to Registrar queue.
@@ -2196,6 +2637,27 @@ def admin_confirm_payment(req_id):
 
     db.session.commit()
 
+    # The number just changed underneath them -- this is the notification
+    # that stops the student from waiting at the cashier for nothing.
+    _notify_request(
+        req_obj,
+        "payment_confirmed",
+        f"Payment received. Your new number is {new_queue_number}.",
+        f"Your payment has been confirmed and you have been moved to the "
+        f"Registrar queue. Please wait at {counter.counter_name} for number "
+        f"{new_queue_number}.",
+        queue_number=new_queue_number
+    )
+
+    db.session.commit()
+
+    record_audit(
+        "PAYMENT_CONFIRMED",
+        target=f"{old_qnum} -> {new_queue_number}",
+        details=f"Payment received: PHP {req_obj.total_price:,.2f} for {req_obj.item_names}. Re-routed to {counter.counter_name} ({new_queue_number}).",
+        actor_type="Admin"
+    )
+
     return jsonify({"success": True, "request": req_obj.to_dict()})
 
 
@@ -2215,6 +2677,18 @@ def admin_cancel_request(req_id):
     if not req_obj:
         return jsonify({"success": False, "error": "Not found"}), 404
 
+    cancelled_qnum = req_obj.queue_number
+    cancelled_doc = req_obj.item_names
+
+    # Notify BEFORE deleting: student_id / guest_session_key only exist here.
+    _notify_request(
+        req_obj,
+        "cancelled",
+        "Your queue request was cancelled",
+        f"Queue {cancelled_qnum} was cancelled by the registrar. Please submit "
+        "a new request if you still need these documents."
+    )
+
     # If the counter was serving this ticket, clear its now_serving display
     m = re.match(r"^([A-Z])-(\d+)", req_obj.queue_number or "")
     if m:
@@ -2233,6 +2707,13 @@ def admin_cancel_request(req_id):
 
     db.session.delete(req_obj)
     db.session.commit()
+
+    record_audit(
+        "TICKET_CANCELLED",
+        target=cancelled_qnum,
+        details=f"Admin cancelled ticket {cancelled_qnum} ({cancelled_doc})",
+        actor_type="Admin"
+    )
 
     return jsonify({"success": True})
 
@@ -2414,12 +2895,32 @@ def admin_get_analytics():
     student_count = sum(1 for r in all_reqs if r.student_id)
     guest_count = len(all_reqs) - student_count
 
+    # Revenue calculation
+    total_revenue = sum(r.total_price for r in all_reqs if r.is_paid)
+
+    # Counter workload distribution
+    all_counters = QueueCounter.query.order_by(QueueCounter.counter_code).all()
+    counter_workload = []
+    for c in all_counters:
+        c_reqs = [r for r in all_reqs if r.counter and (c.counter_name in r.counter or c.counter_code in r.counter)]
+        counter_workload.append({
+            "code": c.counter_code,
+            "name": c.counter_name,
+            "total_assigned": len(c_reqs),
+            "now_serving": c.now_serving_number,
+            "waiting": c.waiting_count,
+            "processing": c.processing_count,
+        })
+
+    total_audit_events = AuditLog.query.count()
+
     return jsonify({
         "success": True,
         "requests_per_day": requests_per_day,
         "most_requested": most_requested,
         "peak_hours": peak_hours,
         "completed_vs_cancelled": completed_vs_cancelled,
+        "counter_workload": counter_workload,
         "summary": {
             "total_requests": len(all_reqs),
             "avg_per_day": avg_per_day,
@@ -2427,8 +2928,375 @@ def admin_get_analytics():
             "guest_requests": guest_count,
             "completed": status_counts.get("Completed", 0),
             "active": status_counts.get("Processing", 0) + status_counts.get("Ready for pickup", 0),
+            "total_revenue": total_revenue,
+            "total_audit_events": total_audit_events
         }
     })
+
+
+# =======================================================
+# ADMIN — AUDIT LOGS API (Week 14: Audit Logs)
+# =======================================================
+
+@auth.route("/api/admin/audit-logs", methods=["GET"])
+@limiter.exempt
+def admin_get_audit_logs():
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    query = AuditLog.query.order_by(AuditLog.id.desc())
+
+    action_filter = request.args.get("action")
+    if action_filter and action_filter != "all":
+        query = query.filter(AuditLog.action == action_filter)
+
+    actor_filter = request.args.get("actor_type")
+    if actor_filter and actor_filter != "all":
+        query = query.filter(AuditLog.actor_type == actor_filter)
+
+    search = request.args.get("search", "").strip()
+    if search:
+        search_like = f"%{search}%"
+        query = query.filter(
+            db.or_(
+                AuditLog.action.ilike(search_like),
+                AuditLog.actor_name.ilike(search_like),
+                AuditLog.target.ilike(search_like),
+                AuditLog.details.ilike(search_like),
+                AuditLog.ip_address.ilike(search_like),
+            )
+        )
+
+    limit = request.args.get("limit", 300, type=int)
+    logs = query.limit(limit).all()
+
+    # Get distinct action types for filter options
+    distinct_actions = [row[0] for row in db.session.query(AuditLog.action).distinct().all()]
+
+    return jsonify({
+        "success": True,
+        "logs": [l.to_dict() for l in logs],
+        "total": query.count(),
+        "available_actions": sorted(distinct_actions)
+    })
+
+
+# =======================================================
+# ADMIN — EXCEL EXPORT API (Week 14: Downloadable Excel)
+# =======================================================
+
+@auth.route("/api/admin/export/excel", methods=["GET"])
+@limiter.exempt
+def admin_export_excel():
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    report_type = request.args.get("type", "all").strip().lower()
+    if report_type not in ("all", "analytics", "requests", "audit"):
+        report_type = "all"
+
+    filters = {
+        "status": request.args.get("status"),
+        "counter": request.args.get("counter"),
+        "user_type": request.args.get("user_type"),
+    }
+
+    admin_user = session.get("admin_email") or "Administrator"
+
+    try:
+        excel_buf = generate_qreserve_excel(
+            report_type=report_type,
+            filters=filters,
+            admin_user=admin_user
+        )
+
+        filename_stamp = ph_now().strftime("%Y%m%d_%H%M%S")
+        type_prefix = {
+            "all": "Executive_Report",
+            "analytics": "Queue_Analytics",
+            "requests": "Queue_Requests",
+            "audit": "System_Audit_Logs"
+        }.get(report_type, "Report")
+
+        filename = f"QRESERVE_{type_prefix}_{filename_stamp}.xlsx"
+
+        record_audit(
+            "REPORT_EXPORTED",
+            target=f"Excel (.xlsx) - {type_prefix}",
+            details=f"Admin exported {type_prefix} workbook ({filename})",
+            actor_type="Admin",
+            actor_name=admin_user
+        )
+
+        return send_file(
+            excel_buf,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        print(f"[Export Error] {e}")
+        return jsonify({"success": False, "error": f"Failed to generate Excel report: {str(e)}"}), 500
+
+
+# =======================================================
+# NOTIFICATION API — GET USER NOTIFICATIONS
+# =======================================================
+
+@auth.route("/api/notifications", methods=["GET"])
+@limiter.exempt
+def get_notifications():
+    student_id = session.get("student_id")
+    guest_key = session.get("guest_session_key")
+
+    query = Notification.query
+
+    if student_id:
+        query = query.filter(Notification.student_id == student_id)
+    elif guest_key:
+        query = query.filter(Notification.guest_session_key == guest_key)
+    else:
+        return jsonify({"success": True, "notifications": [], "unread_count": 0})
+
+    notifications = query.order_by(Notification.created_at.desc()).limit(50).all()
+    unread = sum(1 for n in notifications if not n.is_read)
+
+    return jsonify({
+        "success": True,
+        "notifications": [n.to_dict() for n in notifications],
+        "unread_count": unread,
+    })
+
+
+# =======================================================
+# NOTIFICATION API — MARK AS READ
+# =======================================================
+
+@auth.route("/api/notifications/read", methods=["POST"])
+@limiter.exempt
+def mark_notification_read():
+    data = request.get_json() or {}
+    notif_id = data.get("id")
+
+    if not notif_id:
+        return jsonify({"success": False, "error": "Notification ID required"}), 400
+
+    student_id = session.get("student_id")
+    guest_key = session.get("guest_session_key")
+
+    query = Notification.query.filter(Notification.id == notif_id)
+    if student_id:
+        query = query.filter(Notification.student_id == student_id)
+    elif guest_key:
+        query = query.filter(Notification.guest_session_key == guest_key)
+
+    notif = query.first()
+    if not notif:
+        return jsonify({"success": False, "error": "Notification not found"}), 404
+
+    notif.is_read = True
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+# =======================================================
+# NOTIFICATION API — MARK ALL AS READ
+# =======================================================
+
+@auth.route("/api/notifications/read-all", methods=["POST"])
+@limiter.exempt
+def mark_all_notifications_read():
+    student_id = session.get("student_id")
+    guest_key = session.get("guest_session_key")
+
+    query = Notification.query
+    if student_id:
+        query = query.filter(Notification.student_id == student_id)
+    elif guest_key:
+        query = query.filter(Notification.guest_session_key == guest_key)
+    else:
+        return jsonify({"success": True})
+
+    query.update({Notification.is_read: True}, synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+# =======================================================
+# NOTIFICATION API — DELETE ONE NOTIFICATION
+# =======================================================
+
+@auth.route("/api/notifications/<int:notif_id>", methods=["DELETE"])
+@limiter.exempt
+def delete_notification(notif_id):
+    student_id = session.get("student_id")
+    guest_key = session.get("guest_session_key")
+
+    if not student_id and not guest_key:
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    query = Notification.query.filter(Notification.id == notif_id)
+    if student_id:
+        query = query.filter(Notification.student_id == student_id)
+    else:
+        query = query.filter(Notification.guest_session_key == guest_key)
+
+    notif = query.first()
+    if not notif:
+        return jsonify({"success": False, "error": "Notification not found"}), 404
+
+    db.session.delete(notif)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+# =======================================================
+# NOTIFICATION API — CLEAR ALL NOTIFICATIONS
+# =======================================================
+
+@auth.route("/api/notifications/clear", methods=["POST"])
+@limiter.exempt
+def clear_notifications():
+    student_id = session.get("student_id")
+    guest_key = session.get("guest_session_key")
+
+    query = Notification.query
+    if student_id:
+        query = query.filter(Notification.student_id == student_id)
+    elif guest_key:
+        query = query.filter(Notification.guest_session_key == guest_key)
+    else:
+        return jsonify({"success": True})
+
+    query.delete(synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+# =======================================================
+# NOTIFICATION API — ADMIN SIDE
+# =======================================================
+#
+# Staff notices live in their own table (admin_notifications) and are always
+# scoped to the signed-in administrator's own email, so one admin can never
+# read, clear or delete another admin's notices.
+
+def _admin_email_or_403():
+    """The signed-in admin's email, or a 403 response."""
+    if not session.get("admin_logged_in"):
+        return None, (jsonify({"success": False, "error": "Unauthorized"}), 403)
+
+    email = session.get("admin_email")
+    if not email:
+        return None, (jsonify({"success": False, "error": "Unauthorized"}), 403)
+
+    return email, None
+
+
+@auth.route("/api/admin/notifications", methods=["GET"])
+@limiter.exempt
+def get_admin_notifications():
+    email, error = _admin_email_or_403()
+    if error:
+        return error
+
+    notifications = (
+        AdminNotification.query
+        .filter(AdminNotification.admin_email == email)
+        .order_by(AdminNotification.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    unread = sum(1 for n in notifications if not n.is_read)
+
+    return jsonify({
+        "success": True,
+        "notifications": [n.to_dict() for n in notifications],
+        "unread_count": unread,
+    })
+
+
+@auth.route("/api/admin/notifications/read", methods=["POST"])
+@limiter.exempt
+def mark_admin_notification_read():
+    email, error = _admin_email_or_403()
+    if error:
+        return error
+
+    data = request.get_json() or {}
+    notif_id = data.get("id")
+
+    if not notif_id:
+        return jsonify({"success": False, "error": "Notification ID required"}), 400
+
+    notif = AdminNotification.query.filter(
+        AdminNotification.id == notif_id,
+        AdminNotification.admin_email == email
+    ).first()
+
+    if not notif:
+        return jsonify({"success": False, "error": "Notification not found"}), 404
+
+    notif.is_read = True
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@auth.route("/api/admin/notifications/read-all", methods=["POST"])
+@limiter.exempt
+def mark_all_admin_notifications_read():
+    email, error = _admin_email_or_403()
+    if error:
+        return error
+
+    AdminNotification.query.filter(
+        AdminNotification.admin_email == email
+    ).update({AdminNotification.is_read: True}, synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@auth.route("/api/admin/notifications/<int:notif_id>", methods=["DELETE"])
+@limiter.exempt
+def delete_admin_notification(notif_id):
+    email, error = _admin_email_or_403()
+    if error:
+        return error
+
+    notif = AdminNotification.query.filter(
+        AdminNotification.id == notif_id,
+        AdminNotification.admin_email == email
+    ).first()
+
+    if not notif:
+        return jsonify({"success": False, "error": "Notification not found"}), 404
+
+    db.session.delete(notif)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@auth.route("/api/admin/notifications/clear", methods=["POST"])
+@limiter.exempt
+def clear_admin_notifications():
+    email, error = _admin_email_or_403()
+    if error:
+        return error
+
+    AdminNotification.query.filter(
+        AdminNotification.admin_email == email
+    ).delete(synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"success": True})
 
 
 @auth.after_request

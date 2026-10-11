@@ -1,0 +1,413 @@
+/* ==================================================================
+   QRESERVE — Notification Bell, Dropdown & Toast
+   Shared by the student dashboard and the guest dashboard so both
+   stay in sync. Requires Poppins to be loaded by the page.
+   ================================================================== */
+
+.notification-bell-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+    animation: notifBadgePop 0.35s ease;
+}
+
+.notification-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 360px;
+    max-height: 420px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+    z-index: 10000;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+.notification-dropdown.show {
+    display: flex;
+    animation: notifDropIn 0.18s ease;
+}
+
+.notification-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-weight: 700;
+    font-size: 14px;
+    color: #1e293b;
+}
+
+.notification-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notification-mark-all,
+.notification-clear-all {
+    background: none;
+    border: none;
+    color: #a90000;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.notification-mark-all:hover,
+.notification-clear-all:hover {
+    text-decoration: underline;
+}
+
+.notification-clear-all {
+    color: #64748b;
+}
+
+.notification-list {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 360px;
+}
+
+.notification-empty {
+    padding: 32px 16px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.notification-item {
+    position: relative;
+    padding: 12px 40px 12px 16px;
+    border-bottom: 1px solid #f8fafc;
+    cursor: pointer;
+    transition: background 0.15s;
+    animation: notifItemIn 0.22s ease;
+}
+
+.notification-item:hover {
+    background: #f8fafc;
+}
+
+.notification-item.unread {
+    background: #fef2f2;
+}
+
+.notification-item.unread:hover {
+    background: #fee2e2;
+}
+
+/* Fade + slide the row out when dismissed with the X button. */
+.notification-item.removing {
+    animation: notifItemOut 0.22s ease forwards;
+    pointer-events: none;
+}
+
+/* Unread dot */
+.notification-item.unread::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 16px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #dc2626;
+}
+
+.notification-item-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 3px;
+}
+
+.notification-item-message {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.notification-item-time {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.notification-item-queue {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1e293b;
+    background: #f1f5f9;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-top: 6px;
+}
+
+/* Delete (X) button */
+.notification-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.notification-close:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+    transform: scale(1.08);
+}
+
+.notification-close:focus-visible {
+    outline: 2px solid #a90000;
+    outline-offset: 1px;
+}
+
+.notification-item-type {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+/* --- Type colours ------------------------------------------------ */
+
+.notification-item-type.now_serving {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.notification-item-type.next_in_line {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.notification-item-type.queue_joined {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.notification-item-type.payment_confirmed {
+    background: #ccfbf1;
+    color: #115e59;
+}
+
+.notification-item-type.ready_for_pickup {
+    background: #bbf7d0;
+    color: #14532d;
+}
+
+.notification-item-type.processing {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.notification-item-type.completed {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.notification-item-type.cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.notification-item-type.turn_ended {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.notification-item-type.queue_reset {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* ==================================================================
+   Toast — urgent notifications (number called, ready for pickup…)
+   Slides + fades in, holds, then fades out on its own.
+   ================================================================== */
+
+.notification-toast-stack {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: min(380px, calc(100vw - 36px));
+    pointer-events: none;
+}
+
+.notification-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #fff;
+    border-left: 5px solid #dc2626;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 16px 40px rgba(15,23,42,0.22);
+    opacity: 0;
+    transform: translateX(28px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    cursor: pointer;
+}
+
+.notification-toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification-toast.hiding {
+    opacity: 0;
+    transform: translateX(28px);
+}
+
+.notification-toast-icon {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.notification-toast-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-toast-title {
+    font-family: Poppins, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 3px;
+}
+
+.notification-toast-message {
+    font-family: Poppins, system-ui, sans-serif;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #475569;
+}
+
+.notification-toast-queue {
+    display: inline-block;
+    margin-top: 7px;
+    font-family: Poppins, system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: #b91c1c;
+    background: #fee2e2;
+    border-radius: 6px;
+    padding: 2px 9px;
+}
+
+.notification-toast-close {
+    flex: none;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.notification-toast-close:hover {
+    color: #b91c1c;
+}
+
+/* --- Animations -------------------------------------------------- */
+
+@keyframes notifDropIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes notifItemIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes notifItemOut {
+    from { opacity: 1; max-height: 160px; }
+    to   { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
+}
+
+@keyframes notifBadgePop {
+    0%   { transform: scale(0.6); }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* --- Small screens ------------------------------------------------ */
+
+@media (max-width: 480px) {
+    .notification-dropdown {
+        position: fixed;
+        top: 62px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-height: 70vh;
+    }
+
+    .notification-list {
+        max-height: 58vh;
+    }
+
+    .notification-toast-stack {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+    }
+}

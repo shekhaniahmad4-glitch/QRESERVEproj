@@ -46,10 +46,22 @@
                 });
         },
 
-        getActiveRequest: function () {
-            return this.cachedRequests.find(function (r) {
-                return isOngoing(r.status);
+        getActiveCounterTicket: function () {
+            var live = this.cachedRequests.filter(function (r) {
+                return (r.status === 'Processing') && !r.counterTurnDone && (r.queueStep !== 'document_processing');
             });
+            return live.length ? live[0] : null;
+        },
+
+        getProcessingDocuments: function () {
+            return this.cachedRequests.filter(function (r) {
+                return (r.status === 'Processing' && (Boolean(r.counterTurnDone) || r.queueStep === 'document_processing')) ||
+                       (r.status === 'Ready for pickup');
+            });
+        },
+
+        getActiveRequest: function () {
+            return this.getActiveCounterTicket() || (this.getProcessingDocuments()[0] || null);
         },
 
         selectCard: function (cardEl, serviceName, docName, price) {
@@ -254,15 +266,98 @@
 
             var qrBoxId = this.userType + "ActiveQrBox";
             var dbId = active.db_id || "";
+            var isTurnFinished = Boolean(active.counterTurnDone) || active.status === "Ready for pickup" || active.status === "Completed" || active.queueStep === "document_processing";
 
-            container.innerHTML =
-                '<div class="my-queue-card">' +
-                    '<div class="d-flex justify-content-between align-items-center mb-3">' +
-                        '<div class="my-queue-card-title mb-0">Your Current Queue</div>' +
-                        '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill" style="font-size:12px;font-weight:700;">' +
-                            escapeHtml(active.status) +
-                        "</span>" +
-                    "</div>" +
+            var badgeClass = active.isNowServing
+                ? "bg-success text-white"
+                : (isTurnFinished
+                    ? (active.status === "Ready for pickup" ? "bg-info text-white" : "bg-success text-white")
+                    : (active.queueStep === "payment" ? "bg-warning text-dark" : "bg-primary text-white"));
+
+            var badgeText = active.isNowServing
+                ? "Now Serving"
+                : (isTurnFinished
+                    ? (active.status === "Ready for pickup" ? "Ready for Pickup" : (active.status === "Completed" ? "Completed" : "Document Processing"))
+                    : (active.queueStep === "payment" ? "Awaiting Payment" : "Waiting for Counter"));
+
+            var bannerHtml = "";
+            if (active.isNowServing) {
+                bannerHtml =
+                    '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;box-shadow:0 4px 14px rgba(4,120,87,0.25);">' +
+                        '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
+                            '<i class="bi bi-megaphone-fill" style="font-size:22px;color:#fff;"></i>' +
+                        "</div>" +
+                        '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">Now Calling Your Number!</div>' +
+                        '<div style="font-size:13px;color:rgba(255,255,255,0.95);margin-top:4px;font-weight:600;">' +
+                            (active.queueStep === "payment"
+                                ? "Please proceed to " + escapeHtml(active.counter) + " to pay ₱" + escapeHtml(active.price) + ".00"
+                                : (active.status === "Ready for pickup"
+                                    ? "Your document is ready! Please proceed to " + escapeHtml(active.counter) + " to claim it."
+                                    : "Please proceed to " + escapeHtml(active.counter) + " and have your documents ready.")) +
+                        "</div>" +
+                    "</div>";
+            } else if (isTurnFinished) {
+                if (active.status === "Ready for pickup") {
+                    bannerHtml =
+                        '<div style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;">' +
+                            '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
+                                '<i class="bi bi-file-earmark-check-fill" style="font-size:22px;color:#fff;"></i>' +
+                            "</div>" +
+                            '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase;">Document Ready for Pickup</div>' +
+                            '<div style="font-size:13px;color:rgba(255,255,255,0.9);margin-top:4px;font-weight:500;">Your document is ready. Please proceed to ' + escapeHtml(active.counter) + " to claim it.</div>" +
+                        "</div>";
+                } else if (active.status === "Completed") {
+                    bannerHtml =
+                        '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;">' +
+                            '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
+                                '<i class="bi bi-check-circle-fill" style="font-size:22px;color:#fff;"></i>' +
+                            "</div>" +
+                            '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Transaction Completed</div>' +
+                            '<div style="font-size:13px;color:rgba(255,255,255,0.95);margin-top:4px;font-weight:600;">Your document request has been completed. Thank you for using QRESERVE!</div>' +
+                        "</div>";
+                } else {
+                    bannerHtml =
+                        '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center;box-shadow:0 4px 14px rgba(4,120,87,0.25);">' +
+                            '<div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);margin-bottom:8px;">' +
+                                '<i class="bi bi-check2-circle" style="font-size:24px;color:#fff;"></i>' +
+                            "</div>" +
+                            '<div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Counter Turn Completed!</div>' +
+                            '<div style="font-size:13px;color:rgba(255,255,255,0.95);margin-top:4px;font-weight:600;">Your document request is now processing (Est. 3–5 working days). Keep your QR receipt below to claim your document.</div>' +
+                        "</div>";
+                }
+            } else {
+                bannerHtml =
+                    '<div style="margin-bottom:16px;">' +
+                        (active.queueStep === "payment"
+                            ? '<div style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 10px;border-radius:20px;margin-bottom:8px;"><i class="bi bi-wallet2"></i> Cashier Payment Pending (₱' + escapeHtml(active.price) + '.00)</div>'
+                            : '<div style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#1e40af;background:#dbeafe;padding:3px 10px;border-radius:20px;margin-bottom:8px;"><i class="bi bi-clock-history"></i> Waiting for Counter Turn</div>') +
+                        '<div class="queue-field-label">Queue Status</div>' +
+                        '<div class="wait-time-value" style="font-size:20px;font-weight:800;color:#1e293b;">' +
+                            escapeHtml(active.aheadCount === 0 ? "Next in line" : active.waitTime) +
+                        "</div>" +
+                    "</div>";
+            }
+
+            var stageNotice = "";
+            if (!isTurnFinished) {
+                if (active.queueStep === "payment") {
+                    stageNotice =
+                        '<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:12px 16px;margin-top:14px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#92400e;line-height:1.45;">' +
+                            '<i class="bi bi-info-circle-fill" style="font-size:18px;color:#d97706;flex-shrink:0;"></i>' +
+                            "<div>Please wait for your ticket to be called at <strong>" + escapeHtml(active.counter) + "</strong> to settle payment. <em>Your scannable QR receipt will be issued once your window turn is completed.</em></div>" +
+                        "</div>";
+                } else {
+                    stageNotice =
+                        '<div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:12px 16px;margin-top:14px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#1e40af;line-height:1.45;">' +
+                            '<i class="bi bi-info-circle-fill" style="font-size:18px;color:#2563eb;flex-shrink:0;"></i>' +
+                            "<div>Payment confirmed! Please proceed to <strong>" + escapeHtml(active.counter) + "</strong> when called. <em>Your scannable QR receipt will appear once the counter officer completes your turn.</em></div>" +
+                        "</div>";
+                }
+            }
+
+            var mainBody = "";
+            if (isTurnFinished) {
+                mainBody =
                     '<div class="my-queue-split">' +
                         '<div class="my-queue-info">' +
                             '<div class="queue-field-label">Queue Number</div>' +
@@ -272,14 +367,7 @@
                             '<div class="queue-field-label">Counter</div>' +
                             '<div class="queue-field-value" style="font-weight:700;">' + escapeHtml(active.counter) + "</div>" +
                             '<div class="queue-field-label">Price</div>' +
-                            '<div class="queue-field-value" style="font-weight:700;color:#047857;">₱' + escapeHtml(active.price) + ".00</div>" +
-                            '<div class="queue-field-label">Estimated Wait Time</div>' +
-                            '<div class="wait-time-value" style="font-size:20px;font-weight:800;color:#1e293b;">' +
-                                escapeHtml(active.waitTime) +
-                            "</div>" +
-                            '<div style="font-size:11.5px;color:#64748b;font-weight:500;margin-bottom:12px;">' +
-                                '<i class="bi bi-person-check"></i> The person in front of the queue is now being served.' +
-                            "</div>" +
+                            '<div class="queue-field-value" style="font-weight:700;color:#047857;">₱' + escapeHtml(active.price) + ".00" + (active.isPaid ? " – paid" : "") + "</div>" +
                             '<div class="queue-field-label">Service</div>' +
                             '<div class="queue-field-value">' + escapeHtml(active.service) + "</div>" +
                             '<div class="queue-field-label">Requests</div>' +
@@ -287,46 +375,159 @@
                                 escapeHtml(active.docName) +
                             "</div>" +
                         "</div>" +
-                        '<div class="my-queue-qr-box" id="' + qrBoxId + '"></div>' +
+                        '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+                            '<div class="my-queue-qr-box" id="' + qrBoxId + '" style="cursor:pointer;" onclick="window.open(\'/ticket/\' + encodeURIComponent(\'' + active.transactionId + '\'), \'_blank\')" title="Click to view digital receipt &amp; ticket details">' +
+                            "</div>" +
+                            '<div style="font-size:11px;font-weight:700;color:#64748b;text-align:center;margin-top:2px;"><i class="bi bi-qr-code me-1"></i>Official QR Receipt</div>' +
+                            '<div style="font-size:10px;color:#94a3b8;text-align:center;max-width:140px;">Scannable by phone camera (works offline)</div>' +
+                        "</div>" +
                     "</div>" +
-                    '<div class="my-queue-actions">' +
-                        '<button class="btn-download-qr" type="button" onclick="QReserveApp.downloadActiveQR(\'' + qrBoxId + '\')">' +
+                    '<div class="my-queue-actions d-flex flex-wrap gap-2">' +
+                        '<button class="btn btn-success rounded-pill fw-bold d-inline-flex align-items-center gap-2 px-3 py-2" type="button" onclick="QReserveApp.downloadReceiptPNG()" style="font-size:13px;">' +
+                            '<i class="bi bi-file-earmark-arrow-down-fill"></i> Download Receipt (PNG)' +
+                        "</button>" +
+                        '<button class="btn btn-outline-dark rounded-pill fw-bold d-inline-flex align-items-center gap-2 px-3 py-2" type="button" onclick="QReserveApp.downloadActiveQR(\'' + qrBoxId + '\')" style="font-size:13px;">' +
                             '<i class="bi bi-qr-code-scan"></i> Download QR' +
                         "</button>" +
-                        '<button class="btn btn-outline-danger rounded-pill fw-bold" type="button" onclick="QReserveApp.cancelActive(\'' + dbId + '\')">' +
-                            '<i class="bi bi-x-circle"></i> Cancel' +
-                        "</button>" +
+                        '<a href="/ticket/' + encodeURIComponent(active.transactionId) + '" target="_blank" class="btn btn-outline-secondary rounded-pill fw-bold d-inline-flex align-items-center gap-2 px-3 py-2" style="font-size:13px;text-decoration:none;">' +
+                            '<i class="bi bi-receipt"></i> View Online' +
+                        "</a>" +
+                    "</div>";
+            } else {
+                mainBody =
+                    '<div class="my-queue-info">' +
+                        '<div class="row g-3">' +
+                            '<div class="col-6">' +
+                                '<div class="queue-field-label">Queue Number</div>' +
+                                '<div class="queue-number-display" style="font-size:28px;font-weight:900;color:#1e293b;letter-spacing:1px;margin-bottom:8px;">Queue ' + escapeHtml(active.queueNum) + '</div>' +
+                            '</div>' +
+                            '<div class="col-6">' +
+                                '<div class="queue-field-label">Counter</div>' +
+                                '<div class="queue-field-value" style="font-weight:700;font-size:16px;">' + escapeHtml(active.counter) + '</div>' +
+                            '</div>' +
+                            '<div class="col-6">' +
+                                '<div class="queue-field-label">Price</div>' +
+                                '<div class="queue-field-value" style="font-weight:700;' + (active.price > 0 ? (active.queueStep === 'payment' ? 'color:#b45309;' : 'color:#047857;') : 'color:#64748b;') + '">' +
+                                    (active.price > 0 ? '₱' + escapeHtml(active.price) + '.00' + (active.queueStep === 'payment' ? ' (pending)' : ' – paid') : '—') +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="col-6">' +
+                                '<div class="queue-field-label">Service</div>' +
+                                '<div class="queue-field-value">' + escapeHtml(active.service) + '</div>' +
+                            '</div>' +
+                            '<div class="col-12">' +
+                                '<div class="queue-field-label">Requests</div>' +
+                                '<div class="queue-field-value" style="font-weight:700;color:#8c1010;">' + escapeHtml(active.docName) + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        stageNotice +
+                    '</div>' +
+                    '<div class="my-queue-actions d-flex justify-content-end mt-3">' +
+                        '<button class="btn btn-outline-danger rounded-pill fw-bold d-inline-flex align-items-center gap-2 px-3 py-2" type="button" onclick="QReserveApp.cancelActive(\'' + dbId + '\')" style="font-size:13px;">' +
+                            '<i class="bi bi-x-circle"></i> Cancel Queue Ticket' +
+                        '</button>' +
+                    '</div>';
+            }
+
+            container.innerHTML =
+                '<div class="my-queue-card fade-in-stagger delay-1">' +
+                    '<div class="d-flex justify-content-between align-items-center mb-3">' +
+                        '<div class="my-queue-card-title mb-0">Your Current Queue</div>' +
+                        '<span class="badge ' + badgeClass + ' px-3 py-2 rounded-pill" style="font-size:12px;font-weight:700;">' +
+                            badgeText +
+                        "</span>" +
                     "</div>" +
+                    bannerHtml +
+                    mainBody +
                 "</div>";
 
-            setTimeout(function () {
-                var box = document.getElementById(qrBoxId);
-                if (box && typeof QRCode !== "undefined") {
-                    box.innerHTML = "";
-                    new QRCode(box, {
-                        text: active.transactionId,
-                        width: 140,
-                        height: 140,
-                        colorDark: "#1e293b",
-                        colorLight: "#f8fafc",
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
-                }
-            }, 50);
+            if (isTurnFinished) {
+                var renderQrCode = function (attempts) {
+                    var box = document.getElementById(qrBoxId);
+                    if (!box) return;
+                    if (typeof QRCode === "undefined") {
+                        if ((attempts || 0) < 25) {
+                            setTimeout(function () { renderQrCode((attempts || 0) + 1); }, 80);
+                        }
+                        return;
+                    }
+                    var payload = (window.QReserveTicketCard && window.QReserveTicketCard.buildReceiptText)
+                        ? window.QReserveTicketCard.buildReceiptText(active)
+                        : (window.QReserveTicketCard ? window.QReserveTicketCard.ticketUrl(active.transactionId) : "");
+                    if (window.QReserveTicketCard && window.QReserveTicketCard.buildQRCanvas) {
+                        window.QReserveTicketCard.buildQRCanvas(box, payload, 140);
+                    } else {
+                        box.innerHTML = "";
+                        new QRCode(box, {
+                            text: payload,
+                            width: 140,
+                            height: 140,
+                            colorDark: "#1e293b",
+                            colorLight: "#f8fafc",
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    }
+                };
+                setTimeout(function () { renderQrCode(0); }, 30);
+            }
+        },
+
+        downloadReceiptPNG: function () {
+            var active = this.getActiveRequest();
+            if (!active) return;
+            var boxId = this.userType + "ActiveQrBox";
+            var box = document.getElementById(boxId);
+            var qrEl = box ? (box.querySelector("canvas") || box.querySelector("img")) : null;
+
+            if (window.QReserveTicketCard) {
+                window.QReserveTicketCard.download({
+                    qrImage: qrEl,
+                    qrPayload: window.QReserveTicketCard.buildReceiptText(active),
+                    queueNum: active.queueNum,
+                    docName: active.docName,
+                    counter: active.counter,
+                    txId: active.transactionId,
+                    transactionId: active.transactionId,
+                    date: active.dateTime,
+                    dateTime: active.dateTime,
+                    userName: active.userName,
+                    userType: active.userType,
+                    price: active.price,
+                    isPaid: active.isPaid,
+                    status: active.status
+                });
+            } else {
+                alert("Receipt generator is still loading. Please try again.");
+            }
         },
 
         downloadActiveQR: function (qrBoxId) {
+            var active = this.getActiveRequest();
+            if (!active) return;
             var box = document.getElementById(qrBoxId);
-            if (!box) return;
-            var canvas = box.querySelector("canvas");
-            if (!canvas) {
-                alert("QR code not ready yet.");
-                return;
+            var qrEl = box ? (box.querySelector("canvas") || box.querySelector("img")) : null;
+
+            if (window.QReserveTicketCard) {
+                window.QReserveTicketCard.downloadQR({
+                    qrImage: qrEl,
+                    qrPayload: window.QReserveTicketCard.buildReceiptText(active),
+                    qrUrl: window.QReserveTicketCard.ticketUrl(active.transactionId),
+                    queueNum: active.queueNum,
+                    docName: active.docName,
+                    counter: active.counter,
+                    txId: active.transactionId,
+                    transactionId: active.transactionId,
+                    date: active.dateTime,
+                    dateTime: active.dateTime,
+                    userName: active.userName,
+                    userType: active.userType,
+                    price: active.price,
+                    isPaid: active.isPaid,
+                    status: active.status
+                });
+            } else {
+                alert("QR generator is still loading. Please try again.");
             }
-            var link = document.createElement("a");
-            link.download = "QRESERVE-Ticket-QR.png";
-            link.href = canvas.toDataURL("image/png");
-            link.click();
         },
 
         renderMyRequests: function () {

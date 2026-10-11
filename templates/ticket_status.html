@@ -4,323 +4,593 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QRESERVE | Ticket Status</title>
+    <title>QRESERVE | {% if found %}Receipt {{ req.transaction_id }}{% else %}Receipt Not Found{% endif %}</title>
 
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        html, body {
-            width: 100%;
+        body {
             font-family: 'Poppins', sans-serif;
-            background: #f5f6fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #f1f2f6;
             min-height: 100vh;
+            padding: 28px 14px 40px;
+            color: #1e293b;
         }
 
-        body::before, body::after {
+        body::before {
             content: '';
             position: fixed;
-            border-radius: 50%;
-            filter: blur(70px);
-            opacity: 0.18;
-            pointer-events: none;
+            inset: 0 0 auto 0;
+            height: 230px;
+            background: linear-gradient(135deg, #a90000 0%, #6e0b0b 100%);
             z-index: 0;
         }
-        body::before {
-            width: 500px; height: 500px;
-            background: #a90000;
-            top: -100px; left: -120px;
-        }
-        body::after {
-            width: 400px; height: 400px;
-            background: #e07000;
-            bottom: -80px; right: -80px;
-        }
 
-        .ticket-card {
-            position: relative; z-index: 1;
-            background: white;
-            border-radius: 24px;
-            padding: 34px 36px 32px;
-            width: 100%;
+        .wrap {
+            position: relative;
+            z-index: 1;
             max-width: 460px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            animation: cardEnter 0.45s cubic-bezier(0.16,1,0.3,1) both;
+            margin: 0 auto;
+        }
+
+        /* ---------- Receipt paper ---------- */
+        .receipt {
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+            overflow: hidden;
+            animation: enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        /* Zig-zag "torn paper" bottom edge */
+        .receipt-tear {
+            height: 14px;
+            background:
+                linear-gradient(-45deg, transparent 10px, #fff 0) 0 0 / 20px 14px repeat-x,
+                linear-gradient(45deg, transparent 10px, #fff 0) 0 0 / 20px 14px repeat-x;
+            filter: drop-shadow(0 6px 6px rgba(15, 23, 42, 0.08));
+        }
+
+        @keyframes enter {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .r-head {
             text-align: center;
+            padding: 26px 24px 18px;
+            border-bottom: 2px dashed #e2e8f0;
         }
 
-        @keyframes cardEnter {
-            from { opacity: 0; transform: translateY(28px) scale(0.97); }
-            to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        .r-logo {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+            margin-bottom: 6px;
         }
 
-        .ticket-brand {
-            font-size: 24px;
+        .r-school {
+            font-size: 13px;
             font-weight: 800;
             color: #8c1010;
-            letter-spacing: -0.5px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
 
-        .ticket-subtitle {
-            font-size: 13px;
+        .r-campus {
+            font-size: 11.5px;
             font-weight: 600;
-            color: #94a3b8;
-            margin-top: 2px;
+            color: #64748b;
         }
 
-        .ticket-divider {
-            border: 0;
-            border-top: 1px solid #e2e8f0;
-            margin: 18px 0;
-        }
-
-        .queue-number {
-            font-size: 44px;
-            font-weight: 900;
-            color: #1e293b;
-            letter-spacing: 1px;
-        }
-
-        .badge-status {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
+        .r-title {
+            margin-top: 12px;
             font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            color: #1e293b;
+            text-transform: uppercase;
+        }
+
+        .r-section {
+            padding: 18px 24px;
+            border-bottom: 2px dashed #e2e8f0;
+        }
+
+        .r-section:last-child { border-bottom: 0; }
+
+        .r-label {
+            font-size: 10.5px;
             font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        /* Top identifiers */
+        .id-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: end;
+            gap: 10px;
+        }
+
+        .tx-code {
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+            word-break: break-all;
+        }
+
+        .queue-num {
+            font-size: 34px;
+            font-weight: 900;
+            line-height: 1;
+            color: #8c1010;
+            text-align: right;
+        }
+
+        .queue-num-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: right;
+            margin-bottom: 4px;
+        }
+
+        /* Key/value rows */
+        .kv {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 14px;
+            font-size: 13px;
+            padding: 4px 0;
+        }
+
+        .kv .k { color: #64748b; font-weight: 600; white-space: nowrap; }
+        .kv .v { color: #1e293b; font-weight: 700; text-align: right; }
+
+        /* Items */
+        .items { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .items th {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: left;
+            padding-bottom: 6px;
+        }
+        .items th:last-child, .items td:last-child { text-align: right; }
+        .items td { padding: 7px 0; vertical-align: top; border-top: 1px solid #f1f5f9; }
+        .items .name { font-weight: 700; color: #1e293b; }
+        .items .type {
+            display: inline-block;
+            margin-top: 2px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 10px;
+        }
+        .type-academic { background: #fee2e2; color: #991b1b; }
+        .type-payment  { background: #e0f2fe; color: #075985; }
+        .items .amt { font-weight: 700; white-space: nowrap; }
+        .items .amt.muted { color: #94a3b8; font-weight: 600; font-size: 11.5px; }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
             margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #1e293b;
+        }
+        .total-row .k { font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .total-row .v { font-size: 22px; font-weight: 900; color: #1e293b; }
+
+        /* Payment stamp */
+        .pay-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+        .pay-box.paid   { background: #ecfdf5; border: 1.5px solid #a7f3d0; }
+        .pay-box.unpaid { background: #fffbeb; border: 1.5px solid #fde68a; }
+
+        .stamp {
+            flex-shrink: 0;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            padding: 6px 12px;
+            border: 3px solid currentColor;
+            border-radius: 8px;
+            transform: rotate(-8deg);
+        }
+        .paid .stamp   { color: #047857; }
+        .unpaid .stamp { color: #b45309; }
+
+        .pay-text { font-size: 12.5px; line-height: 1.5; color: #334155; }
+        .pay-text strong { color: #1e293b; }
+
+        /* Live status */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
         }
         .status-processing { background: #fef3c7; color: #b45309; }
         .status-pickup     { background: #dbeafe; color: #1d4ed8; }
         .status-completed  { background: #dcfce7; color: #15803d; }
 
-        .estimate {
-            margin-top: 14px;
-            font-size: 16px;
-            font-weight: 800;
-            color: #1e293b;
+        .live-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: currentColor;
+            animation: pulse 1.4s ease-in-out infinite;
         }
+        @keyframes pulse { 50% { opacity: 0.25; } }
 
-        .detail-list {
-            text-align: left;
-            margin-top: 20px;
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 16px 18px;
-        }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            padding: 7px 0;
-            font-size: 13.5px;
-            border-bottom: 1px solid #eef2f6;
-        }
-        .detail-row:last-child { border-bottom: 0; }
-        .detail-label { color: #64748b; font-weight: 600; }
-        .detail-value { color: #1e293b; font-weight: 700; text-align: right; }
+        .status-msg { margin-top: 10px; font-size: 12.5px; color: #475569; line-height: 1.55; }
+        .status-msg strong { color: #1e293b; }
 
-        .tx-id {
-            margin-top: 16px;
-            font-size: 12px;
+        .callout {
+            margin-top: 10px;
+            border-radius: 12px;
+            padding: 12px 16px;
+            text-align: center;
+            color: #fff;
+        }
+        .callout .t { font-size: 15px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .callout .s { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+        .callout.serving { background: linear-gradient(135deg, #047857, #059669); }
+        .callout.ready   { background: linear-gradient(135deg, #0284c7, #0369a1); }
+
+        .r-foot {
+            text-align: center;
+            font-size: 11px;
             color: #94a3b8;
-            font-weight: 500;
-            word-break: break-all;
-        }
-
-        .note {
-            margin-top: 18px;
-            font-size: 12.5px;
-            color: #64748b;
-            font-weight: 500;
             line-height: 1.6;
         }
+        .r-foot .code { font-family: 'Courier New', monospace; color: #64748b; font-weight: 700; }
 
-        .btn-home {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 11px 26px;
-            border-radius: 30px;
-            background: #a90000;
-            color: #fff;
-            font-weight: 700;
-            font-size: 14px;
-            text-decoration: none;
-            transition: background 0.2s ease;
+        /* Actions */
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+            padding: 12px 14px; border-radius: 30px; border: 0;
+            font-family: inherit; font-size: 13px; font-weight: 700;
+            cursor: pointer; text-decoration: none; transition: filter 0.15s ease;
         }
-        .btn-home:hover { background: #8c1010; color: #fff; }
+        .btn:hover { filter: brightness(1.08); }
+        .btn:disabled { opacity: 0.55; cursor: default; }
+        .btn-primary { background: #8c1010; color: #fff; }
+        .btn-secondary { background: #fff; color: #8c1010; border: 1.5px solid #f1c4c4; }
+        .btn-ghost { grid-column: 1 / -1; background: transparent; color: #64748b; }
+
+        .qr-holder { position: absolute; width: 0; height: 0; overflow: hidden; visibility: hidden; }
+
+        /* Not found */
+        .nf { text-align: center; padding: 34px 26px; }
+        .nf i { font-size: 44px; color: #cbd5e1; }
+        .nf h1 { font-size: 19px; font-weight: 800; margin-top: 10px; }
+        .nf p { font-size: 13px; color: #64748b; margin-top: 8px; line-height: 1.6; }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            body::before, .actions, .live-dot { display: none !important; }
+            .receipt { box-shadow: none; border: 1px solid #cbd5e1; border-radius: 0; }
+            .receipt-tear { display: none; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
     </style>
 </head>
 
 <body>
-    <div class="ticket-card">
-        {% if not found %}
-            <div class="ticket-brand">QRESERVE</div>
-            <div class="ticket-subtitle">Queue Reservation System</div>
-            <hr class="ticket-divider">
-            <div style="font-size:38px;color:#cbd5e1;"><i class="bi bi-ticket-x"></i></div>
-            <div style="font-size:18px;font-weight:800;color:#1e293b;margin-top:10px;">Ticket Not Found</div>
-            <p class="note">We couldn't find this queue ticket. It may have been cancelled or already completed, or the code is invalid.</p>
-        {% else %}
-            <div class="ticket-brand">QRESERVE</div>
-            <div class="ticket-subtitle">Queue Reservation System</div>
-            <hr class="ticket-divider">
+<div class="wrap">
 
-            <div class="queue-number" id="ticketQueueNumber">{{ req.queue_number }}</div>
-
-            <div id="ticketStatusSection">
-            {% if req.status == 'Ready for pickup' %}
-                <span class="badge-status status-pickup">READY FOR PICKUP</span>
-                <div class="estimate">{{ req.estimated_wait }}</div>
-                <div style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);border-radius:12px;padding:14px 20px;margin-top:10px;text-align:center;">
-                    <div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Document Ready</div>
-                    <div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;">Your document is ready for pickup at {{ req.counter }}</div>
-                </div>
-            {% elif req.status == 'Completed' %}
-                <span class="badge-status status-completed">COMPLETED</span>
-            {% else %}
-                <span class="badge-status status-processing">PROCESSING</span>
-                {% if req.is_now_serving %}
-                    <div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:12px;padding:14px 20px;margin-top:10px;text-align:center;">
-                        <div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Now Calling Your Number!</div>
-                        <div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;">Please proceed to {{ req.counter }} now</div>
-                    </div>
-                {% elif req.ahead_count == 0 %}
-                    <div class="estimate" style="margin-top:10px;">Queue Status: Next in line</div>
-                    <div style="font-size:12.5px;color:#64748b;margin-top:4px;">You are next in line. Please wait for your ticket to be called at {{ req.counter }}.</div>
-                {% else %}
-                    <div class="estimate" style="margin-top:10px;">Estimated wait: {{ req.estimated_wait }}</div>
-                    <div style="font-size:12.5px;color:#64748b;margin-top:4px;">{{ req.ahead_count }} person(s) ahead of you in the queue.</div>
-                {% endif %}
-            {% endif %}
-            </div>
-
-            <div class="detail-list">
-                <div class="detail-row"><span class="detail-label">Service</span><span class="detail-value" id="ticketServiceVal">{{ req.service }}</span></div>
-                <div class="detail-row"><span class="detail-label">Document</span><span class="detail-value" id="ticketDocVal">{{ req.doc_name }}</span></div>
-                <div class="detail-row"><span class="detail-label">Counter</span><span class="detail-value" id="ticketCounterVal">{{ req.counter }}</span></div>
-                <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" id="ticketStatusVal">{{ req.status }}</span></div>
-                <div class="detail-row"><span class="detail-label">Fee</span><span class="detail-value" id="ticketPriceVal">₱{{ req.price or 0 }}.00</span></div>
-                <div class="detail-row"><span class="detail-label">Submitted</span><span class="detail-value">{{ req.created_at.strftime('%B %d, %Y %I:%M %p') }}</span></div>
-            </div>
-
-            <div class="tx-id">Transaction ID: {{ req.transaction_id }}</div>
-
-            <div class="note" id="ticketNoteText">
-                Please approach <strong id="ticketNoteCounter">{{ req.counter }}</strong> when your number is called.
-                Bring a valid ID when picking up your document.
-            </div>
-        {% endif %}
-
-        <a class="btn-home" href="{{ url_for('auth.login') }}"><i class="bi bi-house-door"></i> Back to QRESERVE</a>
+{% if not found %}
+    <div class="receipt">
+        <div class="r-head">
+            <img class="r-logo" src="{{ url_for('static', filename='images/favicon.png') }}" alt="">
+            <div class="r-school">Bulacan State University</div>
+            <div class="r-campus">Bustos Campus &middot; QRESERVE</div>
+        </div>
+        <div class="nf">
+            <i class="bi bi-receipt-cutoff"></i>
+            <h1>Receipt Not Found</h1>
+            <p>We couldn't find a transaction for this QR code. The request may have been cancelled, or the code is invalid.</p>
+        </div>
+    </div>
+    <div class="receipt-tear"></div>
+    <div class="actions">
+        <a class="btn btn-primary" style="grid-column:1/-1;" href="{{ url_for('auth.login') }}"><i class="bi bi-house-door"></i> Back to QRESERVE</a>
     </div>
 
-    {% if found and req %}
-    <script>
-    (function() {
-        'use strict';
-        var txId = "{{ req.transaction_id }}";
-        var _lastServing = {{ 'true' if req.is_now_serving else 'false' }};
-        var _lastStatus = "{{ req.status }}";
-        var _chimePlayed = false;
+{% else %}
+    {% set items = req.items or [{'name': req.doc_name, 'type': 'academic', 'price': req.price or 0}] %}
 
-        function playCallChime() {
-            if (_chimePlayed) return;
-            _chimePlayed = true;
-            try {
-                var AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (!AudioCtx) return;
-                var ctx = new AudioCtx();
-                if (ctx.state === 'suspended') ctx.resume();
-                var now = ctx.currentTime;
-                var osc = ctx.createOscillator();
-                var gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, now);
-                osc.frequency.setValueAtTime(880.00, now + 0.18);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.85);
-            } catch(e) {}
-        }
+    <div class="receipt" id="receipt">
 
-        function renderStatusSection(t) {
-            var el = document.getElementById('ticketStatusSection');
-            if (!el) return;
-            var html = '';
-            if (t.status === 'Ready for pickup') {
-                html += '<span class="badge-status status-pickup">READY FOR PICKUP</span>' +
-                        '<div class="estimate">' + t.waitTime + '</div>' +
-                        '<div style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);border-radius:12px;padding:14px 20px;margin-top:10px;text-align:center;">' +
-                            '<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Document Ready</div>' +
-                            '<div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;">Your document is ready for pickup at ' + t.counter + '</div>' +
-                        '</div>';
-            } else if (t.status === 'Completed') {
-                html += '<span class="badge-status status-completed">COMPLETED</span>';
-            } else {
-                html += '<span class="badge-status status-processing">PROCESSING</span>';
-                if (t.isNowServing) {
-                    playCallChime();
-                    html += '<div style="background:linear-gradient(135deg,#047857 0%,#059669 100%);border-radius:12px;padding:14px 20px;margin-top:10px;text-align:center;box-shadow:0 4px 14px rgba(4,120,87,0.3);">' +
-                                '<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;">Now Calling Your Number!</div>' +
-                                '<div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;">Please proceed to ' + t.counter + ' now</div>' +
-                            '</div>';
-                } else if (t.aheadCount === 0) {
-                    html += '<div class="estimate" style="margin-top:10px;">Queue Status: Next in line</div>' +
-                            '<div style="font-size:12.5px;color:#64748b;margin-top:4px;">You are next in line. Please wait for your ticket to be called at ' + t.counter + '.</div>';
-                } else {
-                    html += '<div class="estimate" style="margin-top:10px;">Estimated wait: ' + t.waitTime + '</div>' +
-                            '<div style="font-size:12.5px;color:#64748b;margin-top:4px;">' + t.aheadCount + ' person(s) ahead of you in the queue.</div>';
-                }
+        <!-- Header -->
+        <div class="r-head">
+            <img class="r-logo" src="{{ url_for('static', filename='images/favicon.png') }}" alt="">
+            <div class="r-school">Bulacan State University</div>
+            <div class="r-campus">Bustos Campus &middot; Registrar &amp; Cashier</div>
+            <div class="r-title">Transaction Receipt</div>
+        </div>
+
+        <!-- Transaction code + queue number -->
+        <div class="r-section">
+            <div class="id-grid">
+                <div>
+                    <div class="r-label">Transaction Code</div>
+                    <div class="tx-code">{{ req.transaction_id }}</div>
+                </div>
+                <div>
+                    <div class="queue-num-label">Queue No.</div>
+                    <div class="queue-num" id="rQueueNum">{{ req.queue_number }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live status -->
+        <div class="r-section">
+            <div class="r-label">Current Status</div>
+            <div id="rStatus"></div>
+        </div>
+
+        <!-- Requester & dates -->
+        <div class="r-section">
+            <div class="r-label">Request Details</div>
+            <div class="kv"><span class="k">Requested by</span><span class="v">{{ info.userName }}</span></div>
+            <div class="kv"><span class="k">Account type</span><span class="v">{{ info.userType }}</span></div>
+            {% if info.maskedEmail %}
+            <div class="kv"><span class="k">Email</span><span class="v">{{ info.maskedEmail }}</span></div>
+            {% endif %}
+            <div class="kv"><span class="k">Date requested</span><span class="v">{{ req.created_at.strftime('%B %d, %Y') }}</span></div>
+            <div class="kv"><span class="k">Time requested</span><span class="v">{{ req.created_at.strftime('%I:%M %p') }}</span></div>
+            <div class="kv"><span class="k">Counter</span><span class="v" id="rCounter">{{ req.counter }}</span></div>
+            {% if req.completed_at %}
+            <div class="kv"><span class="k">Completed</span><span class="v">{{ req.completed_at.strftime('%B %d, %Y %I:%M %p') }}</span></div>
+            {% endif %}
+        </div>
+
+        <!-- Itemized documents -->
+        <div class="r-section">
+            <table class="items">
+                <thead>
+                    <tr><th>Document / Service</th><th>Amount</th></tr>
+                </thead>
+                <tbody>
+                {% for it in items %}
+                    <tr>
+                        <td>
+                            <div class="name">{{ it.name }}</div>
+                            {% if it.type == 'payment' %}
+                                <span class="type type-payment">Cashier payment</span>
+                            {% else %}
+                                <span class="type type-academic">Academic document</span>
+                            {% endif %}
+                        </td>
+                        {% if (it.price or 0) > 0 %}
+                            <td class="amt">&#8369;{{ '{:,.2f}'.format(it.price) }}</td>
+                        {% else %}
+                            <td class="amt muted">Assessed at Cashier</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <div class="total-row">
+                <span class="k">Total</span>
+                <span class="v">&#8369;{{ '{:,.2f}'.format(req.total_price) }}</span>
+            </div>
+        </div>
+
+        <!-- Payment -->
+        <div class="r-section">
+            <div class="r-label">Payment</div>
+            {% if req.is_paid %}
+                <div class="pay-box paid">
+                    <div class="stamp">PAID</div>
+                    <div class="pay-text">
+                        <strong>&#8369;{{ '{:,.2f}'.format(req.total_price) }}</strong> received at Counter 3 &ndash; Cashier
+                        {% if req.paid_at %}<br>on {{ req.paid_at.strftime('%B %d, %Y at %I:%M %p') }}{% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="pay-box unpaid">
+                    <div class="stamp">UNPAID</div>
+                    <div class="pay-text">
+                        Please pay <strong>&#8369;{{ '{:,.2f}'.format(req.total_price) }}</strong> at
+                        <strong>Counter 3 &ndash; Cashier</strong> when your number is called.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="r-section r-foot">
+            Present this receipt and a valid ID when claiming your document.<br>
+            System-generated by QRESERVE &middot; not an official BIR receipt.<br>
+            <span class="code">{{ req.transaction_id }}</span>
+        </div>
+    </div>
+    <div class="receipt-tear"></div>
+
+    <div class="actions">
+        <button type="button" class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print / Save PDF
+        </button>
+        <button type="button" class="btn btn-secondary" id="rCardDownload" disabled>
+            <i class="bi bi-file-earmark-arrow-down-fill"></i> Download Receipt (PNG)
+        </button>
+        <a class="btn btn-ghost" href="{{ url_for('auth.login') }}"><i class="bi bi-house-door"></i> Back to QRESERVE</a>
+    </div>
+
+    <div id="ticketQrHolder" class="qr-holder" aria-hidden="true"></div>
+{% endif %}
+
+</div>
+
+<!-- QR Code JS (qrcode.js) -->
+<script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
+<script>
+if (typeof QRCode === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>');
+}
+</script>
+
+<!-- Queue Card PNG Renderer -->
+<script src="{{ url_for('static', filename='js/ticket-card.js') }}"></script>
+
+<!-- Address encoded into the queue-card QR code (see PUBLIC_BASE_URL) -->
+<script>window.QRESERVE_BASE_URL = {{ public_base_url | tojson }};</script>
+
+{% if found and req %}
+<script>
+(function () {
+    'use strict';
+
+    var t = {{ info | tojson }};
+    var txId = t.transactionId;
+    var chimePlayed = false;
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function playChime() {
+        if (chimePlayed) return;
+        chimePlayed = true;
+        try {
+            var Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            var ctx = new Ctx(), now = ctx.currentTime;
+            var osc = ctx.createOscillator(), gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, now);
+            osc.frequency.setValueAtTime(880.0, now + 0.18);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(now); osc.stop(now + 0.85);
+        } catch (e) {}
+    }
+
+    function renderStatus(d) {
+        var el = document.getElementById('rStatus');
+        if (!el) return;
+        var counter = '<strong>' + esc(d.counter) + '</strong>';
+        var html;
+
+        if (d.status === 'Completed') {
+            html = '<span class="status-pill status-completed"><i class="bi bi-check2-circle"></i> Completed</span>' +
+                   '<div class="status-msg">This transaction is complete' +
+                   (d.completedAt ? ' (' + esc(d.completedAt) + ')' : '') + '. Thank you for using QRESERVE.</div>';
+        } else if (d.status === 'Ready for pickup') {
+            html = '<span class="status-pill status-pickup"><span class="live-dot"></span> Ready for pickup</span>' +
+                   '<div class="callout ready"><div class="t">Document Ready</div>' +
+                   '<div class="s">Claim it at ' + esc(d.counter) + '</div></div>';
+        } else {
+            html = '<span class="status-pill status-processing"><span class="live-dot"></span> ' +
+                   esc(d.queueStepLabel || 'Processing') + '</span>';
+            if (d.isNowServing) {
+                playChime();
+                html += '<div class="callout serving"><div class="t">Now Calling Your Number!</div>' +
+                        '<div class="s">Please proceed to ' + esc(d.counter) + ' now</div></div>';
+            } else if (d.counterTurnDone) {
+                html += '<div class="status-msg">Your document is being processed (est. 3&ndash;5 working days). ' +
+                        'You will be notified when it is ready for pickup.</div>';
+            } else if (d.aheadCount === 0) {
+                html += '<div class="status-msg">You are <strong>next in line</strong> at ' + counter + '.</div>';
+            } else if (d.aheadCount > 0) {
+                html += '<div class="status-msg"><strong>' + d.aheadCount + '</strong> person(s) ahead of you at ' +
+                        counter + ' &middot; est. ' + esc(d.waitTime) + '.</div>';
             }
-            el.innerHTML = html;
         }
+        el.innerHTML = html;
+    }
 
-        function pollTicketLive() {
-            fetch('/api/ticket/' + txId + '?_t=' + Date.now(), { cache: 'no-store' })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (!data.success || !data.ticket) return;
-                    var t = data.ticket;
-                    var numEl = document.getElementById('ticketQueueNumber');
-                    if (numEl && t.queueNum) numEl.textContent = t.queueNum;
+    renderStatus(t);
 
-                    var counterEl = document.getElementById('ticketCounterVal');
-                    if (counterEl) counterEl.textContent = t.counter;
-
-                    var noteCounterEl = document.getElementById('ticketNoteCounter');
-                    if (noteCounterEl) noteCounterEl.textContent = t.counter;
-
-                    var statusEl = document.getElementById('ticketStatusVal');
-                    if (statusEl) statusEl.textContent = t.status;
-
-                    var serviceEl = document.getElementById('ticketServiceVal');
-                    if (serviceEl) serviceEl.textContent = t.service;
-
-                    if (t.isNowServing !== _lastServing || t.status !== _lastStatus) {
-                        _lastServing = t.isNowServing;
-                        _lastStatus = t.status;
-                        renderStatusSection(t);
-                    }
-                })
-                .catch(function() {});
+    // ---- Queue card download (same PNG as the dashboard) ----
+    var Card = window.QReserveTicketCard;
+    var btn = document.getElementById('rCardDownload');
+    if (Card && btn) {
+        btn.disabled = false;
+        btn.onclick = function () {
+            Card.download({
+                qrUrl: Card.ticketUrl(txId),
+                qrPayload: Card.buildReceiptText(t),
+                queueNum: t.queueNum,
+                docName: t.docName,
+                items: t.items,
+                queueStep: t.queueStep,
+                counter: t.counter,
+                txId: txId,
+                date: t.dateTime,
+                dateTime: t.dateTime,
+                userName: t.userName,
+                userType: t.userType,
+                price: t.price,
+                isPaid: t.isPaid,
+                status: t.status
+            });
+        };
+        if (window.location.search.indexOf('download=') !== -1) {
+            setTimeout(function() { btn.click(); }, 350);
         }
+    }
 
-        setInterval(pollTicketLive, 1500);
-    })();
-    </script>
-    {% endif %}
+    // ---- Live updates ----
+    // Payment / status / queue-number changes alter the receipt itself,
+    // so reload to re-render it server-side; smaller changes update in place.
+    function poll() {
+        fetch('/api/ticket/' + encodeURIComponent(txId) + '?_t=' + Date.now(), { cache: 'no-store' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.success || !data.ticket) return;
+                var d = data.ticket;
+                if (d.isPaid !== t.isPaid || d.status !== t.status || d.queueNum !== t.queueNum) {
+                    window.location.reload();
+                    return;
+                }
+                if (d.isNowServing !== t.isNowServing || d.aheadCount !== t.aheadCount ||
+                    d.counterTurnDone !== t.counterTurnDone) {
+                    renderStatus(d);
+                }
+                document.getElementById('rCounter').textContent = d.counter;
+                t = Object.assign(t, d);
+            })
+            .catch(function () {});
+    }
+
+    if (t.status !== 'Completed') setInterval(poll, 2000);
+})();
+</script>
+{% endif %}
 </body>
 
 </html>
