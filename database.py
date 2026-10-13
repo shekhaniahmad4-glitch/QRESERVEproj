@@ -240,6 +240,11 @@ class QueueRequest(db.Model):
         nullable=True
     )
 
+    contact_email = db.Column(
+        db.String(120),
+        nullable=True
+    )
+
     created_at = db.Column(
         db.DateTime,
         default=ph_now
@@ -416,6 +421,7 @@ class QueueRequest(db.Model):
             "userName": user_name,
             "userIdentifier": user_identifier,
             "studentId": self.student_id,
+            "contactEmail": getattr(self, "contact_email", None) or (self.student.email if self.student else None),
             "isPaid": self.is_paid,
             "paidAt": self.paid_at.strftime("%B %d, %Y %I:%M %p") if self.paid_at else None,
             "completedAt": self.completed_at.strftime("%B %d, %Y %I:%M %p") if self.completed_at else None

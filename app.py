@@ -177,6 +177,8 @@ def create_app():
             for col in ("paid_at", "completed_at"):
                 if col not in columns:
                     conn.execute(db.text(f"ALTER TABLE queue_requests ADD COLUMN {col} DATETIME"))
+            if "contact_email" not in columns:
+                conn.execute(db.text("ALTER TABLE queue_requests ADD COLUMN contact_email VARCHAR(120)"))
             conn.commit()
 
     # Seed default counters

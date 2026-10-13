@@ -2562,16 +2562,24 @@
                         primaryBtn = '<span style="background:#f1f5f9;color:#059669;border:1px solid #cbd5e1;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><i class="bi bi-check-all"></i>Released</span>';
                     } else if (r.status === 'Ready for pickup') {
                         primaryBtn =
-                            '<button onclick="AdminQM.updateStatus(' + r.db_id + ', \'Completed\')" ' +
-                                'title="Release physical document to student and mark completed" ' +
-                                'style="background:#f0fdf4;border:1px solid #86efac;color:#15803d;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;" ' +
-                                'onmouseover="this.style.background=\'#dcfce7\';" onmouseout="this.style.background=\'#f0fdf4\';">' +
-                                '<i class="bi bi-check2-circle"></i>Release Doc' +
-                            '</button>';
+                            '<div style="display:inline-flex;align-items:center;gap:6px;">' +
+                                '<button onclick="AdminQM.updateStatus(' + r.db_id + ', \'Completed\')" ' +
+                                    'title="Release physical document to student and mark completed" ' +
+                                    'style="background:#f0fdf4;border:1px solid #86efac;color:#15803d;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;" ' +
+                                    'onmouseover="this.style.background=\'#dcfce7\';" onmouseout="this.style.background=\'#f0fdf4\';">' +
+                                    '<i class="bi bi-check2-circle"></i>Release Doc' +
+                                '</button>' +
+                                '<button onclick="AdminQM.resendPickupEmail(' + r.db_id + ')" ' +
+                                    'title="Resend ready for pickup email notification to student" ' +
+                                    'style="background:#f8fafc;border:1px solid #cbd5e1;color:#334155;border-radius:20px;padding:5px 9px;font-size:10.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" ' +
+                                    'onmouseover="this.style.background=\'#e2e8f0\';" onmouseout="this.style.background=\'#f8fafc\';">' +
+                                    '<i class="bi bi-envelope-fill" style="color:#0284c7;"></i>Resend Email' +
+                                '</button>' +
+                            '</div>';
                     } else if (r.counterTurnDone) {
                         primaryBtn =
                             '<button onclick="AdminQM.updateStatus(' + r.db_id + ', \'Ready for pickup\')" ' +
-                                'title="Document preparation is finished \u2014 mark ready for student pickup" ' +
+                                'title="Document preparation is finished \u2014 mark ready for student pickup & send email" ' +
                                 'style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s;" ' +
                                 'onmouseover="this.style.background=\'#dbeafe\';" onmouseout="this.style.background=\'#eff6ff\';">' +
                                 '<i class="bi bi-box-seam-fill"></i>Ready for Pickup' +
@@ -2736,6 +2744,12 @@
                         if (typeof AdminHistory !== 'undefined' && typeof AdminHistory.load === 'function') {
                             AdminHistory.load();
                         }
+                    } else if (newStatus === 'Ready for pickup') {
+                        if (data.email_queued && data.recipient) {
+                            showAdminToast('Document is Ready for Pickup! Email notification sent to ' + data.recipient + '.', 'success');
+                        } else {
+                            showAdminToast('Document status updated to Ready for Pickup.', 'success');
+                        }
                     } else {
                         showAdminToast('Document status updated to ' + newStatus + '.', 'success');
                     }
@@ -2746,6 +2760,21 @@
             .catch(function(err) {
                 console.error('Error updating status:', err);
             });
+        },
+
+        resendPickupEmail: function(reqId) {
+            fetch('/api/admin/request/' + reqId + '/send-pickup-email', { method: 'POST' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        showAdminToast('Pickup notification email re-sent to ' + (data.recipient || 'student') + '!', 'success');
+                    } else {
+                        alert(data.error || 'Failed to send email.');
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Error sending pickup email:', err);
+                });
         },
 
         confirmPayment: function(reqId) {

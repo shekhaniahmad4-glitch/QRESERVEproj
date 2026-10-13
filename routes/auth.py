@@ -53,12 +53,16 @@ BULSU_EMAIL_PATTERN = r"^\d{10}@ms\.bulsu\.edu\.ph$"
 # LOW-LEVEL EMAIL SENDER
 # =======================================================
 
-def _send_email(recipient_email, subject, body):
+def _send_email(recipient_email, subject, body, html_body=None):
 
-    sender_email = current_app.config["MAIL_USERNAME"]
-    sender_password = current_app.config["MAIL_PASSWORD"]
-    smtp_server = current_app.config["MAIL_SERVER"]
-    smtp_port = current_app.config["MAIL_PORT"]
+    sender_email = current_app.config.get("MAIL_USERNAME")
+    sender_password = current_app.config.get("MAIL_PASSWORD")
+    smtp_server = current_app.config.get("MAIL_SERVER", "smtp.gmail.com")
+    smtp_port = current_app.config.get("MAIL_PORT", 587)
+
+    if not sender_email or not sender_password:
+        print("[QRESERVE] Warning: MAIL_USERNAME or MAIL_PASSWORD missing in config. Email aborted.", flush=True)
+        return False
 
     # ---------------------------------------------------
     # Create email
@@ -71,6 +75,8 @@ def _send_email(recipient_email, subject, body):
     message["To"] = recipient_email
 
     message.set_content(body)
+    if html_body:
+        message.add_alternative(html_body, subtype="html")
 
     # ---------------------------------------------------
     # Connect to Gmail SMTP
@@ -85,9 +91,7 @@ def _send_email(recipient_email, subject, body):
         ) as server:
 
             server.ehlo()
-
             server.starttls()
-
             server.ehlo()
 
             server.login(
@@ -98,18 +102,21 @@ def _send_email(recipient_email, subject, body):
             server.send_message(message)
 
         print("=" * 60, flush=True)
-        print("QRESERVE OTP EMAIL SENT", flush=True)
+        print("QRESERVE EMAIL SENT", flush=True)
         print("TO:", recipient_email, flush=True)
+        print("SUBJECT:", subject, flush=True)
         print("STATUS: SUCCESS", flush=True)
         print("=" * 60, flush=True)
+        return True
 
     except Exception as e:
 
         print("=" * 60, flush=True)
-        print("QRESERVE OTP EMAIL ERROR", flush=True)
+        print("QRESERVE EMAIL ERROR", flush=True)
         print("TO:", recipient_email, flush=True)
         print("ERROR:", e, flush=True)
         print("=" * 60, flush=True)
+        return False
 
 
 # =======================================================
@@ -249,6 +256,226 @@ def send_password_reset_otp_email_background(recipient_email, otp):
         recipient_email,
         otp
     )
+
+
+# =======================================================
+# READY FOR PICKUP EMAIL NOTIFICATION
+# =======================================================
+
+def _send_document_ready_email_worker(req_id, base_url):
+    """Worker function executed in background thread to send pickup notification email."""
+    req_obj = db.session.get(QueueRequest, req_id)
+    if not req_obj:
+        return False
+
+    recipient_email = None
+    recipient_name = "Student"
+
+    if req_obj.student_id and req_obj.student:
+        recipient_email = req_obj.student.email
+        profile = StudentProfile.query.filter_by(student_id=req_obj.student_id).first()
+        if profile and profile.full_name:
+            recipient_name = profile.full_name
+        elif req_obj.student.email:
+            recipient_name = req_obj.student.email.split("@")[0].replace(".", " ").title()
+    elif getattr(req_obj, "contact_email", None):
+        recipient_email = req_obj.contact_email
+        recipient_name = req_obj.guest_name or "Guest Client"
+    elif req_obj.guest_name:
+        recipient_name = req_obj.guest_name
+
+    if not recipient_email:
+        print(f"[QRESERVE] Notice: QueueRequest #{req_id} ({req_obj.queue_number}) has no recipient email. Skipping email.", flush=True)
+        return False
+
+    doc_names = req_obj.item_names or req_obj.doc_name or "Requested Document"
+    counter_name = req_obj.counter or "Counter 1 – Registrar"
+    queue_number = req_obj.queue_number or "N/A"
+    transaction_id = req_obj.transaction_id or ""
+
+    ticket_url = f"{base_url}/ticket/{transaction_id}" if base_url else f"/ticket/{transaction_id}"
+
+    subject = f"[QRESERVE] Your Document is Ready for Pickup! (Queue #{queue_number})"
+
+    plain_body = f"""\
+Hello {recipient_name},
+
+Good news! Your requested document is now READY FOR PICKUP at Bulacan State University – Bustos Campus.
+
+--------------------------------------------------
+DOCUMENT PICKUP DETAILS
+--------------------------------------------------
+Queue Ticket:        {queue_number}
+Requested Document:  {doc_names}
+Claiming Window:     {counter_name}
+Transaction Ref:     {transaction_id}
+Tracking Link:       {ticket_url}
+
+--------------------------------------------------
+CLAIMING INSTRUCTIONS
+--------------------------------------------------
+1. Please proceed to {counter_name} at BulSU Bustos Campus.
+2. Present your valid BulSU Student ID or government-issued ID upon claiming.
+3. Show your Queue Number ({queue_number}) or Transaction ID receipt.
+4. Office Hours: Monday to Friday, 8:00 AM – 5:00 PM.
+
+Thank you for using QRESERVE!
+
+--------------------------------------------------
+Bulacan State University – Bustos Campus
+Office of the Registrar • QRESERVE Online Queue System
+--------------------------------------------------
+"""
+
+    html_body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Document is Ready for Pickup - QRESERVE</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1e293b;line-height:1.6;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f1f5f9;padding:30px 15px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background-color:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);border:1px solid #e2e8f0;">
+          
+          <!-- University Header Banner -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#8a0d0d 0%,#a91616 50%,#700a0a 100%);padding:28px 24px;text-align:center;color:#ffffff;">
+              <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.85);margin-bottom:4px;">Bulacan State University &bull; Bustos Campus</div>
+              <div style="font-size:22px;font-weight:800;letter-spacing:0.5px;margin-bottom:6px;">QRESERVE QUEUE SYSTEM</div>
+              <div style="display:inline-block;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.5px;">Office of the Registrar Notification</div>
+            </td>
+          </tr>
+
+          <!-- Notification Hero Badge -->
+          <tr>
+            <td style="padding:28px 30px 10px;text-align:center;">
+              <div style="display:inline-block;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;padding:6px 18px;border-radius:30px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;">
+                &#10004; Document Ready for Pickup
+              </div>
+              <h2 style="font-size:22px;font-weight:800;color:#0f172a;margin:16px 0 8px;">Good news! Your document is ready.</h2>
+              <p style="font-size:14px;color:#475569;margin:0 auto;max-width:480px;line-height:1.5;">
+                Hello <strong>{recipient_name}</strong>, your requested document has been successfully processed by the Registrar and is now waiting for you at the pickup counter.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Ticket Summary Card -->
+          <tr>
+            <td style="padding:16px 30px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;padding:20px;">
+                <tr>
+                  <td align="center" style="padding-bottom:16px;border-bottom:1px dashed #cbd5e1;">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;">Queue Ticket Number</div>
+                    <div style="font-size:36px;font-weight:900;color:#8a0d0d;letter-spacing:1px;margin-top:2px;font-family:monospace;">{queue_number}</div>
+                    <div style="font-size:12px;font-weight:600;color:#059669;margin-top:2px;">Status: Ready for Pickup</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:16px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="6" border="0" style="font-size:13px;">
+                      <tr>
+                        <td width="38%" style="color:#64748b;font-weight:600;">Document(s):</td>
+                        <td width="62%" style="color:#0f172a;font-weight:700;">{doc_names}</td>
+                      </tr>
+                      <tr>
+                        <td style="color:#64748b;font-weight:600;">Claiming Counter:</td>
+                        <td style="color:#8a0d0d;font-weight:700;">{counter_name}</td>
+                      </tr>
+                      <tr>
+                        <td style="color:#64748b;font-weight:600;">Transaction Ref:</td>
+                        <td style="color:#0f172a;font-family:monospace;font-weight:600;">{transaction_id}</td>
+                      </tr>
+                      <tr>
+                        <td style="color:#64748b;font-weight:600;">Claiming Location:</td>
+                        <td style="color:#334155;">BulSU Bustos Campus &bull; Registrar Window</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Instructions & What to Bring -->
+          <tr>
+            <td style="padding:10px 30px 20px;">
+              <div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:14px 16px;border-radius:6px;">
+                <div style="font-size:12.5px;font-weight:700;color:#b45309;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">&#9432; Important Claiming Guidelines:</div>
+                <ul style="margin:0;padding-left:18px;font-size:12.5px;color:#78350f;line-height:1.6;">
+                  <li>Present your <strong>valid BulSU Student ID</strong> or government-issued ID upon claiming.</li>
+                  <li>Show your <strong>Queue Number ({queue_number})</strong> or <strong>Transaction ID ({transaction_id})</strong> at the window.</li>
+                  <li>Office Hours: <strong>Monday to Friday, 8:00 AM &ndash; 5:00 PM</strong> (excluding holidays).</li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Action Button: View Live Ticket -->
+          <tr>
+            <td align="center" style="padding:10px 30px 28px;">
+              <a href="{ticket_url}" target="_blank" style="background:#8a0d0d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:24px;font-size:13.5px;font-weight:700;display:inline-block;letter-spacing:0.3px;box-shadow:0 4px 12px rgba(138,13,13,0.25);">
+                View Digital Ticket &amp; QR Code &rarr;
+              </a>
+              <div style="font-size:11.5px;color:#94a3b8;margin-top:10px;">
+                Or open this link: <a href="{ticket_url}" style="color:#8a0d0d;word-break:break-all;">{ticket_url}</a>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 24px;text-align:center;font-size:11.5px;color:#64748b;line-height:1.5;">
+              <div style="font-weight:700;color:#334155;">Bulacan State University &ndash; Bustos Campus</div>
+              <div style="color:#64748b;">Office of the University Registrar &bull; QRESERVE System</div>
+              <div style="margin-top:8px;font-size:10.5px;color:#94a3b8;">
+                This is an automated system notification. Please do not reply directly to this email.<br>
+                For inquiries, please visit the Registrar's Office during official university working hours.
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+    success = _send_email(recipient_email, subject, plain_body, html_body)
+    if success:
+        record_audit(
+            "READY_FOR_PICKUP_EMAIL",
+            target=f"{queue_number} -> {recipient_email}",
+            details=f"Ready for pickup notification email delivered to {recipient_email} for document(s): {doc_names}",
+            actor_type="System",
+            actor_name="QRESERVE Mailer",
+            ip_address="127.0.0.1"
+        )
+    return success
+
+
+def send_document_ready_email_background(req_id, base_url=None):
+    """Spawns a daemon thread to send ready-for-pickup email without delaying HTTP response."""
+    app = current_app._get_current_object()
+    if not base_url:
+        base_url = current_app.config.get("PUBLIC_BASE_URL", "").rstrip("/")
+
+    def send():
+        with app.app_context():
+            try:
+                _send_document_ready_email_worker(req_id, base_url)
+            except Exception as e:
+                print(f"[QRESERVE] Document ready email thread exception for req_id={req_id}: {e}", flush=True)
+
+    thread = threading.Thread(
+        target=send,
+        daemon=True
+    )
+    thread.start()
 
 
 # =======================================================
@@ -2427,6 +2654,13 @@ def admin_update_request_status(req_id):
 
     # Tell the user when their document is ready -- the single most
     # important thing they can be told.
+    email_queued = False
+    recipient_email = None
+    if req_obj.student and req_obj.student.email:
+        recipient_email = req_obj.student.email
+    elif getattr(req_obj, "contact_email", None):
+        recipient_email = req_obj.contact_email
+
     if new_status == "Ready for pickup":
         _notify_request(
             req_obj,
@@ -2435,6 +2669,10 @@ def admin_update_request_status(req_id):
             f"{req_obj.doc_name} is ready for pickup at {req_obj.counter}. "
             "Please proceed to claim your documents."
         )
+
+        base_url = current_app.config.get("PUBLIC_BASE_URL") or request.host_url.rstrip("/")
+        send_document_ready_email_background(req_obj.id, base_url)
+        email_queued = bool(recipient_email)
     elif new_status == "Completed":
         _notify_request(
             req_obj,
@@ -2466,14 +2704,58 @@ def admin_update_request_status(req_id):
 
     db.session.commit()
 
+    details_str = f"Status updated to '{new_status}' for {req_obj.item_names} ({req_obj.counter})"
+    if new_status == "Ready for pickup" and email_queued:
+        details_str += f". Pickup notification email queued for {recipient_email}."
+
     record_audit(
         "STATUS_CHANGE",
         target=req_obj.queue_number,
-        details=f"Status updated to '{new_status}' for {req_obj.item_names} ({req_obj.counter})",
+        details=details_str,
         actor_type="Admin"
     )
 
-    return jsonify({"success": True, "request": req_obj.to_dict()})
+    return jsonify({
+        "success": True,
+        "email_queued": email_queued,
+        "recipient": recipient_email,
+        "request": req_obj.to_dict()
+    })
+
+
+@auth.route("/api/admin/request/<int:req_id>/send-pickup-email", methods=["POST"])
+def admin_send_pickup_email(req_id):
+    """Manually dispatch or re-send the ready for pickup email notification."""
+    if not session.get("admin_logged_in"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+    req_obj = db.session.get(QueueRequest, req_id)
+    if not req_obj:
+        return jsonify({"success": False, "error": "Not found"}), 404
+
+    recipient_email = None
+    if req_obj.student and req_obj.student.email:
+        recipient_email = req_obj.student.email
+    elif getattr(req_obj, "contact_email", None):
+        recipient_email = req_obj.contact_email
+
+    if not recipient_email:
+        return jsonify({"success": False, "error": "No email address found for this request"}), 400
+
+    base_url = current_app.config.get("PUBLIC_BASE_URL") or request.host_url.rstrip("/")
+    send_document_ready_email_background(req_obj.id, base_url)
+
+    admin_user = session.get("admin_email") or "Administrator"
+    record_audit(
+        "READY_FOR_PICKUP_EMAIL",
+        target=f"{req_obj.queue_number} -> {recipient_email}",
+        details=f"Admin manually dispatched pickup notification email to {recipient_email} for {req_obj.item_names}",
+        actor_type="Admin",
+        actor_name=admin_user,
+        ip_address=request.remote_addr or "127.0.0.1"
+    )
+
+    return jsonify({"success": True, "recipient": recipient_email})
 
 
 # =======================================================
