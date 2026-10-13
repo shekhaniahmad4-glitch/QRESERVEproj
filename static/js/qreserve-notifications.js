@@ -497,48 +497,189 @@
         } catch (e) {}
     }
 
-    function sound() {
-        try {
+    /* ------------------------------------------------------------------
+     * Audio Engine — Web Audio API + HTML5 Audio Fallback
+     * Unlocked on first user interaction (click, touch, key, pointer)
+     * ------------------------------------------------------------------ */
+    var _audioCtx = null;
+    var _chimeAudio = null;
+    var _chimeUrl = null;
+
+    function getAudioContext() {
+        if (!_audioCtx) {
             var AudioCtx = global.AudioContext || global.webkitAudioContext;
-            if (!AudioCtx) return;
+            if (AudioCtx) {
+                try {
+                    _audioCtx = new AudioCtx();
+                } catch (e) {}
+            }
+        }
+        return _audioCtx;
+    }
 
-            var ctx = new AudioCtx();
-            if (ctx.state === 'suspended') ctx.resume();
+    function generateChimeWavUrl() {
+        if (_chimeUrl) return _chimeUrl;
+        try {
+            var sampleRate = 22050;
+            var duration = 0.55;
+            var numSamples = Math.floor(sampleRate * duration);
+            var buffer = new ArrayBuffer(44 + numSamples * 2);
+            var view = new DataView(buffer);
 
-            var now = ctx.currentTime;
-            var osc = ctx.createOscillator();
-            var gain = ctx.createGain();
+            function writeStr(offset, str) {
+                for (var i = 0; i < str.length; i++) {
+                    view.setUint8(offset + i, str.charCodeAt(i));
+                }
+            }
 
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, now);
-            osc.frequency.setValueAtTime(1108.7, now + 0.12);
+            writeStr(0, 'RIFF');
+            view.setUint32(4, 36 + numSamples * 2, true);
+            writeStr(8, 'WAVEfmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); // PCM format
+            view.setUint16(22, 1, true); // Mono channel
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeStr(36, 'data');
+            view.setUint32(40, numSamples * 2, true);
 
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            for (var i = 0; i < numSamples; i++) {
+                var t = i / sampleRate;
+                var freq, env;
+                if (t < 0.12) {
+                    freq = 659.25; // E5
+                    env = Math.sin(Math.PI * (t / 0.12)) * 0.45;
+                } else {
+                    var t2 = t - 0.12;
+                    freq = 880.00; // A5
+                    env = Math.exp(-t2 * 6.0) * 0.5;
+                }
+                var sample = Math.floor(Math.sin(2 * Math.PI * freq * t) * env * 32767);
+                view.setInt16(44 + i * 2, Math.max(-32767, Math.min(32767, sample)), true);
+            }
 
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.5);
+            var blob = new Blob([buffer], { type: 'audio/wav' });
+            var URLObj = global.URL || global.webkitURL;
+            if (URLObj && typeof URLObj.createObjectURL === 'function') {
+                _chimeUrl = URLObj.createObjectURL(blob);
+            }
+        } catch (e) {}
+        return _chimeUrl;
+    }
+
+    function playWebAudioChime(ctx) {
+        var now = ctx.currentTime;
+        var osc1 = ctx.createOscillator();
+        var osc2 = ctx.createOscillator();
+        var gain = ctx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, now); // E5
+        osc1.frequency.setValueAtTime(880.00, now + 0.12); // A5
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1318.50, now);
+        osc2.frequency.setValueAtTime(1760.00, now + 0.12);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.35, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.65);
+        osc2.stop(now + 0.65);
+    }
+
+    function playFallbackAudio() {
+        try {
+            var url = generateChimeWavUrl();
+            if (!url) return;
+            var audio = new Audio(url);
+            audio.volume = 0.65;
+            var p = audio.play();
+            if (p && typeof p.catch === 'function') {
+                p.catch(function () {});
+            }
         } catch (e) {}
     }
+
+    function sound() {
+        try {
+            var ctx = getAudioContext();
+            var played = false;
+
+            if (ctx) {
+                if (ctx.state === 'running') {
+                    playWebAudioChime(ctx);
+                    played = true;
+                } else if (ctx.state === 'suspended') {
+                    ctx.resume().then(function () {
+                        playWebAudioChime(ctx);
+                    }).catch(function () {
+                        playFallbackAudio();
+                    });
+                    return;
+                }
+            }
+
+            if (!played) {
+                playFallbackAudio();
+            }
+        } catch (e) {
+            playFallbackAudio();
+        }
+    }
+
+    function unlockAudio() {
+        try {
+            var ctx = getAudioContext();
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume().catch(function () {});
+            }
+            if (!_chimeAudio) {
+                var url = generateChimeWavUrl();
+                if (url) {
+                    _chimeAudio = new Audio(url);
+                    _chimeAudio.volume = 0.01;
+                    var p = _chimeAudio.play();
+                    if (p && typeof p.then === 'function') {
+                        p.then(function () {
+                            _chimeAudio.pause();
+                            _chimeAudio.currentTime = 0;
+                            _chimeAudio.volume = 0.65;
+                        }).catch(function () {});
+                    }
+                }
+            }
+        } catch (e) {}
+    }
+
+    ['click', 'touchstart', 'touchend', 'keydown', 'mousedown', 'pointerdown'].forEach(function (evt) {
+        document.addEventListener(evt, unlockAudio, { passive: true, capture: true });
+    });
 
     /* ------------------------------------------------------------------
      * Polling
      * ------------------------------------------------------------------ */
 
     /* Was this notification already in the feed before we started watching?
-       Only true for a pre-load backlog. Anything created after the page
-       booted is a live alert and must be shown, even if the very first
-       poll failed and this is technically our first successful response. */
+       Stale notifications older than 2 hours are suppressed on page load to
+       avoid blasting old history, but any recent unread notification (e.g.
+       marked Ready for Pickup while user was away or logging in) is shown. */
     function isPreBootBacklog(n) {
-        if (!n.created_ts) return true;   // no timestamp -> preserve old behaviour
+        if (!n.created_ts) return false;
         var created = Date.parse(n.created_ts);
-        if (isNaN(created)) return true;
-        // Only timestamps clearly older than boot count as backlog. The grace
-        // window sits *before* boot so a few seconds of pre-load history may
-        // still surface; erring towards "show it" is the safe direction.
-        return created < _state.bootAt - 2000;
+        if (isNaN(created)) return false;
+        var ageMs = Date.now() - created;
+        // Suppress on first poll only if older than 2 hours
+        return ageMs > 2 * 60 * 60 * 1000;
     }
 
     function poll() {
@@ -562,7 +703,13 @@
         var opts = { cache: 'no-store' };
         if (controller) opts.signal = controller.signal;
 
-        return fetch(url('list') + '?_t=' + Date.now(), opts)
+        var fetchUrl = url('list') + '?_t=' + Date.now();
+        try {
+            var gk = localStorage.getItem('guest_session_key') || localStorage.getItem('qreserve_guest_key');
+            if (gk) fetchUrl += '&guest_key=' + encodeURIComponent(gk);
+        } catch (e) {}
+
+        return fetch(fetchUrl, opts)
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (!data || !data.success) return;
@@ -576,20 +723,40 @@
 
                 var isFirstPoll = !_state.pollCount;
                 _state.pollCount++;
+                var bootToastsShown = 0;
+                var MAX_BOOT_TOASTS = 2;
 
                 list.forEach(function (n) {
-                    if (_state.seenIds[n.id]) return;
-
+                    var wasSeen = _state.seenIds[n.id];
                     _state.seenIds[n.id] = true;
 
+                    // Read notifications never trigger a toast or chime
                     if (n.is_read) return;
 
-                    // Suppress only the backlog that existed at page load.
-                    // Suppressing on "first poll" alone silently ate real
-                    // alerts whenever the opening request failed.
-                    if (isFirstPoll && isPreBootBacklog(n)) return;
+                    // Session storage check: don't re-toast if already shown in this tab session
+                    var toastedKey = 'qreserve_toasted_' + n.id;
+                    var alreadyToasted = false;
+                    try {
+                        alreadyToasted = !!sessionStorage.getItem(toastedKey);
+                    } catch (e) {}
+                    if (alreadyToasted) return;
 
-                    // Fresh unread notification.
+                    // If already seen in this in-memory polling session, do not re-toast
+                    if (wasSeen) return;
+
+                    // On the very first poll, show at most MAX_BOOT_TOASTS recent unread alerts
+                    if (isFirstPoll) {
+                        if (isPreBootBacklog(n)) return;
+                        if (bootToastsShown >= MAX_BOOT_TOASTS) return;
+                        bootToastsShown++;
+                    }
+
+                    // Mark as toasted in this session so it won't repeat on refresh
+                    try {
+                        sessionStorage.setItem(toastedKey, '1');
+                    } catch (e) {}
+
+                    // Fresh unread notification: pop out toast, play sound, show push
                     if (shouldToast(n.type)) {
                         toast(n);
                     }
@@ -719,6 +886,7 @@
         clearAll: clearAll,
         markAllRead: markAllRead,
         sound: sound,
+        unlockAudio: unlockAudio,
         requestPermission: requestPermission
     };
 

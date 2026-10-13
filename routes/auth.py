@@ -3329,7 +3329,7 @@ def admin_export_excel():
 @limiter.exempt
 def get_notifications():
     student_id = session.get("student_id")
-    guest_key = session.get("guest_session_key")
+    guest_key = session.get("guest_session_key") or _resolve_guest_key(request.args.get("guest_key"))
 
     query = Notification.query
 

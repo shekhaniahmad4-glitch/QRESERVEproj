@@ -11,6 +11,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -462,6 +463,7 @@ if (typeof QRCode === 'undefined') {
 
 <!-- Queue Card PNG Renderer -->
 <script src="{{ url_for('static', filename='js/ticket-card.js') }}"></script>
+<script src="{{ url_for('static', filename='js/qreserve-notifications.js') }}"></script>
 
 <!-- Address encoded into the queue-card QR code (see PUBLIC_BASE_URL) -->
 <script>window.QRESERVE_BASE_URL = {{ public_base_url | tojson }};</script>
@@ -485,6 +487,10 @@ if (typeof QRCode === 'undefined') {
         if (chimePlayed) return;
         chimePlayed = true;
         try {
+            if (window.QReserveNotifications && typeof window.QReserveNotifications.sound === 'function') {
+                window.QReserveNotifications.sound();
+                return;
+            }
             var Ctx = window.AudioContext || window.webkitAudioContext;
             if (!Ctx) return;
             var ctx = new Ctx(), now = ctx.currentTime;
@@ -510,6 +516,17 @@ if (typeof QRCode === 'undefined') {
                    '<div class="status-msg">This transaction is complete' +
                    (d.completedAt ? ' (' + esc(d.completedAt) + ')' : '') + '. Thank you for using QRESERVE.</div>';
         } else if (d.status === 'Ready for pickup') {
+            if (!chimePlayed) {
+                playChime();
+                if (window.QReserveNotifications && typeof window.QReserveNotifications.toast === 'function') {
+                    window.QReserveNotifications.toast({
+                        type: 'ready_for_pickup',
+                        title: 'Your document is ready!',
+                        message: (d.docName || 'Your document') + ' is ready for pickup at ' + d.counter + '. Please proceed to claim your documents.',
+                        queue_number: d.queueNum
+                    });
+                }
+            }
             html = '<span class="status-pill status-pickup"><span class="live-dot"></span> Ready for pickup</span>' +
                    '<div class="callout ready"><div class="t">Document Ready</div>' +
                    '<div class="s">Claim it at ' + esc(d.counter) + '</div></div>';
@@ -517,7 +534,17 @@ if (typeof QRCode === 'undefined') {
             html = '<span class="status-pill status-processing"><span class="live-dot"></span> ' +
                    esc(d.queueStepLabel || 'Processing') + '</span>';
             if (d.isNowServing) {
-                playChime();
+                if (!chimePlayed) {
+                    playChime();
+                    if (window.QReserveNotifications && typeof window.QReserveNotifications.toast === 'function') {
+                        window.QReserveNotifications.toast({
+                            type: 'now_serving',
+                            title: 'Now Calling Your Number!',
+                            message: 'Please proceed to ' + esc(d.counter) + ' now',
+                            queue_number: d.queueNum
+                        });
+                    }
+                }
                 html += '<div class="callout serving"><div class="t">Now Calling Your Number!</div>' +
                         '<div class="s">Please proceed to ' + esc(d.counter) + ' now</div></div>';
             } else if (d.counterTurnDone) {

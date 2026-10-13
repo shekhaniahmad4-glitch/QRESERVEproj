@@ -271,11 +271,12 @@
     position: fixed;
     top: 18px;
     right: 18px;
-    z-index: 100000;
+    z-index: 999999 !important;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: min(380px, calc(100vw - 36px));
+    width: 380px;
+    max-width: calc(100vw - 36px);
     pointer-events: none;
 }
 
@@ -296,13 +297,13 @@
 }
 
 .notification-toast.show {
-    opacity: 1;
-    transform: translateX(0);
+    opacity: 1 !important;
+    transform: translateX(0) !important;
 }
 
 .notification-toast.hiding {
-    opacity: 0;
-    transform: translateX(28px);
+    opacity: 0 !important;
+    transform: translateX(28px) !important;
 }
 
 .notification-toast-icon {

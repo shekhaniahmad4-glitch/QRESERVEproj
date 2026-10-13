@@ -3002,37 +3002,23 @@ if (typeof QRCode === 'undefined') {
         if (_lastChimedTicket === ticketNum) return;
         _lastChimedTicket = ticketNum;
         try {
-            var AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return;
-            var ctx = new AudioCtx();
-            if (ctx.state === 'suspended') ctx.resume();
-            var now = ctx.currentTime;
-            var osc1 = ctx.createOscillator();
-            var osc2 = ctx.createOscillator();
-            var gain = ctx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(587.33, now); // D5
-            osc1.frequency.setValueAtTime(880.00, now + 0.18); // A5
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
-            osc1.connect(gain);
-            gain.connect(ctx.destination);
-            osc1.start(now);
-            osc1.stop(now + 0.85);
+            if (window.QReserveNotifications && typeof window.QReserveNotifications.sound === 'function') {
+                window.QReserveNotifications.sound();
+            }
         } catch(e) {}
     }
 
     function updateGlobalAlert(active) {
         var alertEl = document.getElementById('globalLiveCallBanner');
         if (!alertEl) return;
-        if (active && active.isNowServing) {
+        if (active && (active.isNowServing || active.status === 'Ready for pickup')) {
             var pane = document.getElementById('tab-my-queue');
             if (pane && pane.classList.contains('active')) {
                 alertEl.style.opacity = '0';
                 alertEl.style.transform = 'translateX(-50%) translateY(-12px)';
                 return;
             }
-            playCallChime(active.queueNum);
+            playCallChime((active.queueNum || '') + '_' + (active.status || ''));
             alertEl.innerHTML =
                 '<div style="display:flex;align-items:center;gap:12px;width:100%;justify-content:space-between;">' +
                     '<div style="display:flex;align-items:center;gap:10px;">' +
